@@ -8,11 +8,19 @@ Combining Interrupted Time Series Design and Text Classification to Examine How 
 
 ## Workflow 
 
+### Data collection 
+
 1. Collecting Muslim-related articles from Arab- and Indian-American newspapers using [Ethnic Newswatch database](https://www.proquest.com/products-services/ethnic_newswatch.html) (manually done due to legal restrictions) **COMPLETE**
 2. Parsing original HTML files into CSV files in Python (e.g., beautiful soup) **COMPLETE**
+
+### Machine learning 
+
 3. Randomly sampling articles from the corpus in R **COMPLETE**
 4. Labeling the sample articles (manually done) **COMPLETE**
 5. Classifying articles in Python (e.g., scikit-learn) **IN PROGRESS**
+
+### Causal inference 
+
 6. Estimating the causal effect in R **IN PROGRESS**
 
 ## Collaborators 
