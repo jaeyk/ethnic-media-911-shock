@@ -8,7 +8,7 @@ Combining Interrupted Time Series Design and Text Classification to Study How Th
 
 ## Workflow 
 
-0. Collecting Muslim-related articles from Arab- and Indian-American newspapers using Ethnic Watch database (manual process)
+0. Collecting Muslim-related articles from Arab- and Indian-American newspapers using Ethnic Watch database (manually done due to legal restrictions)
 1. Parsing original HTML files into CSV files using beautiful soup in Python 
 2. Randomly sampling articles from the corpus in R
 3. Classifying articles using the sample articles in Python 
