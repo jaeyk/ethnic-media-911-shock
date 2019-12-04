@@ -13,7 +13,7 @@ Combining Interrupted Time Series Design and Text Classification to Study How Th
 3. Randomly sampling articles from the corpus in R **COMPLETE**
 4. Labeling the sample articles (manually done) **COMPLETE**
 5. Classifying articles in Python (e.g., scikit-learn) **IN PROGRESS**
-6. Estimating the causal effect in R **I
+6. Estimating the causal effect in R **IN PROGRESS**
 
 ## Collaborators 
 I worked with three highly competent UC Berkeley ungergraduates for this project (Sarah, Vivek, and Carlos). 
