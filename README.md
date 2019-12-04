@@ -2,7 +2,7 @@
 
 ## Purpose 
 
-Combining Interrupted Time Series Design and Text Classification to Study How Threats Shape Immigrant Communities' Interest in US Domestic Politics. The intent of the project is to demonstate how machine learning (i.e., text classification) can be used to provide data for causal inference. 
+Combining Interrupted Time Series Design and Text Classification to Examine How Threats Shape Immigrant Communities' Interest in US Domestic Politics. The intent of the project is to demonstate how machine learning (i.e., text classification) can be used to provide data for causal inference. 
 
 ## Abstract 
 
