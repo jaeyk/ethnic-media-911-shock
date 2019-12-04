@@ -3,6 +3,6 @@ Combining Interrupted Time Series Design and Text Classification to Study How Th
 
 I worked with three highly competent UC Berkeley ungergraduates for this project (Sarah, Vivek, and Carlos). 
 
-I am project lead and Andrew Thompson (predoctoral fellow in Political Science at MIT) is co-author of the paper based on this project.
+I am project lead and Andrew Thompson (a predoctoral fellow in Political Science at MIT and a PhD candidate in Political Science at Northwestern) is co-author of the paper based on this project. The paper is scheduled to present at the upcoming Western Political Science Association annual meeting. 
 
 This project was supported by [the Data Science Discovery Program](https://data.berkeley.edu/research/discovery) at UC Berkley (Fall 2019).
