@@ -16,7 +16,7 @@ Combining Interrupted Time Series Design and Text Classification to Examine How 
 6. Estimating the causal effect in R **IN PROGRESS**
 
 ## Collaborators 
-I worked with three highly competent UC Berkeley ungergraduates for this project (Sarah, Vivek, and Carlos). 
+I worked with three highly competent UC Berkeley ungergraduates for this project (Sarah Santiago, Vivek Datta, and Carlos Ortiz). 
 
 I am project lead and Andrew Thompson (a predoctoral fellow in Political Science at MIT and a PhD candidate in Political Science at Northwestern) is co-author of the paper based on this project. The paper is scheduled to present at the upcoming Western Political Science Association annual meeting. 
 
