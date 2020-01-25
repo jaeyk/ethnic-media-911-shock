@@ -165,9 +165,12 @@ ggsave("/home/jae/ITS-Text-Classification/output/raw_data_plot.png")
 
 #### 3.2. No outliers and missing values 
 
-I adapted the code from this Oracle blog post to remove outliers and impute missing values. 
+I adapted the code from this Oracle blog post to remove outliers and impute missing values. As the number of missing values in the data is 0, this process focuses on removing outliers. The plot shows that a couple of outliers disappeared in the updated data. 
 
 ```{r}
+
+# checking whether there's NA
+paste("The number of missing values in the data is", sum(is.na(df_grouped)))
 
 # Clean the dependent variable
 
