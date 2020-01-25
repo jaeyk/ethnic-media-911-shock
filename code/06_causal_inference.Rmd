@@ -13,9 +13,9 @@ output:
 
 # Clean up the environment
 
-rm(list = ls())
+# rm(list = ls())
 
-# Import librarires (adapted from this link: https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them)
+# Import libraries (adapted from this link: https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them)
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
@@ -32,7 +32,13 @@ pacman::p_load(
         ggpmisc, # for detecting peaks and valleys 
         broom, # for tidying model objects 
         modelr, # for modeling 
-        ggthemes, # for fancy ggplot themes 
+        forecast, # for forecasting 
+        ggseas, # for seasonal and decomposition on the fly
+        itsadug, # for interpreting time series and autocorrelated data 
+        mgcv, # for mixed GAM Computation Vehicle with Automatic Smoothness Estimation
+        tseries, # for computational financial analysis
+        mcp, # for regression with multiple change points 
+        ggthemes, # for fancy ggplot themes
         ggpubr) # for arranging plots 
 ```
 
@@ -65,7 +71,7 @@ sample$assimilating[is.na(sample$assimilating)] <- 0
 
 sample$domestic <- ifelse(sample$expanding == 1 | sample$distancing == 1 | sample$assimilating == 1, 1, 0)
 
-# Create domestic varaible for unlabled and apply predicted values to the variable 
+# Create domestic variable for unlabeled and apply predicted values to the variable 
 
 unlabeled$domestic <- results$`0`
 
@@ -103,11 +109,11 @@ df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Ame
 
 paste("the class of date is", class(df$date))
 
-# Convert date into data object 
+# Convert date into date object 
 
 df$date <- as.Date(as.character(df$date), "%Y%m%d") 
 
-# Recode values in doemstic variable 
+# Recode values in domestic variable 
 
 df$domestic <- as.character(df$domestic) 
 
@@ -117,6 +123,8 @@ df$domestic[df$domestic == 0] <- "Non-domestic"
 ```
 
 ### 3.2. Data visualization
+
+#### 3.1. Raw data 
 
 ```{r}
 
@@ -148,10 +156,43 @@ ggsave("/home/jae/ITS-Text-Classification/output/raw_data_plot.png")
 
 ```
 
+#### 3.2. No outliers and missing values 
+
+I adapted the code from this Oracle blog post to remove outliers and impute missing values. 
+
+```{r}
+
+# Clean the dependent variable
+
+count_ts <- ts(df_grouped[, c('n')])
+
+df_grouped$count_ts <- tsclean(count_ts)
+
+# Cleaned plot 
+
+df_grouped %>%
+  ggplot(aes(x = date, y = count_ts)) +
+    geom_line(size = 1) + # line plot
+    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
+    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
+    facet_wrap(group~domestic, scale = "free_y") + # facetting, y scale is free 
+    labs(x = "Date",
+         y = "Publication count",
+         col = "Issue focus",
+         title = "9/11 and Minority Political Interests",
+         subtitle = "All articles mentioned Muslims",
+         caption = "Source: Ethnic Newswatch") + # labels 
+    theme_fivethirtyeight() # theme 
+
+# Save plot 
+
+ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png")
+```
+
 
 ## 4. Interrupted time series design analysis 
 
-### 4.1. Non-adjusted 
+### 4.1. Base model
 
 ```{r}
 
@@ -171,9 +212,15 @@ df_nondomestic <- df_grouped %>%
 
 visualize_its_base <- function(input){
   
-  # Apply poission regression model 
+  # Apply Poisson regression model 
   
   model <- glm(n ~ intervention + date + group, family = poisson, data = input)
+  
+  # Check dispersion 
+  print(summary(model)$dispersion)
+  
+  # Check ci
+  print(ci.exp(model))
   
   # Make predictions 
   
@@ -218,18 +265,70 @@ ggarrange(visualize_its_base(df_domestic) + ggtitle("9/11 and Minority Domestic 
 
 ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png")
 ```
+### 4.2. Check for autocorrelation
 
-### 4.2. Adjusted 
+The base model is naive. To make it more robust, first, I assess the correlation between the series and its time lags (autocorrelation). In both cases, ACF (correlation a time series and its lags) test shows only a couple of lags have statistically significant estimated correlation coefficients. As expected, PACF (correlation between a time series and its lags unexplained by previous lags) test shows overall even small coefficients. 
 
 ```{r}
 
-# A new function for adjusted models 
+check_autocorrelation_acf <- function(input){
+  
+  # Model 
+  
+  model <- glm(n ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input) 
+  
+  # Autocorrelation functions 
+  
+  pacf <- ggAcf(resid(model)) +
+    theme_fivethirtyeight()
 
-visualize_its_adjusted <- function(input){
+}
+
+check_autocorrelation_pacf <- function(input){
   
-  # Apply poission regression model 
+  # Model 
   
-  model <- glm(n ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input)
+  model <- glm(n ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input) 
+  
+  # Autocorrelation functions 
+  
+  pacf <- ggPacf(resid(model)) +
+    theme_fivethirtyeight()
+
+}
+
+
+# Apply to each data
+
+ggarrange(check_autocorrelation_acf(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (ACF)"), 
+          check_autocorrelation_acf(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (ACF)"),
+           nrow = 2, ncol =1)
+
+ggarrange(check_autocorrelation_pacf(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (PACF)"), 
+          check_autocorrelation_pacf(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (PACF)"),
+           nrow = 2, ncol =1)
+
+```
+
+### 4.3. Adjusted for over-dispersion and seasonality
+
+As the next step, I adjusted the base model for over-dispersion and seasonality to examine whether these steps make any difference. I adapted some code from [Lopez Bernal IJE 2017](https://github.com/gasparrini/2017_lopezbernal_IJE_codedata) to do so. 
+
+```{r}
+
+# A new function which is adjusted for over-dispersion and seasonality
+
+visualize_its_adjusted_od_st <- function(input){
+  
+  # Apply quasi-Poisson model to avoid over-dispersion: the conditional variance > the conditional mean -> as a consequence cis are likely to be narrow. See the following link: https://stats.idre.ucla.edu/stata/dae/poisson-regression/ 
+  
+  model <- glm(n ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input) # harmonic term is added for accounting for seasonality
+  
+  # Check dispersion 
+  print(summary(model)$dispersion)
+  
+  # Check ci
+  print(ci.exp(model))
   
   # Make predictions 
   
@@ -268,9 +367,10 @@ visualize_its_adjusted <- function(input){
 
 # Visualize each result 
 
-ggarrange(visualize_its_adjusted(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"), 
-          visualize_its_adjusted(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
-          nrow = 2, ncol =1)
+ggarrange(visualize_its_adjusted_od_st(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"), 
+          visualize_its_adjusted_od_st(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
+           nrow = 2, ncol =1)
 
 ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png")
+
 ```
