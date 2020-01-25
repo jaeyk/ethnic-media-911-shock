@@ -1,7 +1,6 @@
 ---
 title: "Sampling"
 author: "Jae Yeon Kim"
-author: "Jae Yeon Kim"
 output:
   html_document: 
     toc: true
@@ -92,7 +91,7 @@ table(sample_articles$source, sample_articles$intervention)
 
 ```{r}
 
-write.csv(sample_articles, file = "sample_articles.csv")
+  write.csv(sample_articles, file = "sample_articles.csv")
 
 ```
 
