@@ -28,7 +28,7 @@ The goal of this project was to showcase how machine learning could help infer a
 6. Estimating the causal effect in R 
 
 ## Collaborators 
-I worked with three highly competent UC Berkeley ungergraduates for this project (Sarah Santiago, Vivek Datta, and Carlos Ortiz). 
+I worked with three highly competent UC Berkeley ungergraduates for this project (Carlos Ortiz, Sarah Santiago, and Vivek Datta; I listed their names in an alphabetical order). 
 
 I am project lead and Andrew Thompson (a predoctoral fellow in Political Science at MIT and a PhD candidate in Political Science at Northwestern) is co-author of the paper based on this project. The paper is scheduled to present at the upcoming Western Political Science Association annual meeting. 
 
