@@ -1,0 +1,276 @@
+---
+title: "ITS design analysis"
+author: "Jae Yeon Kim"
+output:
+  html_document: 
+    toc: true
+    theme: united
+---
+
+## 0. Setup
+
+```{r}
+
+# Clean up the environment
+
+rm(list = ls())
+
+# Import librarires (adapted from this link: https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them)
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(
+        tidyverse, # for the tidyverse framework 
+        splitstackshape, # for stacking and reshaping datasets 
+        tsModel, # for specifying time series regression models
+        lmtest, # for testing linear regression models
+        Epi, # for statistical analysis in epidemology 
+        splines, # for spline regression
+        vcd, # for visualizing categorical variable 
+        nlme, # for linear and nonlinear mixed effects models 
+        zoo, # S3 infrastructure for regular and irregular time series 
+        TTR, # for constructing technical trading rules
+        ggpmisc, # for detecting peaks and valleys 
+        broom, # for tidying model objects 
+        modelr, # for modeling 
+        ggthemes, # for fancy ggplot themes 
+        ggpubr) # for arranging plots 
+```
+
+## 1. Import files
+
+Unfortunately, I cannot share the original data because they are proprietary. Proquest holds the copyrights. 
+
+```{r include=FALSE}
+
+# Import files 
+
+unlabeled <- read_csv("/home/jae/muslim_newspapers-selected/code/unlabeled_articles.csv")
+sample <- read_csv("/home/jae/muslim_newspapers-selected/processed_data/sample_articles.csv")
+results <- read_csv("/home/jae/muslim_newspapers-selected/processed_data/final_values_predicted.csv")
+
+```
+
+## 2. Merging dataframes 
+
+
+```{r}
+
+# Replace NAs with 0s in sample articles 
+
+sample$expanding[is.na(sample$expanding)] <- 0
+sample$distancing[is.na(sample$distancing)] <- 0
+sample$assimilating[is.na(sample$assimilating)] <- 0
+
+# Collapsing three variables into one 
+
+sample$domestic <- ifelse(sample$expanding == 1 | sample$distancing == 1 | sample$assimilating == 1, 1, 0)
+
+# Create domestic varaible for unlabled and apply predicted values to the variable 
+
+unlabeled$domestic <- results$`0`
+
+# Select key variables 
+
+sample_selected <- dplyr::select(sample, 
+              source,
+              intervention,
+              date,
+              domestic)
+
+labeled_selected <- dplyr::select(unlabeled, 
+              source, 
+              intervention,
+              date,
+              domestic)
+
+# Row bind the two dataframes  
+
+df <- bind_rows(sample_selected, labeled_selected)
+
+```
+
+## 3. Descriptive analysis
+
+### 3.1. Data wrangling
+
+```{r}
+
+# Create group variable based on newspaper names 
+
+df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Americans")
+
+# Check date variable 
+
+paste("the class of date is", class(df$date))
+
+# Convert date into data object 
+
+df$date <- as.Date(as.character(df$date), "%Y%m%d") 
+
+# Recode values in doemstic variable 
+
+df$domestic <- as.character(df$domestic) 
+
+df$domestic[df$domestic == 1] <- "Domestic"
+df$domestic[df$domestic == 0] <- "Non-domestic"
+
+```
+
+### 3.2. Data visualization
+
+```{r}
+
+# Grouping and summarizing data 
+
+df_grouped <- df %>%
+  group_by(date, domestic, group) %>% # group by 
+  dplyr::summarize(n = n()) # summarize 
+
+# Raw plot 
+
+df_grouped %>%
+  ggplot(aes(x = date, y = n)) +
+    geom_line(size = 1) + # line plot
+    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
+    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
+    facet_wrap(group~domestic, scale = "free_y") + # facetting, y scale is free 
+    labs(x = "Date",
+         y = "Publication count",
+         col = "Issue focus",
+         title = "9/11 and Minority Political Interests",
+         subtitle = "All articles mentioned Muslims",
+         caption = "Source: Ethnic Newswatch") + # labels 
+    theme_fivethirtyeight() # theme 
+
+# Save plot 
+
+ggsave("/home/jae/ITS-Text-Classification/output/raw_data_plot.png")
+
+```
+
+
+## 4. Interrupted time series design analysis 
+
+### 4.1. Non-adjusted 
+
+```{r}
+
+# Create intervention variable 
+
+df_grouped$intervention <- ifelse(df_grouped$date < as.Date("2001-09-11"), 0, 1)
+
+# Divide data 
+
+df_domestic <- df_grouped %>%
+  filter(domestic == "Domestic") 
+
+df_nondomestic <- df_grouped %>%
+  filter(domestic != "Domestic") 
+
+# Create a function for non-adjusted models 
+
+visualize_its_base <- function(input){
+  
+  # Apply poission regression model 
+  
+  model <- glm(n ~ intervention + date + group, family = poisson, data = input)
+  
+  # Make predictions 
+  
+  input$pred <- predict(model, type = "response", input)
+  
+  # Create confidence intervals  
+  
+  ilink <- family(model)$linkinv # Extracting the inverse link from parameter objects 
+  
+  # Combined prediction outputs 
+  
+  input <-predict(model, input, se.fit = TRUE)[1:2] %>%
+    bind_cols(input) %>%
+    mutate(
+      upr = ilink(fit + (2 * se.fit)),
+      lwr = ilink(fit - (2 * se.fit)))
+  
+  # Visualize the outcome 
+  
+  input %>%
+    ggplot(aes(x = date, y = n)) +
+    geom_point(alpha = 0.2) +
+    facet_wrap(~group) +
+    geom_line(aes(y = pred), size = 1) +
+    ggthemes::theme_fivethirtyeight() +
+    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
+    ggthemes::theme_fivethirtyeight() +
+    labs(x = "Date",
+         y = "Publication count",
+         subtitle = "All articles mentioned Muslims",
+         caption = "Source: Ethnic Newswatch") +
+    scale_y_continuous(breaks= scales::pretty_breaks()) +
+    geom_ribbon(aes(ymin = lwr, ymax = upr),
+                alpha = 0.3, color = "blue")
+}
+
+# Visualize ITS analysis result for each subset of the data 
+
+ggarrange(visualize_its_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"),
+          visualize_its_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
+          nrow = 2, ncol =1)
+
+ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png")
+```
+
+### 4.2. Adjusted 
+
+```{r}
+
+# A new function for adjusted models 
+
+visualize_its_adjusted <- function(input){
+  
+  # Apply poission regression model 
+  
+  model <- glm(n ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input)
+  
+  # Make predictions 
+  
+  input$pred <- predict(model, type = "response", input)
+  
+  # Create confidence intervals  
+  
+  ilink <- family(model)$linkinv # Extracting the inverse link from parameter objects 
+  
+  # Combined prediction outputs 
+  
+  input <-predict(model, input, se.fit = TRUE)[1:2] %>%
+    bind_cols(input) %>%
+    mutate(
+      upr = ilink(fit + (2 * se.fit)),
+      lwr = ilink(fit - (2 * se.fit)))
+  
+  # Visualize the outcome 
+  
+  input %>%
+    ggplot(aes(x = date, y = n)) +
+    geom_point(alpha = 0.2) +
+    facet_wrap(~group) +
+    geom_line(aes(y = pred), size = 1) +
+    ggthemes::theme_fivethirtyeight() +
+    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
+    ggthemes::theme_fivethirtyeight() +
+    labs(x = "Date",
+         y = "Publication count",
+         subtitle = "All articles mentioned Muslims",
+         caption = "Source: Ethnic Newswatch") +
+    scale_y_continuous(breaks= scales::pretty_breaks()) +
+    geom_ribbon(aes(ymin = lwr, ymax = upr),
+                alpha = 0.3, color = "blue")
+}
+
+# Visualize each result 
+
+ggarrange(visualize_its_adjusted(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"), 
+          visualize_its_adjusted(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
+          nrow = 2, ncol =1)
+
+ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png")
+```
