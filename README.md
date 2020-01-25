@@ -33,4 +33,4 @@ I worked with three highly competent UC Berkeley ungergraduates for this project
 I am project lead and Andrew Thompson (a predoctoral fellow in Political Science at MIT and a PhD candidate in Political Science at Northwestern) is co-author of the paper based on this project. The paper is scheduled to present at the upcoming Western Political Science Association annual meeting. 
 
 ## Institutional support 
-This project was supported by [the Data Science Discovery Program](https://data.berkeley.edu/research/discovery) at UC Berkley (Fall 2019).
+This project was supported by [the Data Science Discovery Program](https://data.berkeley.edu/research/discovery) at UC Berkeley (Fall 2019).
