@@ -183,7 +183,7 @@ df_grouped$count_ts <- tsclean(count_ts)
 # Cleaned plot 
 
 cleaned_domestic_plot <- df_grouped %>%
-  filter(domestic == "Domeestic")
+  filter(domestic == "Domestic") %>%
   ggplot(aes(x = date, y = count_ts)) +
     geom_line(size = 1) + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
@@ -197,7 +197,7 @@ cleaned_domestic_plot <- df_grouped %>%
     theme_fivethirtyeight() # theme 
   
 cleaned_nondomestic_plot <- df_grouped %>%
-  filter(domestic != "Domeestic")
+  filter(domestic != "Domestic") %>%
   ggplot(aes(x = date, y = count_ts)) +
     geom_line(size = 1) + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
@@ -211,7 +211,7 @@ cleaned_nondomestic_plot <- df_grouped %>%
     theme_fivethirtyeight() # theme 
 
 # Save plot 
-
+  
 ggarrange(cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political Interests"),
           cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests"),
           nrow = 2, ncol =1)
