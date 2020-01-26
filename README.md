@@ -6,7 +6,7 @@ The goal of this article is to document how I develop this project from end to e
 
 
 
-##Motivation
+## Motivation
 
 Hi there. I am Jae Kim, a PhD candidate in Political Science and a data science fellow for [the Data-intensive Social Sciences Lab](https://dlab.berkeley.edu/) (D-Lab) and a data science education program fellow at UC Berkeley. In summer 2019, I was invited to participate in the two-week intensive program on computational social science at Princeton called [the Summer Institute on Computational Social Science](https://compsocialscience.github.io/summer-institute/2019/princeton/people) as one of its 29 participants. It is a cool program that gave a lot of fresh ideas about doing computational social science and fantastic opportunities for networking and other kinds of professional development. 
 
@@ -16,7 +16,7 @@ Through this program, I met [Andrew Thompson](https://sites.northwestern.edu/ath
 
 ## Research Design
 
-###Finding a leverage
+### Finding a leverage
 
 Before going into more details, let's talk a little bit about why the causal inference is tough. To assess the causal relationship between $X$ and $Y$, we should be able to observe subjects treated (think of users exposed to a certain kind of online advertisement) ($Y^{treated}$) and the same subjects who are not treated ($Y ^{untreated}$) at the same temporal point ($t$). Otherwise, we can't tell how the treatment, the online advertisement makes, a difference in the way the users interact with the product or the service advertised. According to [the Neyman-Rubin potential outcome model](https://en.wikipedia.org/wiki/Rubin_causal_model), the comparison between the real world and the counterfactual world is crucial to define as the average difference between $Y$ treated and $Y$ untreated. However, we are not living in the world of a Sci-Fi fiction (e.g. Philip K. Dick's [*The Man in the High Castle*](https://en.wikipedia.org/wiki/The_Man_in_the_High_Castle_(TV_series))). These two observations can't exist simultaneously. Holland (1986) [called](http://www-stat.wharton.upenn.edu/~hwainer/Readings/Holland_Statistics%20and%20Causal%20Inference.pdf) this challenge as "the fundamental problem of causal inference." 
 
@@ -53,9 +53,9 @@ After we figured out the research design, we were ready to get our hands dirty. 
 
 
 
-#### Primary Data collection (Summer 2019)
+### Primary Data collection (Summer 2019)
 
-##### 01_Collecting Muslims-related Articles from Arab and Indian American Newspapers Using [Ethnic Newswatch Database](https://www.proquest.com/products-services/ethnic_newswatch.html). 
+#### 01_Collecting Muslims-related Articles from Arab and Indian American Newspapers Using [Ethnic Newswatch Database](https://www.proquest.com/products-services/ethnic_newswatch.html).
 
 - I did not web scrape these articles because I was worried about a potential copyright infringement issue. For the exactly same reason, I am not able to share the text data I used this project because Proquest holds the copyrights. 
 
@@ -63,7 +63,7 @@ After we figured out the research design, we were ready to get our hands dirty. 
 	- The text dataset contains two Arab American (The Arab American News and The Arab American View) and three Indian American (New India - Times, India Abroad, and India - West) newspapers. Also, the number of Indian newspaper articles (N = 4,552) is 4 times greater than the number of Arab American newspaper articles (N = 1,132).
 - We used a 5-year window for the data collection, from September 1996 through September 2006. I selected and manually downloaded **Muslim populations related articles** from the database during this time period.
 
-##### 02_Parsing Original HTML Files into CSV Files in Python
+#### 02_Parsing Original HTML Files into CSV Files in Python
 
 - I created a function named `parsing_proquest` that takes the print version of the newspaper articles which you can download Proquest and turn them into a single CSV file. 
 - They changed their policies from time to time, and so you should check what they allow you to do. In the past, you are able to download 100 articles from Proquest at once as an HTML file. Then, a couple of months ago, the option was to print 100 articles at once and then save them as a HTML file. The old feature provided nicer attributes that you can exploit to turn that file into a CSV dataset.
@@ -91,22 +91,22 @@ for filename in os.listdir(os.getcwd()):
 
 
 
-#### Machine Learning (Fall 2019)
+### Machine Learning (Fall 2019)
 
-##### 03_Random Sampling Articles Stratifying on Intervention and Source Variables in R 
+#### 03_Random Sampling Articles Stratifying on Intervention and Source Variables in R
 
 - These sample articles were used to train machine learning algorithms.
 - At this stage, I tried to have 1) enough number of sample articles for both the pre- and post-intervention periods and 2) getting these sample articles across different kinds of newspapers. The underlying assumptions are **the variations in these variables matter in training the model and making accurate predictions**.   
 
 `sample_articles <- stratified(articles, c("intervention", "source"), 120)`
 
-##### 04_Labeling the Sample Articles
+#### 04_Labeling the Sample Articles
 
 - We divided the 1,015 sample articles among 5 people me, Andrew, and the 3 RAs. Initially, we were very ambitious and wanted to get fine-grained data on what kinds of political information these newspapers provided to their readers. For instance, whether the focus of these newspapers was on strengthening unity between their readership and the general Muslim populations in the United States or differences between them or stress their American identity (assimilation). When Andrew and I talked about this at the conceptual level, we were excited about this idea as it can give us a chance to talk about group identity. 
 - However, as we started reading and labeling the sample articles, we realized that that conceptual framework is not going to work. The main problem is that many articles either fit into any of these three constructs or didn't fit at all. The undergraduate RAs really pushed this as a problem because they felt *they could not be confident how a machine learning algorithm can predict values if they can't*. Consequently, we decided to **keep things simple** and label articles whether they are about U.S. domestic politics or not (a binary choice). Interestingly, most of the non-domestic Muslim articles were about international relations such as the relationship between India and Pakistan.
 - If time allowed, I would like to calculate the inter-coder reliability score by assigning same articles at least to two different coders. We couldn't do that because we needed to present the preliminary findings by the end of the semester. When we reached this stage, we have only 1-2 weeks left (excluding the Thanksgiving break).
 
-##### 05_Classifying Articles Using Machine Learning in Python
+#### 05_Classifying Articles Using Machine Learning in Python
 
 
 
@@ -133,8 +133,9 @@ Training Accuracy:  0.7897042716319824
 
 
 
-#### Causal Inference (Winter 2019 and Spring 2020)
+### Causal Inference (Winter 2019 and Spring 2020)
 
-##### 06_Estimating the Causal Effect in R 
+#### 06_Estimating the Causal Effect in R
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png>)
+
