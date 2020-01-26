@@ -182,21 +182,39 @@ df_grouped$count_ts <- tsclean(count_ts)
 
 # Cleaned plot 
 
-df_grouped %>%
+cleaned_domestic_plot <- df_grouped %>%
+  filter(domestic == "Domeestic")
   ggplot(aes(x = date, y = count_ts)) +
     geom_line(size = 1) + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
     scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
-    facet_wrap(group~domestic, scale = "free_y") + # facetting, y scale is free 
+    facet_wrap(~group, scale = "free_y") + # facetting, y scale is free 
     labs(x = "Date",
          y = "Publication count",
          col = "Issue focus",
-         title = "9/11 and Minority Political Interests",
+         subtitle = "All articles mentioned Muslims",
+         caption = "Source: Ethnic Newswatch") + # labels 
+    theme_fivethirtyeight() # theme 
+  
+cleaned_nondomestic_plot <- df_grouped %>%
+  filter(domestic != "Domeestic")
+  ggplot(aes(x = date, y = count_ts)) +
+    geom_line(size = 1) + # line plot
+    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
+    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
+    facet_wrap(~group, scale = "free_y") + # facetting, y scale is free 
+    labs(x = "Date",
+         y = "Publication count",
+         col = "Issue focus",
          subtitle = "All articles mentioned Muslims",
          caption = "Source: Ethnic Newswatch") + # labels 
     theme_fivethirtyeight() # theme 
 
 # Save plot 
+
+ggarrange(cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political Interests"),
+          cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests"),
+          nrow = 2, ncol =1)
 
 ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png")
 ```
