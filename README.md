@@ -16,7 +16,7 @@ Hi there. I am Jae Kim, a PhD candidate in Political Science and a data science 
 
 ### Finding a leverage
 
-Before going into more details, let's talk a little bit about why the causal inference is tough. To assess the causal relationship between $X$ and $Y$, we should be able to observe subjects treated (think of users exposed to a certain kind of online advertisement) ($Y^{treated}$) and the same subjects who are not treated ($Y ^{untreated}$) at the same temporal point ($t$). Otherwise, we can't tell how the treatment, the online advertisement makes, a difference in the way the users interact with the product or the service advertised. According to [the Neyman-Rubin potential outcome model](https://en.wikipedia.org/wiki/Rubin_causal_model), the comparison between the real world and the counterfactual world is crucial to define as the average difference between $Y$ treated and $Y$ untreated. However, we are not living in the world of a Sci-Fi fiction (e.g. Philip K. Dick's [*The Man in the High Castle*](https://en.wikipedia.org/wiki/The_Man_in_the_High_Castle_(TV_series))). These two observations can't exist simultaneously. Holland (1986) [called](http://www-stat.wharton.upenn.edu/~hwainer/Readings/Holland_Statistics%20and%20Causal%20Inference.pdf) this challenge as "the fundamental problem of causal inference." 
+Before going into more details, let's talk a little bit about why the causal inference is tough. To assess the causal relationship between $X$ and $Y$, we should be able to observe subjects treated (think of users exposed to a certain kind of online advertisement) ($$Y^{treated}$$) and the same subjects who are not treated ($Y ^{untreated}$) at the same temporal point ($t$). Otherwise, we can't tell how the treatment, the online advertisement makes, a difference in the way the users interact with the product or the service advertised. According to [the Neyman-Rubin potential outcome model](https://en.wikipedia.org/wiki/Rubin_causal_model), the comparison between the real world and the counterfactual world is crucial to define as the average difference between $Y$ treated and $Y$ untreated. However, we are not living in the world of a Sci-Fi fiction (e.g. Philip K. Dick's [*The Man in the High Castle*](https://en.wikipedia.org/wiki/The_Man_in_the_High_Castle_(TV_series))). These two observations can't exist simultaneously. Holland (1986) [called](http://www-stat.wharton.upenn.edu/~hwainer/Readings/Holland_Statistics%20and%20Causal%20Inference.pdf) this challenge as "the fundamental problem of causal inference." 
 
 In experimental studies, randomly assigning treatment to one group but not the others (as used in A/B testing in the tech industry and randomized-controlled experiments in academia) solves this selection bias/confounding/endogeneity problem (again, different names but the same idea). It is because randomization, by definition, creates treatment and control groups only differ in their treatment status on average. 
 
@@ -139,7 +139,7 @@ Training Accuracy:  0.7897042716319824
 
 **Raw Data**
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png>)
+![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png>)
 
 
 
