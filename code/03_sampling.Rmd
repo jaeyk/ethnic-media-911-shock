@@ -11,7 +11,7 @@ output:
 
 ```{r}
 
-# Clean up the environment
+# Clean up the environment  
 
 rm(list = ls())
 
