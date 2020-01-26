@@ -273,7 +273,7 @@ visualize_its_base <- function(input){
   input %>%
     ggplot(aes(x = date, y = count_ts)) +
     geom_point(alpha = 0.2) +
-    facet_wrap(~group) +
+    facet_wrap(~group, scale = "free_y") +
     geom_line(aes(y = pred), size = 1) +
     ggthemes::theme_fivethirtyeight() +
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
@@ -286,6 +286,7 @@ visualize_its_base <- function(input){
     geom_ribbon(aes(ymin = lwr, ymax = upr),
                 alpha = 0.3, color = "blue")
 }
+
 
 # Visualize ITS analysis result for each subset of the data 
 
@@ -383,7 +384,7 @@ visualize_its_adjusted_od_st <- function(input){
   input %>%
     ggplot(aes(x = date, y = count_ts)) +
     geom_point(alpha = 0.2) +
-    facet_wrap(~group) +
+    facet_wrap(~group, scale = "free_y") +
     geom_line(aes(y = pred), size = 1) +
     ggthemes::theme_fivethirtyeight() +
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
