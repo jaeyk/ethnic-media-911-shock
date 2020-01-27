@@ -123,13 +123,13 @@ Training Accuracy:  0.7897042716319824
 #### 06_Estimating the Causal Effect in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_causal_inference.Rmd)], [[Output](https://github.com/jaeyk/ITS-Text-Classification/tree/master/output)] 
 
 - After spending one semester, I finally obtained the time series data needed for the interrupted time series design analysis. 
-- In both Figures 1 and 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles (count). In the upper panel, the plots are about U.S. domestic politics. In the lower panel, the plots are about non-U.S. domestic politics (mostly about international relations).  
+- In both Figures 1 and 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles (count). In the upper panel, the y-values show the number of the articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of the articles published on `non-U.S. domestic politics` (mostly about international relations). Note that I removed a couple of outliers from the raw date. You can check that this change is marginal from [the raw data plot](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png).
 
-**Figure 1. Raw Data**
+**Figure 1. Scatted Plot**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png>)
 
-**Figure 2. Raw Data With Predicted Lines from the Interrupted Time Series Design Analysis**
+**Figure 2. Scatted Plot With Predicted Lines from the Interrupted Time Series Design Analysis**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png>)
 
