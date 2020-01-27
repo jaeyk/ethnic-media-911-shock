@@ -44,7 +44,13 @@ pacman::p_load(
         itsadug, # for interpreting time series and autocorrelated data 
         mgcv, # for mixed GAM Computation Vehicle with Automatic Smoothness Estimation
         tseries, # for computational financial analysis
-        mcp, # for regression with multiple change points 
+        mcp, # for regression with multiple change points
+        lawstat, # for testing stats in biostat, public policy, and law
+        sarima, # for simulation and prediction with seasonal ARIMA models  
+        car, # for Durbin Watson test 
+        tidyr, # for tidying messy daa 
+        AICcmodavg, # for computing predicted values and standard errors 
+        MuMIn, # for selecting models
         ggthemes, # for fancy ggplot themes
         ggpubr) # for arranging plots 
 ```
@@ -110,10 +116,6 @@ df <- bind_rows(sample_selected, labeled_selected)
 
 ```{r}
 
-# Create group variable based on newspaper names 
-
-df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Americans")
-
 # Check date variable 
 
 paste("the class of date is", class(df$date))
@@ -129,6 +131,10 @@ df$domestic <- as.character(df$domestic)
 df$domestic[df$domestic == 1] <- "Domestic"
 df$domestic[df$domestic == 0] <- "Non-domestic"
 
+# Create group variable based on newspaper names 
+
+df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Americans")
+
 ```
 
 ### 3.2. Data visualization
@@ -141,7 +147,8 @@ df$domestic[df$domestic == 0] <- "Non-domestic"
 
 df_grouped <- df %>%
   group_by(date, domestic, group) %>% # group by 
-  dplyr::summarize(n = n()) # summarize 
+  dplyr::summarize(n = n()) %>% # summarize 
+  as.data.frame()
 
 # Raw plot 
 
@@ -178,7 +185,11 @@ paste("The number of missing values in the data is", sum(is.na(df_grouped)))
 
 count_ts <- ts(df_grouped[, c('n')])
 
-df_grouped$count_ts <- tsclean(count_ts)
+df_grouped$count_ts <- as.integer(tsclean(count_ts))
+
+# Get rid of n
+df_grouped <- df_grouped %>%
+  dplyr::select(-n)
 
 # Cleaned plot 
 
@@ -226,7 +237,7 @@ ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png")
 
 ```{r}
 
-# Create intervention variable 
+# Create assignment variable 
 
 df_grouped$intervention <- ifelse(df_grouped$date < as.Date("2001-09-11"), 0, 1)
 
@@ -240,17 +251,11 @@ df_nondomestic <- df_grouped %>%
 
 # Create a function for non-adjusted models 
 
-visualize_its_base <- function(input){
+visualize_base <- function(input){
   
-  # Apply Poisson regression model 
+  # Apply OLS regression
   
-  model <- glm(count_ts ~ intervention + date + group, family = poisson, data = input)
-  
-  # Check dispersion 
-  print(summary(model)$dispersion)
-  
-  # Check ci
-  print(ci.exp(model))
+  model <- lm(count_ts ~ intervention + date + group, data = input)
   
   # Make predictions 
   
@@ -290,94 +295,161 @@ visualize_its_base <- function(input){
 
 # Visualize ITS analysis result for each subset of the data 
 
-ggarrange(visualize_its_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"),
-          visualize_its_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
+ggarrange(visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"),
+          visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
           nrow = 2, ncol =1)
 
 ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png")
 ```
 ### 4.2. Check for autocorrelation
 
-The base model is naive. To make it more robust, first, I assess the correlation between the series and its time lags (autocorrelation). In both cases, ACF (correlation a time series and its lags) test shows only a handful of lags have statistically significant estimated correlation coefficients. As expected, PACF (correlation between a time series and its lags unexplained by previous lags) test shows overall even small coefficients. 
+The base model is naive. To make it more robust, first, I assess the correlation between the series and its time lags (autocorrelation). In both cases, ACF (correlation a time series and its lags) test shows there exits a weak seasonal trend. 
 
 ```{r}
 
-check_autocorrelation_acf <- function(input){
+# Create the full date 
+
+all_days <- seq(min(df_grouped$date), max(df_grouped$date), by ="+1 day")
+
+# Turn it into a dataframe 
+
+all_days <- data.frame(date = all_days)
+
+# Filling the missing days 
+
+df_grouped <- all_days %>%
+  merge(df_grouped, by = "date", all.x = TRUE)
+
+# Divide data 
+
+df_domestic <- df_grouped %>%
+  filter(domestic == "Domestic") 
+
+df_nondomestic <- df_grouped %>%
+  filter(domestic != "Domestic") 
+
+# ACF
+
+acf_plot <- function(input){
   
   # Model 
   
-  model <- glm(count_ts ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input) 
+  model <- lm(count_ts ~ intervention + date + group, data = input)
   
   # Autocorrelation functions 
   
   pacf <- ggAcf(resid(model)) +
     theme_fivethirtyeight()
-
 }
 
-check_autocorrelation_pacf <- function(input){
+# PACF
+
+pacf_plot <- function(input){
   
   # Model 
   
-  model <- glm(count_ts ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input) 
+  model <- lm(count_ts ~ intervention + date + group, data = input)
   
   # Autocorrelation functions 
   
   pacf <- ggPacf(resid(model)) +
     theme_fivethirtyeight()
-
 }
+
 ```
 
 ```{r echo=FALSE}
-
 # Apply to each data
-
-ggarrange(check_autocorrelation_acf(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (ACF)"), 
-          check_autocorrelation_acf(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (ACF)"),
+ggarrange(acf_plot(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (ACF)"), 
+          acf_plot(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (ACF)"),
            nrow = 2, ncol =1)
 
-ggarrange(check_autocorrelation_pacf(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (PACF)"), 
-          check_autocorrelation_pacf(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (PACF)"),
-           nrow = 2, ncol =1)
+ggsave("/home/jae/ITS-Text-Classification/output/acf_plot.png")
 
+ggarrange(pacf_plot(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (PACF)"), 
+          pacf_plot(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (PACF)"),
+           nrow = 2, ncol =1)
 ```
 
-### 4.3. Adjusted for over-dispersion and seasonality
 
-As the next step, I adjusted the base model for over-dispersion and seasonality to examine whether these steps make any difference. I adapted some code from [Lopez Bernal IJE 2017](https://github.com/gasparrini/2017_lopezbernal_IJE_codedata) to do so. 
+### 4.3. Correcting autocorrelation 
+
+The new model corrects autocorrelation by accounting for the correlation between the time series data and its time lags. corARMA() function defines correlation structure. p argument specifies the autoregressive order, and q argument specifies the moving average order of the ARMA structure. I ran for loop to find the combination of p and q that yields the minimum Akaike Information Criterion (AIC).
+
+```{r}
+
+# Create a function 
+
+correct_ac <- function(a, b, input){
+  
+  model <- gls(count_ts ~ intervention + date + group, 
+               data = input,
+               correlation = corARMA(p = a, q = b, form = ~ date | group),
+               na.action = na.omit,
+               method = "ML",
+               verbose = TRUE)
+  
+  results <- data.frame('P' = a,
+                        'Q' = b,
+                        'logLik' = logLik(model), 
+                        'AIC' = AIC(model)) # data.frame is better than rbind to keep heterogeneous data type 
+  
+  return(results)
+}
+ 
+# Nested for loop
+
+final_list <- list() # list 
+counter = 1
+
+# I adapted the code from this link: https://www.tylermw.com/theres-no-need-to-apply-yourself/
+
+for (j in c(1,2,3)){ 
+  for (i in c(1,3)){
+   final_list[[counter]] <- correct_ac(i, j, df_domestic) # computation
+   counter = counter + 1
+  }
+}
+
+knitr::kable(final_list)
+
+# Put together 
+
+final_list <- do.call(rbind, final_list)
+
+# P
+
+final_list$P[final_list$AIC == min(final_list$AIC)]
+
+# Q
+
+final_list$Q[final_list$AIC == min(final_list$AIC)]
+```
+
+### 4.4 Visualization 
 
 ```{r}
 
 # A new function which is adjusted for over-dispersion and seasonality
 
-visualize_its_adjusted_od_st <- function(input){
+visualize_adj <- function(input){
   
-  # Apply quasi-Poisson model to avoid over-dispersion: the conditional variance > the conditional mean -> as a consequence cis are likely to be narrow. See the following link: https://stats.idre.ucla.edu/stata/dae/poisson-regression/ 
-  
-  model <- glm(count_ts ~ intervention + date + group + harmonic(date, 2, length(input$date)), family = quasipoisson, data = input) # harmonic term is added for accounting for seasonality
-  
-  # Check dispersion 
-  print(summary(model)$dispersion)
-  
-  # Check ci
-  print(ci.exp(model))
+  model <- gls(count_ts ~ intervention + date + group, 
+               data = input,
+               correlation = corARMA(p= 3, q = 1, form = ~ date | group),
+               na.action = na.omit) 
   
   # Make predictions 
   
   input$pred <- predict(model, type = "response", input)
   
-  # Create confidence intervals  
-  
-  ilink <- family(model)$linkinv # Extracting the inverse link from parameter objects 
-  
   # Combined prediction outputs 
   
-  input <-predict(model, input, se.fit = TRUE)[1:2] %>%
+  input <- predictSE.gls(model, input, se.fit = TRUE) %>%
     bind_cols(input) %>%
     mutate(
-      upr = ilink(fit + (2 * se.fit)),
-      lwr = ilink(fit - (2 * se.fit)))
+      upr = fit + (2 * se.fit),
+      lwr = fit - (2 * se.fit))
   
   # Visualize the outcome 
   
@@ -400,8 +472,8 @@ visualize_its_adjusted_od_st <- function(input){
 
 # Visualize each result 
 
-ggarrange(visualize_its_adjusted_od_st(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"), 
-          visualize_its_adjusted_od_st(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
+ggarrange(visualize_adj(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"), 
+          visualize_adj(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
            nrow = 2, ncol =1)
 
 ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png")
