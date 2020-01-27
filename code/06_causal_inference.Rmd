@@ -372,9 +372,9 @@ ggarrange(pacf_plot(df_domestic) + ggtitle("9/11 and Minority Domestic Political
 ```
 
 
-### 4.3. Correcting autocorrelation 
+### 4.3. Parameterizing correlation
 
-The new model corrects autocorrelation by accounting for the correlation between the time series data and its time lags. corARMA() function defines correlation structure. p argument specifies the autoregressive order, and q argument specifies the moving average order of the ARMA structure. I ran for loop to find the combination of p and q that yields the minimum Akaike Information Criterion (AIC).
+The new model parameterizes autocorrelation by accounting for the correlation between the time series data and its time lags. `corARMA() function` defines correlation structure. `p` argument specifies the autoregressive order, and `q` argument specifies the moving average order of the ARMA structure. I ran for loop to find the combination of `p` and `q` that yields the minimum Akaike Information Criterion (AIC).
 
 ```{r}
 
@@ -476,7 +476,7 @@ visualize_adj <- function(input){
                 alpha = 0.3, color = "blue")
 }
 
-# Visualize each result 
+# Visualize each result in the scatted plot 
 
 ggarrange(visualize_adj(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"), 
           visualize_adj(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
