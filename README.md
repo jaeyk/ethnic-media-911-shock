@@ -189,7 +189,7 @@ correct_ac <- function(a, b, input){
 
 **Figure 3. Scattered Plot With Predicted Lines from the Interrupted Time Series Design Analysis**
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png>)
+![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_base_plot.png>)
 
 
 
