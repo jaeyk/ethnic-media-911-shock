@@ -20,7 +20,9 @@ As Andrew Ng [said](https://www.youtube.com/watch?v=21EiKfQYZXc), artificial int
 
 ### Causal Inference and Natural Experiments 
 
-Causal inference is hard. To assess the causal relationship between X and Y, we should be able to observe subjects treated (Y treated) and the same subjects who are not treated (Y untreated) simultaneously. The subjects could be patients and the treatment could be a new standard of medical care. The comparison between them would reveal the causal effect of the treatment. However, we are not living in a world of Sci-Fi fiction and we cannot observe these two groups at the same time. As Holland (1986) [called](http://www-stat.wharton.upenn.edu/~hwainer/Readings/Holland_Statistics%20and%20Causal%20Inference.pdf), this missing information problem is "the fundamental problem of causal inference." In experimental studies, randomly assignment, assigning treatment to one group but not the others, solves this selection bias/confounding/endogeneity problem (different names in different fields but essential a similar idea). It is because randomization creates treatment and control groups who only differ in their treatment status on average. No comparable convenient solution is available in observational studies. Observational studies have weaker designs because here, we do not know enough about the process under which some subjects receive the treatment, and the others didn't ([Rubin and Imbens 2015](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB)). For that reason, the statistical models we build to estimate the relationship between X and Y are often poor approximations of the underlying data generating process. 
+Causal inference is hard. To assess the causal relationship between X and Y, we should be able to observe subjects treated (Y treated) and the same subjects who are not treated (Y untreated) simultaneously. The subjects could be patients and the treatment could be a new standard of medical care. The comparison between them would reveal the causal effect of the treatment. However, we are not living in a world of Sci-Fi fiction and we cannot observe these two groups at the same time. As Holland (1986) [called](http://www-stat.wharton.upenn.edu/~hwainer/Readings/Holland_Statistics%20and%20Causal%20Inference.pdf), this missing information problem is "the fundamental problem of causal inference." 
+
+In experimental studies, randomly assignment, assigning treatment to one group but not the others, solves this selection bias/confounding/endogeneity problem (different names in different fields but essential a similar idea). It is because randomization creates treatment and control groups who only differ in their treatment status on average. No comparable convenient solution is available in observational studies. Observational studies have weaker designs because here, we do not know enough about the process under which some subjects receive the treatment, and the others didn't ([Rubin and Imbens 2015](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB)). For that reason, the statistical models we build to estimate the relationship between X and Y are often poor approximations of the underlying data generating process. 
 
 Nevertheless, on rare occasions, we find [natural experiments](https://en.wikipedia.org/wiki/Natural_experiment) where exogenous factors carry out experiments on a large number of subjects in the real world. Unexpected big events, such as natural disasters and wars, are good examples. These shocks force subjects to be untreated at t-1 but treated at t (within subjects analysis), or they make some subjects treated, but others left untreated at the same temporal point (between subjects analysis). 
 
@@ -132,8 +134,6 @@ Training Accuracy:  0.7897042716319824
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png>)
 
-
-
 - Looking at the changes in the y-values before and after the intervention (the dotted vertical red line) in Figure 1, one can quickly notice that the publication count increased in the post-intervention period for `U.S. domestic political news`, but not for `the international ones`. Yet, one also should be cautious not to draw a strong conclusion from this plot alone. The y-values indicate both the treatment effect as well as seasonal changes, trends, and random noises. Comparing two groups (Arab and Indian American newspapers) reassures that the observed pattern is not group-specific, but it cannot address these problems.
 
 - Therefore, the next step is to build a model that differentiates the treatment effect from these other factors. Before doing so, it is important to acknowledge how interrupted time series design (ITS) is different from regression-discontinuity (RD) design in terms of estimation strategy. In both research designs, a cutoff (an interruption or a discontinuity) in the data is essential to qualify them as natural experiments.
@@ -144,15 +144,12 @@ Training Accuracy:  0.7897042716319824
 
 - Particularly problematic is autocorrelation or the linear correlation between a time series data and the lagged version of itself. If so, it violates the key assumption of an OLS model: residuals (error terms) are i.i.d. (independent and identically distributed). In this case, this serial correlation [does not influence the unbiased consistency of the estimator, but it affects their efficiency](https://www3.nd.edu/~rwilliam/stats2/l26.pdf): smaller standard errors and narrower confidence intervals than their correct versions. This problem causes Type I error (false positive). 
 
--  To check whether autocorrelation exists in the data, I applied `acf() function` to it. One technically tricky thing about this is the function assumes that there are no gaps in the time lags. Therefore, if you have gaps in your time variable (e.g., missing days or months), you should fill them before running `acf() function`. This can be done easily by creating the complete time sequence using `seq(start_date, end_date, by = 'the time interval') function`. In Figure 2, the Y-axis indicates the degree of the correlation associated with increasing time lags and the X-axis indicates time lags. The plot (called correlogram) shows the presence of a weak seasonal trend, especially for the upper panel (the U.S. domestic politics news).
+- To check whether autocorrelation exists in the data, I applied `acf() function` to it. One technically tricky thing about this is the function assumes that there are no gaps in the time lags. Therefore, if you have gaps in your time variable (e.g., missing days or months), you should fill them before running `acf() function`. This can be done easily by creating the complete time sequence using `seq(start_date, end_date, by = 'the time interval') function`. In Figure 2, the Y-axis indicates the degree of the correlation associated with increasing time lags and the X-axis indicates time lags. The plot (called correlogram) shows the presence of a weak seasonal trend, especially for the upper panel (the U.S. domestic politics news).
 
-   ​
 
 **Figure 2. ACF Plot**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/acf_plot.png>)
-
-
 
 - After getting this result, I shifted from OLS to [Generalized Least Squares](https://en.wikipedia.org/wiki/Generalized_least_squares) (GLS) for statistical modeling to parametrize autocorrelation. Unlike OLS, GLS relaxes i.i.d. assumption and instead assumes a certain degree of correlation between the residuals and a regression model. Specifically, two key parameters define the correlation structure: `the autoregressive (AR) order` and `the moving average (MA) order`. AR specifies the ways in which earlier lags predict later ones. MA determines the ways we average and reduce the degree of the random noise.
 - Which combination of `p` and `q` creates the best fitting model is an empirical question. In `R`, we can build a GLS model using `gls package` and specify AR and MR as arguments in  `corARMA() function` inside `gls() function`.
@@ -184,6 +181,7 @@ correct_ac <- function(a, b, input){
 
 
 - It is fascinating to see how these different modeling approaches influence the ways we can interpret the statistical results. Figures 3 and 4 are similar to Figure 1 in terms of its X-axis, Y-axis, and the raw data points (they are intentionally blurred to stress predicted lines more). The predicted lines come from the naive OLS model in Figure 3 and the GLS model in Figure 4. In terms of slopes, they are close, what makes them different is the size of confidence intervals (the gray area surrounding the line plots). This observation is consistent with what we discussed earlier. Autocorrelation influences the efficiency of regression estimators and, thus, when we take that problem in our modeling approach, the confidence intervals become more conservative.
+- The results confirms H1 but rejects H2. Substantively, it means threats induce information seeking. In this case, the origin of these threats is U.S. domestic politics. 
 
 
 
@@ -192,9 +190,11 @@ correct_ac <- function(a, b, input){
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_base_plot.png>)
 
 
-
-
 **Figure 4. Scattered Plot With Predicted Lines from the Interrupted Time Series Design Analysis**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png>)
 
+## Conclusions 
+
+1. Association is not causation. However, it does not mean that machine learning, a powerful tool for building prediction models, has nothing with to do with causal inference. As [Hernán, Hsu, and Healy (2019: 43-45)](https://www.tandfonline.com/doi/pdf/10.1080/09332480.2019.1579578) argued, we can define causal inference as a counterfactual prediction problem. Specifically, machine learning algorithms can help causal inference by generating new data from a wide array of sources (e.g., text, image, audio, video, and etc.). This case is one of many possible showcases. 
+2. However, it is also important to note that machine learning algorithms do not provide the causal structure of the data generating process. They are not given. Researchers should carefully investigate the cases under their study (causal structure of the data), apply appropriate research designs (threats to validity), and carefully examine modeling assumptions. As [David Freedman](https://theory.stanford.edu/~dfreeman/) stressed, "a desire to substitute intellectual capital for labor" by using (fancy) statistical techniques has always been present and probably will never fade away. However, if we search for causality, it is almost inevitable to examine "problems in their full specificity and complexity" ([Collier, Sekhon, and Stark 2009](https://www.cambridge.org/core/books/statistical-models-and-causal-inference/7CE8D4957FF6E9615AAAC4128FA8246E)).
