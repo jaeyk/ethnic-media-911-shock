@@ -107,14 +107,21 @@ labeled_selected <- dplyr::select(unlabeled,
 # Row bind the two dataframes  
 
 df <- bind_rows(sample_selected, labeled_selected)
-  
+
+# Save the processed data 
+
+write.csv(df, "/home/jae/ITS-Text-Classification/processed_data/df.csv")
 ```
 
 ## 3. Descriptive analysis
 
 ### 3.1. Data wrangling
 
+If you want to repliace the analysis, you can start from here using `df.csv` saved in `processed_data` directory..
+
 ```{r}
+
+# df <- read_csv("/home/jae/ITS-Text-Classification/processed_data.df.csv")
 
 # Check date variable 
 
