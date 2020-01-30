@@ -55,7 +55,7 @@ pacman::p_load(
         ggpubr) # for arranging plots 
 ```
 
-## 1. Import files
+## 1. Importing files
 
 Unfortunately, I cannot share the original data because they are proprietary. Proquest holds the copyrights. 
 
