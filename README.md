@@ -47,7 +47,7 @@ Still, on rare occasions, we find [natural experiments](https://en.wikipedia.org
 In this section, I document how I implemented the research design step-by-step. If possible, I also provide the Python or R code used in each step. Aside from the text classification, all the Python and R code was written by me.
 
 
-### Data collection (Summer 2019)
+### Data Collection (Summer 2019)
 
 #### 01_Collecting Articles Concerning Muslims from Arab and Indian American Newspapers Using the [Ethnic Newswatch Database](https://www.proquest.com/products-services/ethnic_newswatch.html).
 
