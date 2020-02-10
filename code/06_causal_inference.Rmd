@@ -372,14 +372,14 @@ pacf_plot <- function(input){
 
 ```{r echo=FALSE}
 # Apply to each data
-ggarrange(acf_plot(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (ACF)"), 
-          acf_plot(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (ACF)"),
+ggarrange(acf_plot(df_domestic) + ggtitle("Domestic Political Interests (ACF)"), 
+          acf_plot(df_nondomestic) + ggtitle("International Political Interests (ACF)"),
            nrow = 2, ncol =1)
 
 ggsave("/home/jae/ITS-Text-Classification/output/acf_plot.png")
 
-ggarrange(pacf_plot(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests (PACF)"), 
-          pacf_plot(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests (PACF)"),
+ggarrange(pacf_plot(df_domestic) + ggtitle("Domestic Political Interests (PACF)"), 
+          pacf_plot(df_nondomestic) + ggtitle("International Political Interests (PACF)"),
            nrow = 2, ncol =1)
 ```
 
