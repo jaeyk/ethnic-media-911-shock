@@ -111,6 +111,11 @@ df <- bind_rows(sample_selected, labeled_selected)
 # Save the processed data 
 
 write.csv(df, "/home/jae/ITS-Text-Classification/processed_data/df.csv")
+
+library(tidytext)
+token <-df %>% 
+  unnest_tokens(word, text)
+
 ```
 
 ## 3. Descriptive analysis
@@ -171,7 +176,7 @@ df_grouped %>%
          title = "9/11 and Minority Political Interests",
          subtitle = "All articles mentioned Muslims",
          caption = "Source: Ethnic Newswatch") + # labels 
-    theme_fivethirtyeight() # theme 
+    theme_base() # theme 
 
 # Save plot 
 
@@ -212,7 +217,7 @@ cleaned_domestic_plot <- df_grouped %>%
          col = "Issue focus",
          subtitle = "All articles mentioned Muslims",
          caption = "Source: Ethnic Newswatch") + # labels 
-    theme_fivethirtyeight() # theme 
+    theme_base() # theme 
   
 cleaned_nondomestic_plot <- df_grouped %>%
   filter(domestic != "Domestic") %>%
@@ -226,7 +231,7 @@ cleaned_nondomestic_plot <- df_grouped %>%
          col = "Issue focus",
          subtitle = "All articles mentioned Muslims",
          caption = "Source: Ethnic Newswatch") + # labels 
-    theme_fivethirtyeight() # theme 
+    theme_base() # theme 
 
 # Save plot 
   
@@ -287,9 +292,9 @@ visualize_base <- function(input){
     geom_point(alpha = 0.2) +
     facet_wrap(~group, scale = "free_y") +
     geom_line(aes(y = pred), size = 1) +
-    ggthemes::theme_fivethirtyeight() +
+    ggthemes::theme_base() +
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
-    ggthemes::theme_fivethirtyeight() +
+    ggthemes::theme_base() +
     labs(x = "Date",
          y = "Publication count",
          subtitle = "All articles mentioned Muslims",
@@ -346,7 +351,7 @@ acf_plot <- function(input){
   # Autocorrelation functions 
   
   pacf <- ggAcf(resid(model)) +
-    theme_fivethirtyeight()
+    theme_base()
 }
 
 # PACF
@@ -360,7 +365,7 @@ pacf_plot <- function(input){
   # Autocorrelation functions 
   
   pacf <- ggPacf(resid(model)) +
-    theme_fivethirtyeight()
+    theme_base()
 }
 
 ```
@@ -439,7 +444,7 @@ final_list$P[final_list$AIC == min(final_list$AIC)]
 final_list$Q[final_list$AIC == min(final_list$AIC)]
 ```
 
-### 4.4 Visualization 
+### 4.4. Visualization 
 
 ```{r}
 
@@ -471,9 +476,9 @@ visualize_adj <- function(input){
     geom_point(alpha = 0.2) +
     facet_wrap(~group, scale = "free_y") +
     geom_line(aes(y = pred), size = 1) +
-    ggthemes::theme_fivethirtyeight() +
+    ggthemes::theme_base() +
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
-    ggthemes::theme_fivethirtyeight() +
+    ggthemes::theme_base() +
     labs(x = "Date",
          y = "Publication count",
          subtitle = "All articles mentioned Muslims",
