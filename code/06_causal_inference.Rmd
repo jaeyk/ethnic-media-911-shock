@@ -13,7 +13,7 @@ I tweaked the global option of the R Markdown to enlarge figures produced by ggp
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.width = 12, fig.height = 8, 
-                      echo = FALSE, warning = FALSE, message = FALSE) # global setting for enlarging image size
+                      warning = FALSE, message = FALSE) # global setting for enlarging image size
 ```
 
 ```{r}
@@ -448,7 +448,7 @@ final_list$Q[final_list$AIC == min(final_list$AIC)]
 
 ```{r}
 
-# A new function which is adjusted for over-dispersion and seasonality
+# A new function 
 
 visualize_adj <- function(input){
   
@@ -497,5 +497,4 @@ ggarrange(visualize_adj(df_domestic) + ggtitle("9/11 and Minority Domestic Polit
 ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", height = 10)
 
 ```
-
-
+  
