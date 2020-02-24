@@ -13,7 +13,7 @@
 
 As Andrew Ng said, [artificial intelligence, especially machine learning, is the new electricity](https://www.youtube.com/watch?v=21EiKfQYZXc). Yet, compared to the industry, the impact of machine learning has been relatively marginal in the social sciences. One reason for this is that most machine learning applications focus on prediction tools and have little to do with explaining the causal relationship between two variables, X and Y (causal inference). However, these relationships are what many social scientists deeply care about, as they are useful for making sound recommendations for policy or behavioral changes. In this context, I co-developed this project with Andrew Thompson to demonstrate **how machine learning can help create critical data for causal inference**. We hope that this project draws more social scientists to machine learning and AI.
 
-​	
+	
 
 ## Research Design
 
@@ -53,6 +53,9 @@ In this section, I document how I implemented the research design step-by-step. 
 - I used a 5-year window for the data collection from September 1996 to September 2006. I downloaded **Muslim populations related articles** published during this period from the database. These newspaper articles were then saved in HTML format to utilize the metadata (e.g., publication dates). I did this **manually** instead of using web scraping because I did not want to violate the copyrights held by Proquest. 
 - The text data included two Arab American (The Arab American News and The Arab American View) and three Indian American (New India Times, India Abroad, and India West) newspapers. The number of Indian newspaper articles was 4,552, and the number of Arab American newspaper articles was 1,132. For copyright reasons, I cannot share the proprietary text data that I collected for this project.
 
+**Figure 1. The origianl HTML file**
+
+![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/misc/screenshot.png>)
 
 #### 02_Parsing Original HTML Files into a CSV File in Python [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/02_html_parsing.ipynb)]
 
@@ -125,15 +128,15 @@ Training Accuracy:  0.7897042716319824
 #### 06_Estimating the Causal Effect in R [[Data](https://github.com/jaeyk/ITS-Text-Classification/blob/master/processed_data/df.csv)], [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_causal_inference.Rmd)], [[Output](https://github.com/jaeyk/ITS-Text-Classification/tree/master/output)] 
 
 - I finally obtained the time series data needed for the interrupted time series design analysis by combining the classified texts and their publication dates. 
-- In Figure 1, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `non-U.S. domestic politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
+- In Figure 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `non-U.S. domestic politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
 
 
 
-**Figure 1. Scatted Plot**
+**Figure 2. Scatted Plot**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png>)
 
-- Looking at the changes in the y-values before and after the intervention (the dotted vertical red line) in Figure 1, one can quickly notice that the publication count for Muslim-related articles increased in the post-intervention period for `U.S. domestic political news`, but not for `the international news`. Yet, one should also be cautious not to draw a strong conclusion from this plot alone. The y-values indicate both the treatment effect as well as seasonal changes, trends, and random noises. Comparing two groups (Arab and Indian American newspapers) reassures that the observed pattern is not group-specific, but a naive model cannot address these other factors. 
+- Looking at the changes in the y-values before and after the intervention (the dotted vertical red line) in Figure 2, one can quickly notice that the publication count for Muslim-related articles increased in the post-intervention period for `U.S. domestic political news`, but not for `the international news`. Yet, one should also be cautious not to draw a strong conclusion from this plot alone. The y-values indicate both the treatment effect as well as seasonal changes, trends, and random noises. Comparing two groups (Arab and Indian American newspapers) reassures that the observed pattern is not group-specific, but a naive model cannot address these other factors. 
 
 - Therefore, the next step is to build a model that differentiates the treatment effect from these other factors. Before doing so, it is important to acknowledge how an interrupted time series (ITS) design is different from a regression-discontinuity (RD) design in terms of estimation strategy. In both research designs, a cutoff (an interruption or a discontinuity) in the data is essential to qualify them as natural experiments.
 
@@ -142,10 +145,10 @@ Training Accuracy:  0.7897042716319824
 - In contrast, the main challenge of ITS is time, a variable that is not randomly assigned across the data points. Therefore, researchers need to figure out how they can model time series data and its various components.
 - What is particularly problematic is autocorrelation or the linear correlation between time series data and the lagged version of itself. When this occurs, one of the key assumptions of an OLS model is violated: residuals (error terms) are i.i.d. (independent and identically distributed). In this case, this serial correlation does not influence the unbiased consistency of the estimator, but it [affects their efficiency](https://www3.nd.edu/~rwilliam/stats2/l26.pdf), leading to smaller standard errors and narrower confidence intervals than their correct versions. This problem causes Type I errors (false positives). 
 
-- To check whether autocorrelation exists in the data, I applied the `acf() function` to it. One technically tricky thing about this is the function assumes that there are no gaps in the time lags. Therefore, if you have gaps in your time variable (e.g., missing days or months), you should fill them before running the `acf() function`. This can be done easily by creating the complete time sequence using `seq(start_date, end_date, by = 'the time interval') function`. In Figure 2, the Y-axis indicates the degree of the correlation associated with increasing time lags and the X-axis indicates time lags. The plot (called correlogram) shows the presence of a weak seasonal trend, especially for the upper panel (the U.S. domestic politics news).
+- To check whether autocorrelation exists in the data, I applied the `acf() function` to it. One technically tricky thing about this is the function assumes that there are no gaps in the time lags. Therefore, if you have gaps in your time variable (e.g., missing days or months), you should fill them before running the `acf() function`. This can be done easily by creating the complete time sequence using `seq(start_date, end_date, by = 'the time interval') function`. In Figure 3, the Y-axis indicates the degree of the correlation associated with increasing time lags and the X-axis indicates time lags. The plot (called correlogram) shows the presence of a weak seasonal trend, especially for the upper panel (the U.S. domestic politics news).
 
 
-**Figure 2. ACF Plot**
+**Figure 3. ACF Plot**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/acf_plot.png>)
 
@@ -178,17 +181,17 @@ correct_ac <- function(a, b, input){
 ```
 
 
-- It is fascinating to see how these different modeling approaches influence the ways we can interpret the statistical results. Figure 3 and 4 are similar to Figure 1 in terms of the X-axis, Y-axis, and raw data points (they are intentionally blurred to stress predicted lines more). The predicted lines come from the naive OLS model in Figure 3 and the GLS model in Figure 4. In terms of slopes, they are close; what makes them different is the size of the confidence intervals (the gray area surrounding the line plots). This observation is consistent with what we discussed earlier. Autocorrelation influences the efficiency of regression estimators, so that when we take that problem in our modeling approach, the confidence intervals become more conservative.
+- It is fascinating to see how these different modeling approaches influence the ways we can interpret the statistical results. Figure 4 and 5 are similar to Figure 2 in terms of the X-axis, Y-axis, and raw data points (they are intentionally blurred to stress predicted lines more). The predicted lines come from the naive OLS model in Figure 4 and the GLS model in Figure 5. In terms of slopes, they are close; what makes them different is the size of the confidence intervals (the gray area surrounding the line plots). This observation is consistent with what we discussed earlier. Autocorrelation influences the efficiency of regression estimators, so that when we take that problem in our modeling approach, the confidence intervals become more conservative.
 - The results confirm H1 (domestic threats induce information seeking) but reject H2 (international threats induce information seeking). Substantively, this means threats induce information seeking and the origin of these threats is U.S. domestic politics. 
 
 
 
-**Figure 3. Scattered Plot with Predicted Lines from the OLS Model**
+**Figure 4. Scattered Plot with Predicted Lines from the OLS Model**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_base_plot.png>)
 
 
-**Figure 4. Scattered Plot with Predicted Lines from the GLS Model**
+**Figure 5. Scattered Plot with Predicted Lines from the GLS Model**
 
 ![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png>)
 
