@@ -197,7 +197,7 @@ correct_ac <- function(a, b, input){
 
 Table 1. GLS analysis resuls
 
-- As shown in Table  1, the results confirm H1 (domestic threats induce information seeking) but also does noot reject H2 (international threats induce information seeking). The difference lies in the effect size. The treatment effect is larger in the domestic threats than the the international threats case.
+- As shown in Table  1, the results confirm H1 (domestic threats induce information seeking) but also does not reject H2 (international threats induce information seeking). The difference lies in the effect size. The treatment effect is larger in the domestic threats than the the international threats case.
 
 
 ## Conclusions
