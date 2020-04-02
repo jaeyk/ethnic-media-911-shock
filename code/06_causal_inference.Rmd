@@ -234,7 +234,7 @@ ggarrange(cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political 
           cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests"),
           nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png", height = 13)
+ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png", height = 8)
 ```
 
 
@@ -304,7 +304,7 @@ ggarrange(visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Poli
           visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
           nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png", height = 13)
+ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png", height = 8)
 ```
 ### 4.2. Check for autocorrelation
 
@@ -475,7 +475,7 @@ ggarrange(visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic
           visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and Minority International Political Interests"),
            nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", height = 13)
+ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", height = 8)
 
 ```
 ### 4.5. Regression table
