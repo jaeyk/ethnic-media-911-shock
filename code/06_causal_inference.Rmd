@@ -47,7 +47,8 @@ pacman::p_load(
         AICcmodavg, # for computing predicted values and standard errors 
         MuMIn, # for selecting models
         ggthemes, # for fancy ggplot themes
-        ggpubr) # for arranging plots 
+        ggpubr, # for arranging plots 
+        stargazer) # for regression table 
 
 # Set theme 
 
@@ -261,7 +262,7 @@ visualize_base <- function(input){
   
   # Apply OLS regression
   
-  model <- lm(count_ts ~ intervention + date + group, data = input)
+  model <- lm(count_ts ~ intervention + date + intervention*date + group, data = input)
   
   # Make predictions 
   
@@ -338,7 +339,7 @@ acf_plot <- function(input){
   
   # Model 
   
-  model <- lm(count_ts ~ intervention + date + group, data = input)
+  model <- lm(count_ts ~ intervention + date + intervention*date + group, data = input)
   
   # Autocorrelation functions 
   
@@ -351,7 +352,7 @@ pacf_plot <- function(input){
   
   # Model 
   
-  model <- lm(count_ts ~ intervention + date + group, data = input)
+  model <- lm(count_ts ~ intervention + date + intervention*date + group, data = input)
   
   # Autocorrelation functions 
   
@@ -376,15 +377,15 @@ ggarrange(pacf_plot(df_domestic) + ggtitle("Domestic Political Interests (PACF)"
 
 ### 4.3. Parameterizing correlation
 
-The new model parameterizes autocorrelation by accounting for the correlation between the time series data and its time lags. `corARMA() function` defines correlation structure. `p` argument specifies the autoregressive order, and `q` argument specifies the moving average order of the ARMA structure. I ran for loop to find the combination of `p` and `q` that yields the minimum Akaike Information Criterion (AIC).
+The new model parameterizes autocorrelation by accounting for the correlation between the time series data and its time lags. `corARMA() function` defines correlation structure. `p` argument specifies the autoregressive order, and `q` argument specifies the moving average order of the ARMA structure. I then find the combination of `p` and `q` that yields the minimum Akaike Information Criterion (AIC).
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 # Create a function 
 
 correct_ac <- function(a, b, input){
   
-  model <- gls(count_ts ~ intervention + date + group, 
+  model <- gls(count_ts ~ intervention + date + intervention*date + group, 
                data = input,
                correlation = corARMA(p = a, q = b, form = ~ date | group),
                na.action = na.omit,
@@ -398,40 +399,31 @@ correct_ac <- function(a, b, input){
   
   return(results)
 }
- 
+
 ```
 
-```{r}
-# Nested for loop
+```{r eval=FALSE, include=FALSE}
 
-final_list <- list() # list 
-counter = 1
+pq_domestic <- bind_rows(
+correct_ac(1, 1, df_domestic),
+correct_ac(1, 2, df_domestic),
+correct_ac(2, 1, df_domestic),
+correct_ac(2, 2, df_domestic)
+)
 
-# I adapted the code from this link: https://www.tylermw.com/theres-no-need-to-apply-yourself/
+pq_nondomestic <- bind_rows(
+correct_ac(1, 1, df_nondomestic),
+correct_ac(1, 2, df_nondomestic),
+correct_ac(2, 1, df_nondomestic),
+correct_ac(2, 2, df_nondomestic)
+)
 
-for (j in c(1,3)){ 
-  for (i in c(1,2,3)){
-   final_list[[counter]] <- correct_ac(i, j, df_domestic) # computation
-   counter = counter + 1
-  }
-}
+pq_domestic %>%
+  filter(AIC == min(AIC))
 
+pq_nondomestic %>%
+  filter(AIC == min(AIC))
 
-
-# Put together 
-
-final_list <- do.call(rbind, final_list)
-
-final_list %>%
-  arrange(AIC) 
-
-# P
-
-final_list$P[final_list$AIC == min(final_list$AIC)]
-
-# Q
-
-final_list$Q[final_list$AIC == min(final_list$AIC)]
 ```
 
 ### 4.4. Visualization 
@@ -440,11 +432,11 @@ final_list$Q[final_list$AIC == min(final_list$AIC)]
 
 # A new function 
 
-visualize_adj <- function(input){
+visualize_adj <- function(input, p.pam, q.pam){
   
-  model <- gls(count_ts ~ intervention + date + group, 
+  model <- gls(count_ts ~ intervention + intervention*date + date + group, 
                data = input,
-               correlation = corARMA(p= 3, q = 1, form = ~ date | group),
+               correlation = corARMA(p= p.pam, q = q.pam, form = ~ date | group),
                na.action = na.omit) 
   
   # Make predictions 
@@ -478,11 +470,23 @@ visualize_adj <- function(input){
 
 # Visualize each result in the scatted plot 
 
-ggarrange(visualize_adj(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"), 
-          visualize_adj(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
+ggarrange(visualize_adj(df_domestic, 2, 2) + ggtitle("9/11 and Minority Domestic Political Interests"), 
+          visualize_adj(df_nondomestic, 1, 1) + ggtitle("9/11 and Minority International Political Interests"),
            nrow = 2, ncol =1)
 
 ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", height = 10)
 
 ```
-  
+### 4.5. Regression table
+
+```{r}
+
+model_output <- gls(count_ts ~ intervention + intervention*date + date + group, 
+               data = df_domestic,
+               correlation = corARMA(p= 2, q = 2, form = ~ date | group),
+               na.action = na.omit) 
+
+stargazer(model_output)
+
+```
+
