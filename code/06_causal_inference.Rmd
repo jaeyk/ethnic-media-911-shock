@@ -167,7 +167,7 @@ df_grouped %>%
     geom_line() + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
     scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
-    facet_wrap(group~domestic, ncol = 2) + # facetting, y scale is free 
+    facet_wrap(group~domestic) + # facetting, y scale is free 
     labs(x = "Date",
          y = "Publication count",
          col = "Issue focus",
@@ -232,9 +232,9 @@ cleaned_nondomestic_plot <- df_grouped %>%
   
 ggarrange(cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political Interests"),
           cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests"),
-          nrow = 1, ncol =2)
+          nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png", width = 13)
+ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png", height = 13)
 ```
 
 
@@ -302,9 +302,9 @@ visualize_base <- function(input){
 
 ggarrange(visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"),
           visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
-          nrow = 1, ncol = 2)
+          nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png", width = 13)
+ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png", height = 13)
 ```
 ### 4.2. Check for autocorrelation
 
@@ -473,9 +473,9 @@ visualize_adj <- function(input, p.pam, q.pam){
 
 ggarrange(visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic Political Interests"), 
           visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and Minority International Political Interests"),
-           nrow = 1, ncol = 2)
+           nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", width = 13)
+ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", height = 13)
 
 ```
 ### 4.5. Regression table
