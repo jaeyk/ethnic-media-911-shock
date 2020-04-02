@@ -164,10 +164,10 @@ df_grouped <- df %>%
 
 df_grouped %>%
   ggplot(aes(x = date, y = n)) +
-    geom_line(size = 1) + # line plot
+    geom_line() + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
     scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
-    facet_wrap(group~domestic, scale = "free_y") + # facetting, y scale is free 
+    facet_wrap(group~domestic, ncol = 2) + # facetting, y scale is free 
     labs(x = "Date",
          y = "Publication count",
          col = "Issue focus",
@@ -177,7 +177,7 @@ df_grouped %>%
 
 # Save plot 
 
-ggsave("/home/jae/ITS-Text-Classification/output/raw_data_plot.png", height = 10)
+ggsave("/home/jae/ITS-Text-Classification/output/raw_data_plot.png", width = 13)
 
 ```
 
@@ -205,7 +205,7 @@ df_grouped <- df_grouped %>%
 cleaned_domestic_plot <- df_grouped %>%
   filter(domestic == "Domestic") %>%
   ggplot(aes(x = date, y = count_ts)) +
-    geom_line(size = 1) + # line plot
+    geom_line() + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
     scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
     facet_wrap(~group, scale = "free_y") + # facetting, y scale is free 
@@ -218,7 +218,7 @@ cleaned_domestic_plot <- df_grouped %>%
 cleaned_nondomestic_plot <- df_grouped %>%
   filter(domestic != "Domestic") %>%
   ggplot(aes(x = date, y = count_ts)) +
-    geom_line(size = 1) + # line plot
+    geom_line() + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
     scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
     facet_wrap(~group, scale = "free_y") + # facetting, y scale is free 
@@ -232,9 +232,9 @@ cleaned_nondomestic_plot <- df_grouped %>%
   
 ggarrange(cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political Interests"),
           cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests"),
-          nrow = 2, ncol =1)
+          nrow = 1, ncol =2)
 
-ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png", height = 10)
+ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png", width = 13)
 ```
 
 
@@ -367,7 +367,7 @@ ggarrange(acf_plot(df_domestic) + ggtitle("Domestic Political Interests (ACF)"),
           acf_plot(df_nondomestic) + ggtitle("International Political Interests (ACF)"),
            nrow = 1, ncol =2)
 
-ggsave("/home/jae/ITS-Text-Classification/output/acf_plot.png")
+ggsave("/home/jae/ITS-Text-Classification/output/acf_plot.png", width = 10)
 
 ```
 
@@ -490,6 +490,6 @@ nondomestic_output <- gls(count_ts ~ intervention +  date + group,
                data = df_nondomestic,
                correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
 
-stargazer(domestic_output, nondomestic_output, type = "text")
+stargazer(domestic_output, nondomestic_output, type = "html")
 ```
 

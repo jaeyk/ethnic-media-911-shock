@@ -192,31 +192,8 @@ correct_ac <- function(a, b, input){
 
 - It is fascinating to see how these different modeling approaches influence the ways we can interpret the statistical results. Figure 4 and 5 are similar to Figure 2 in terms of the X-axis, Y-axis, and raw data points (they are intentionally blurred to stress predicted lines more). The predicted lines come from the naive OLS model in Figure 4 and the GLS model in Figure 5. In terms of slopes, they are close; what makes them different is the size of the confidence intervals (the gray area surrounding the line plots). This observation is consistent with what we discussed earlier. Autocorrelation influences the efficiency of regression estimators, so that when we take that problem in our modeling approach, the confidence intervals become more conservative.
 
-==================================================
-                          Dependent variable:
-                      ----------------------------
-                                count_ts
-                           (1)            (2)
---------------------------------------------------
-intervention             3.103***       0.934**
-                         (0.666)        (0.401)
 
-date                     -0.0004       -0.001***
-                         (0.0004)      (0.0002)
-
-groupIndian Americans    2.109***      2.100***
-                         (0.649)        (0.221)
-
-Constant                  4.915        9.827***
-                         (4.064)        (2.103)
-
---------------------------------------------------
-Observations               780            757
-Log Likelihood          -1,650.396    -1,684.882
-Akaike Inf. Crit.       3,318.792      3,387.764
-Bayesian Inf. Crit.     3,360.679      3,429.381
-==================================================
-Note:                  *p<0.1; **p<0.05; ***p<0.01
+![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/table.png>)
 
 Table 1. GLS analysis resuls
 
