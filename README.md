@@ -55,7 +55,7 @@ In this section, I document how I implemented the research design step-by-step. 
 
 **Figure 1. The origianl HTML file**
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/misc/screenshot.png>)
+<img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/misc/screenshot.png" width="600">
 
 #### 02_Parsing Original HTML Files into a CSV File in Python [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/02_html_parsing.ipynb)]
 
@@ -81,7 +81,6 @@ for filename in os.listdir(os.getcwd()):
         print("file",n, filename)
         temp_dataset.append(parsing_proquest(filename))
 ```
-
 
 
 ### Machine Learning (Fall 2019)
@@ -134,7 +133,7 @@ Training Accuracy:  0.7897042716319824
 
 **Figure 2. Scatted Plot**
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png>)
+<img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png" width="600">
 
 - Looking at the changes in the y-values before and after the intervention (the dotted vertical red line) in Figure 2, one can quickly notice that the publication count for Muslim-related articles increased in the post-intervention period for `U.S. domestic political news`, but not for `the international news`. Yet, one should also be cautious not to draw a strong conclusion from this plot alone. The y-values indicate both the treatment effect as well as seasonal changes, trends, and random noises. Comparing two groups (Arab and Indian American newspapers) reassures that the observed pattern is not group-specific, but a naive model cannot address these other factors.
 
@@ -148,14 +147,14 @@ Training Accuracy:  0.7897042716319824
 
 **Figure 3. Scattered Plot with Predicted Lines from the OLS Model**
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_base_plot.png>)
+<img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_base_plot.png" width="600">
 
 - To check whether autocorrelation exists in the data, I applied the `acf() function` to it. One technically tricky thing about this is the function assumes that there are no gaps in the time lags. Therefore, if you have gaps in your time variable (e.g., missing days or months), you should fill them before running the `acf() function`. This can be done easily by creating the complete time sequence using `seq(start_date, end_date, by = 'the time interval') function`. In Figure 3, the Y-axis indicates the degree of the correlation associated with increasing time lags and the X-axis indicates time lags. The plot (called correlogram) shows the presence of a weak seasonal trend, especially for the upper panel (the U.S. domestic politics news).
 
 
 **Figure 4. ACF Plot**
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/acf_plot.png>)
+<img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/acf_plot.png" width="600">
 
 - After getting this result, I shifted from OLS to [Generalized Least Squares](https://en.wikipedia.org/wiki/Generalized_least_squares) (GLS) for statistical modeling to parametrize autocorrelation. Unlike OLS, GLS relaxes the i.i.d. assumption and instead assumes a certain degree of correlation between the residuals and a regression model. Specifically, two key parameters define the correlation structure: `the autoregressive (AR) order` and `the moving average (MA) order`. AR specifies the ways in which earlier lags predict later ones. MA determines the ways we average and reduce the degree of random noise.
 - Which combination of `p` and `q` creates the best fitting model is an empirical question. In `R`, we can build a GLS model using the `gls package` and specify AR and MR as arguments in  the`corARMA() function` inside the `gls() function`.
@@ -188,7 +187,7 @@ correct_ac <- function(a, b, input){
 
 **Figure 5. Scattered Plot with Predicted Lines from the GLS Model**
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png>)
+<img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png" width="600">
 
 - It is fascinating to see how these different modeling approaches influence the ways we can interpret the statistical results. Figure 4 and 5 are similar to Figure 2 in terms of the X-axis, Y-axis, and raw data points (they are intentionally blurred to stress predicted lines more). The predicted lines come from the naive OLS model in Figure 4 and the GLS model in Figure 5. In terms of slopes, they are close; what makes them different is the size of the confidence intervals (the gray area surrounding the line plots). This observation is consistent with what we discussed earlier. Autocorrelation influences the efficiency of regression estimators, so that when we take that problem in our modeling approach, the confidence intervals become more conservative.
 
