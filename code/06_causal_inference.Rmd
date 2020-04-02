@@ -262,7 +262,7 @@ visualize_base <- function(input){
   
   # Apply OLS regression
   
-  model <- lm(count_ts ~ intervention + date + intervention*date + group, data = input)
+  model <- lm(count_ts ~ intervention + date +  group, data = input)
   
   # Make predictions 
   
@@ -285,7 +285,7 @@ visualize_base <- function(input){
   input %>%
     ggplot(aes(x = date, y = count_ts)) +
     geom_point(alpha = 0.2) +
-    facet_wrap(~group, scale = "free_y") +
+    facet_wrap(~group) +
     geom_line(aes(y = pred), size = 1) +
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
     labs(x = "Date",
@@ -302,9 +302,9 @@ visualize_base <- function(input){
 
 ggarrange(visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"),
           visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
-          nrow = 2, ncol =1)
+          nrow = 1, ncol = 2)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png", height = 10)
+ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png", width = 13)
 ```
 ### 4.2. Check for autocorrelation
 
@@ -339,7 +339,7 @@ acf_plot <- function(input){
   
   # Model 
   
-  model <- lm(count_ts ~ intervention + date + intervention*date + group, data = input)
+  model <- lm(count_ts ~ intervention + date +  group, data = input)
   
   # Autocorrelation functions 
   
@@ -352,7 +352,7 @@ pacf_plot <- function(input){
   
   # Model 
   
-  model <- lm(count_ts ~ intervention + date + intervention*date + group, data = input)
+  model <- lm(count_ts ~ intervention + date +  group, data = input)
   
   # Autocorrelation functions 
   
@@ -365,13 +365,10 @@ pacf_plot <- function(input){
 # Apply to each data
 ggarrange(acf_plot(df_domestic) + ggtitle("Domestic Political Interests (ACF)"), 
           acf_plot(df_nondomestic) + ggtitle("International Political Interests (ACF)"),
-           nrow = 2, ncol =1)
+           nrow = 1, ncol =2)
 
 ggsave("/home/jae/ITS-Text-Classification/output/acf_plot.png")
 
-ggarrange(pacf_plot(df_domestic) + ggtitle("Domestic Political Interests (PACF)"), 
-          pacf_plot(df_nondomestic) + ggtitle("International Political Interests (PACF)"),
-           nrow = 2, ncol =1)
 ```
 
 
@@ -381,21 +378,38 @@ The new model parameterizes autocorrelation by accounting for the correlation be
 
 ```{r eval=FALSE, include=FALSE}
 
-# Create a function 
+# Create functions 
 
-correct_ac <- function(a, b, input){
+correct_ac_domestic <- function(a, b){
   
-  model <- gls(count_ts ~ intervention + date + intervention*date + group, 
-               data = input,
+  model <- gls(count_ts ~ intervention + date +  group, 
+               data = df_domestic,
                correlation = corARMA(p = a, q = b, form = ~ date | group),
-               na.action = na.omit,
                method = "ML",
                verbose = TRUE)
   
   results <- data.frame('P' = a,
                         'Q' = b,
-                        'logLik' = logLik(model), 
-                        'AIC' = AIC(model)) # data.frame is better than rbind to keep heterogeneous data type 
+                        'AIC' = AIC(model), 
+                        'BIC' = BIC(model),
+                        'AICc' = AICc(model)) # data.frame is better than rbind to keep heterogeneous data type 
+  
+  return(results)
+}
+
+correct_ac_nondomestic <- function(a, b){
+  
+  model <- gls(count_ts ~ intervention + date +  group, 
+               data = df_nondomestic,
+               correlation = corARMA(p = a, q = b, form = ~ date | group),
+               method = "ML",
+               verbose = TRUE)
+  
+  results <- data.frame('P' = a,
+                        'Q' = b,
+                        'AIC' = AIC(model), 
+                        'BIC' = BIC(model),
+                        'AICc' = AICc(model)) # data.frame is better than rbind to keep heterogeneous data type 
   
   return(results)
 }
@@ -404,26 +418,13 @@ correct_ac <- function(a, b, input){
 
 ```{r eval=FALSE, include=FALSE}
 
-pq_domestic <- bind_rows(
-correct_ac(1, 1, df_domestic),
-correct_ac(1, 2, df_domestic),
-correct_ac(2, 1, df_domestic),
-correct_ac(2, 2, df_domestic)
-)
+pq_domestic <- mapply(correct_ac_domestic, c(1,2,3), c(1))
 
-pq_nondomestic <- bind_rows(
-correct_ac(1, 1, df_nondomestic),
-correct_ac(1, 2, df_nondomestic),
-correct_ac(2, 1, df_nondomestic),
-correct_ac(2, 2, df_nondomestic)
-)
+pq_nondomestic <- mapply(correct_ac_nondomestic, c(1,2,3), c(1))
 
-pq_domestic %>%
-  filter(AIC == min(AIC))
+pq_domestic
 
-pq_nondomestic %>%
-  filter(AIC == min(AIC))
-
+pq_nondomestic
 ```
 
 ### 4.4. Visualization 
@@ -434,7 +435,7 @@ pq_nondomestic %>%
 
 visualize_adj <- function(input, p.pam, q.pam){
   
-  model <- gls(count_ts ~ intervention + intervention*date + date + group, 
+  model <- gls(count_ts ~ intervention +  date + group, 
                data = input,
                correlation = corARMA(p= p.pam, q = q.pam, form = ~ date | group),
                na.action = na.omit) 
@@ -456,7 +457,7 @@ visualize_adj <- function(input, p.pam, q.pam){
   input %>%
     ggplot(aes(x = date, y = count_ts)) +
     geom_point(alpha = 0.2) +
-    facet_wrap(~group, scale = "free_y") +
+    facet_wrap(~group) +
     geom_line(aes(y = pred), size = 1) +
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
     labs(x = "Date",
@@ -470,23 +471,25 @@ visualize_adj <- function(input, p.pam, q.pam){
 
 # Visualize each result in the scatted plot 
 
-ggarrange(visualize_adj(df_domestic, 2, 2) + ggtitle("9/11 and Minority Domestic Political Interests"), 
-          visualize_adj(df_nondomestic, 1, 1) + ggtitle("9/11 and Minority International Political Interests"),
-           nrow = 2, ncol =1)
+ggarrange(visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic Political Interests"), 
+          visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and Minority International Political Interests"),
+           nrow = 1, ncol = 2)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", height = 10)
+ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", width = 13)
 
 ```
 ### 4.5. Regression table
 
 ```{r}
 
-model_output <- gls(count_ts ~ intervention + intervention*date + date + group, 
+domestic_output <- gls(count_ts ~ intervention +  date + group, 
                data = df_domestic,
-               correlation = corARMA(p= 2, q = 2, form = ~ date | group),
-               na.action = na.omit) 
+               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
 
-stargazer(model_output)
+nondomestic_output <- gls(count_ts ~ intervention +  date + group, 
+               data = df_nondomestic,
+               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
 
+stargazer(domestic_output, nondomestic_output, type = "text")
 ```
 
