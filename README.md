@@ -162,7 +162,7 @@ Training Accuracy:  0.7897042716319824
 - I created a function for testing different GLS models and ran for loops to extract AIC (Akaike Information Criterion) from these models. Essentially, AIC [penalizes](https://www.quantstart.com/articles/Autoregressive-Moving-Average-ARMA-p-q-Models-for-Time-Series-Analysis-Part-1/) overfitting models and, thus, the lower AIC score indicates a better model fit. To do that, you need to set the `method` argument inside the `gls() function` to `ML (Maximum Likelihood Estimation)`. The default method is faster, but it does not provide AIC scores.
 - The optimal combination that I found from the for loops is `p = 3` and `q = 1`.
 
-```{r}
+```r
 
 # Create a function
 
