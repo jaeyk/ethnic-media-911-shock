@@ -153,7 +153,7 @@ features_x_train.head()
 <tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Intervention</td><td>2.507<sup>***</sup></td><td>0.601</td></tr>
 <tr><td style="text-align:left"></td><td>(0.693)</td><td>(0.579)</td></tr>
 <tr><td style="text-align:left"></td><td></td><td></td></tr>
-<tr><td style="text-align:left">date</td><td>-0.0002</td><td>-0.001<sup>**</sup></td></tr>
+<tr><td style="text-align:left">Date</td><td>-0.0002</td><td>-0.001<sup>**</sup></td></tr>
 <tr><td style="text-align:left"></td><td>(0.0004)</td><td>(0.0003)</td></tr>
 <tr><td style="text-align:left"></td><td></td><td></td></tr>
 <tr><td style="text-align:left">Indian Americans</td><td>2.291<sup>***</sup></td><td>2.316<sup>***</sup></td></tr>
