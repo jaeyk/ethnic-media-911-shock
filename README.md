@@ -6,12 +6,6 @@
 - Many people helped me to push this project forward. [Andrew Thompson](https://sites.northwestern.edu/athompson/) (Northwestern and MIT) was essential in getting the project started in summer 2019. He's also a co-author of the paper based on this project. We plan to present the findings at the upcoming Western Political Science Association annual meeting (we would love to see you there and hear your feedback). My three amazing Berkeley undergraduate RAs---[Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)---made it possible to complete most of the data analysis in fall 2019.
 - I will keep this Git repository and the article updated as I make progress. Any comments or questions on the project are warmly welcomed.
 
-## Motivation
-
-As Andrew Ng said, [artificial intelligence, especially machine learning, is the new electricity](https://www.youtube.com/watch?v=21EiKfQYZXc). Yet, compared to the industry, the impact of machine learning has been relatively marginal in the social sciences. One reason for this is that most machine learning applications focus on prediction tools and have little to do with explaining the causal relationship between two variables, X and Y (causal inference). However, these relationships are what many social scientists deeply care about, as they are useful for making sound recommendations for policy or behavioral changes. In this context, I co-developed this project with Andrew Thompson to demonstrate **how machine learning can help create critical data for causal inference**. We hope that this project draws more social scientists to machine learning and AI.
-
-
-
 ## Research Design
 
 ### Causal Inference and Natural Experiments
@@ -158,9 +152,3 @@ features_x_train.head()
 Table 1. GLS analysis resuls
 
 - As shown in Table  1, the results confirm H1 (domestic threats induce information seeking) but also does not reject H2 (international threats induce information seeking). The difference lies in the effect size. The treatment effect is larger in the domestic threats than the the international threats case.
-
-
-## Conclusions
-
-1. Association does not equal causation. However, it does not imply that machine learning, a powerful tool for building prediction models, has little with to do with causal inference. As [Hernán, Hsu, and Healy (2019: 43-45)](https://www.tandfonline.com/doi/pdf/10.1080/09332480.2019.1579578) argued, we can define causal inference as a counterfactual prediction problem. Specifically, machine learning algorithms can help causal inference by generating new data from a wide array of sources (e.g., text, image, audio, video, etc.). The case outlined in the present study is one of many possible ways of how machine learning can help casual inference.
-2. However, it is also important to note that machine learning algorithms do not provide the causal structure of the data generating process. Researchers should carefully investigate the cases under their study (causal structure of the data), apply appropriate research designs (threats to validity), and carefully examine modeling assumptions. As [David Freedman](https://theory.stanford.edu/~dfreeman/) stressed, "a desire to substitute intellectual capital for labor" by using (fancy) statistical techniques has always been present and probably will never fade away. However, if we search for causality, it is almost inevitable that we will need to examine "problems in their full specificity and complexity" ([Collier, Sekhon, and Stark 2009](https://www.cambridge.org/core/books/statistical-models-and-causal-inference/7CE8D4957FF6E9615AAAC4128FA8246E)).
