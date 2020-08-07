@@ -149,8 +149,7 @@ features_x_train.head()
 
 <table style="text-align:center"><tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="2"><em>Dependent variable:</em></td></tr>
 <tr><td></td><td colspan="2" style="border-bottom: 1px solid black"></td></tr>
-<tr><td style="text-align:left"></td><td colspan="2">count_ts</td></tr>
-<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td></tr>
+<tr><td style="text-align:left"></td><td>Domestic</td><td>Non-domestic</td></tr>
 <tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Intervention</td><td>2.507<sup>***</sup></td><td>0.601</td></tr>
 <tr><td style="text-align:left"></td><td>(0.693)</td><td>(0.579)</td></tr>
 <tr><td style="text-align:left"></td><td></td><td></td></tr>
