@@ -96,7 +96,17 @@ for filename in os.listdir(os.getcwd()):
 
 #### 05_Classifying Articles Using Machine Learning in Python [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_classification.ipynb)]
 
-- The RAs then trained a lasso model in Python using these labeled texts. Initial trials did not deliver a promising result. To improve this, we added features (i.e., stratifying variables -- assignment and source variables) that were used in the sampling process. The classification accuracy rate is 73\%, precision rate is 75\%, and recall rate is 80\%.
+- The RAs then trained a lasso model in Python using these labeled texts. Initial trials did not deliver a promising result. To improve this, we added features (i.e., stratifying variables -- assignment and source variables) that were used in the sampling process. The classification accuracy rate is **73\%**, precision rate **75\%**, and recall rate **80\%**.
+
+```python
+# Get addition features from one hot encoding the source, intervention, and group columns
+
+features_x_train = pd.concat([pd.get_dummies(train[col]) for col in ['source', 'intervention', 'group']], axis=1)
+
+features_x_train = features_x_train.drop(columns = ["The Arab American View"])
+
+features_x_train.head()
+```
 
 ### Causal Inference (Winter 2019 and Spring 2020)
 
