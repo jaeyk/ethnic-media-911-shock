@@ -147,8 +147,29 @@ features_x_train.head()
 - It is fascinating to see how these different modeling approaches influence the ways we can interpret the statistical results. Figure 4 and 5 are similar to Figure 2 in terms of the X-axis, Y-axis, and raw data points (they are intentionally blurred to stress predicted lines more). The predicted lines come from the naive OLS model in Figure 4 and the GLS model in Figure 5. In terms of slopes, they are close; what makes them different is the size of the confidence intervals (the gray area surrounding the line plots). This observation is consistent with what we discussed earlier. Autocorrelation influences the efficiency of regression estimators, so that when we take that problem in our modeling approach, the confidence intervals become more conservative.
 
 
-![](<https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/table.png>)
+<table style="text-align:center"><tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="2"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="2" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="2">count_ts</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td></tr>
+<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Intervention</td><td>2.507<sup>***</sup></td><td>0.601</td></tr>
+<tr><td style="text-align:left"></td><td>(0.693)</td><td>(0.579)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">date</td><td>-0.0002</td><td>-0.001<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(0.0004)</td><td>(0.0003)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">Indian Americans</td><td>2.291<sup>***</sup></td><td>2.316<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(0.488)</td><td>(0.339)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">Constant</td><td>3.656</td><td>8.197<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td>(3.818)</td><td>(2.982)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>818</td><td>681</td></tr>
+<tr><td style="text-align:left">Log Likelihood</td><td>-1,829.846</td><td>-1,528.902</td></tr>
+<tr><td style="text-align:left">Akaike Inf. Crit.</td><td>3,677.691</td><td>3,075.804</td></tr>
+<tr><td style="text-align:left">Bayesian Inf. Crit.</td><td>3,720.009</td><td>3,116.463</td></tr>
+<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="2" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
 
 Table 1. GLS analysis resuls
 
-- As shown in Table  1, the results confirm H1 (domestic threats induce information seeking) but also does not reject H2 (international threats induce information seeking). The difference lies in the effect size. The treatment effect is larger in the domestic threats than the the international threats case.
+- As shown in Table  1, the results confirm H1 (domestic threats induce information seeking) and reject H2 (international threats induce information seeking).
