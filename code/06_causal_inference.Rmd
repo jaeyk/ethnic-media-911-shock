@@ -13,11 +13,7 @@ output:
 
 ```{r}
 
-# Clean up the environment
-
-# rm(list = ls())
-
-# Import libraries (adapted from this link: https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them)
+# Import libraries 
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
@@ -50,11 +46,24 @@ pacman::p_load(
         ggpubr, # for arranging plots 
         stargazer) # for regression table 
 
-# Set theme 
 
-source("/home/jae/ITS-Text-Classification/functions/theme_publications.r")
+# devtools::install_github("jaeyk/makereproducible")
+library(makereproducible)
 
-theme_set(theme_Publication(14))
+# Import R scripts
+
+script_list <- list.files(paste0(here::here(), "/functions"),
+  pattern = "*.r|*.R",
+  full.names = TRUE
+)
+
+for (i in 1:length(script_list))
+{
+  source(script_list[[i]])
+}
+
+# for publication-friendly theme
+theme_set(theme_pubr())
 ```
 
 ## 1. Importing files
@@ -65,9 +74,11 @@ Unfortunately, I cannot share the original data because they are proprietary. Pr
 
 # Import files 
 
-unlabeled <- read_csv("/home/jae/muslim_newspapers-selected/code/unlabeled_articles.csv")
-sample <- read_csv("/home/jae/muslim_newspapers-selected/processed_data/sample_articles.csv")
-results <- read_csv("/home/jae/muslim_newspapers-selected/processed_data/final_values_predicted.csv")
+unlabeled <- read_csv(make_here("/home/jae/muslim_newspapers-selected/raw_data/unlabeled_articles.csv"))
+
+sample <- read_csv(make_here("/home/jae/muslim_newspapers-selected/raw_data/sample_articles.csv"))
+
+results <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/predicted.csv"))
 
 ```
 
@@ -167,7 +178,7 @@ df_grouped %>%
     geom_line() + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
     scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
-    facet_wrap(group~domestic) + # facetting, y scale is free 
+    facet_grid(group~domestic) + # facetting, y scale is free 
     labs(x = "Date",
          y = "Publication count",
          col = "Issue focus",
@@ -367,7 +378,7 @@ ggarrange(acf_plot(df_domestic) + ggtitle("Domestic Political Interests (ACF)"),
           acf_plot(df_nondomestic) + ggtitle("International Political Interests (ACF)"),
            nrow = 1, ncol =2)
 
-ggsave("/home/jae/ITS-Text-Classification/output/acf_plot.png", width = 10)
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/acf_plot.png"), width = 10)
 
 ```
 
@@ -475,9 +486,10 @@ ggarrange(visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic
           visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and Minority International Political Interests"),
            nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png", height = 8)
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png"), height = 8)
 
 ```
+
 ### 4.5. Regression table
 
 ```{r}
