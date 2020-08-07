@@ -6,6 +6,10 @@
 - RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
 - [Slides](https://docs.google.com/presentation/d/15IQNQk62wA4hmqkxZuCX3csvi2nc_jNizqurOaQSeEI/edit?usp=sharing) (presented at [the joint PaCSS and PolNet 2020 conference](https://web.northeastern.edu/nulab/pacss/))
 
+## Motivation 
+
+Past studies have also looked at how threats induce information seeking ([Valentino et al. 2008](https://onlinelibrary.wiley.com/doi/full/10.1111/j.1467-9221.2008.00625.x?casa_token=AFdpYAvh0rUAAAAA%3AlZ4OrLYGOUc3s-GkdnMusZVZ1d6SDJWSB84H7zu6T7alT3TeAZgR6hx_6M7-QaD-3l2ON1JiaKWyt-A), [Gadarian and Albertson 2013](https://onlinelibrary.wiley.com/doi/full/10.1111/pops.12034?casa_token=jRK3KrzsfR4AAAAA%3AMds8LYY6-Ld62cLOBnXd68_WIitzqqUGX3IvfWajNlfwkU3aUrPGdE1y27Hj8MIcoQgEEilVe5xkCj4) ). Yet, most of these studies were done using associational analyses or survey experiments. Our study contributes to this literature by using novel data (text) and methods (a combination of machine learning and causal inference) that **improve both the internal and external validity of the research design**.
+
 ## Research Design
 
 ### Threats and Information Seeking
@@ -14,7 +18,6 @@
 - **Treatment**: This research design allows us to identify the causal effects of **threats** on the political behaviors of immigrant communities. The 9/11 attacks mean different things to different people. Defining the meaning of the intervention as precisely as possible helps reduce confusion that can arise from different interpretations. Here, my focus is on the impact of the 9/11 attacks on immigrant communities. For these marginalized populations, the hawkish policy (i.e., the War on Terrorism) and the accompanying xenophobic public opinion were threatening in that they caused this population to suffer increasing uncertainty about their safety.
 - **Mechanism**: We hypothesized that **threats** induce **information seeking**. After 9/11, immigrant communities might have been compelled to collect information on the treatment of Muslims in the United States to reduce the uncertainty they felt about their safety in the rapidly changing political climate.
 - **Case selection**: Arab and Indian Americans were ideal cases to test this argument for the ways in which they were **associated** with the image of terrorists. Arab Americans were targeted by the War on Terrorism and the xenophobic public opinion in the post-9.11 period because they came from the Muslim-majority countries and, thus, they were often perceived and treated as "potential terrorists." Indian Americans were also targeted because of their physical resemblance to Arab Americans in the eyes of white Americans.
-- **Contributions**: Past studies have also looked at how threats induce information seeking ([Valentino et al. 2008](https://onlinelibrary.wiley.com/doi/full/10.1111/j.1467-9221.2008.00625.x?casa_token=AFdpYAvh0rUAAAAA%3AlZ4OrLYGOUc3s-GkdnMusZVZ1d6SDJWSB84H7zu6T7alT3TeAZgR6hx_6M7-QaD-3l2ON1JiaKWyt-A), [Gadarian and Albertson 2013](https://onlinelibrary.wiley.com/doi/full/10.1111/pops.12034?casa_token=jRK3KrzsfR4AAAAA%3AMds8LYY6-Ld62cLOBnXd68_WIitzqqUGX3IvfWajNlfwkU3aUrPGdE1y27Hj8MIcoQgEEilVe5xkCj4) ). Yet, most of these studies were done using associational analyses or survey experiments. Our study contributes to this literature by using novel data (text) and methods (a combination of machine learning and causal inference) that **improve both the internal and external validity of the research design**.
 
 ### Text Data and Hypotheses
 
