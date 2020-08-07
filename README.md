@@ -2,19 +2,15 @@
 
 **A Showcase of How Machine Learning Can Be Used to Provide Essential Data for Causal Inference**
 
-- The goal of this article is to document how I have developed this machine learning + causal inference project from end to end. I intend to share my successes and failures from the project and what I learned along the journey. What was really challenging about this project was that I needed to apply a wide range of skills (e.g., parsing HTML pages, sampling, classifying texts, and inferring causality in time series data) at the different stages. But, that's also what made working on the project so fun!
-- Many people helped me to push this project forward. [Andrew Thompson](https://sites.northwestern.edu/athompson/) (Northwestern and MIT) was essential in getting the project started in summer 2019. He's also a co-author of the paper based on this project. We plan to present the findings at the upcoming Western Political Science Association annual meeting (we would love to see you there and hear your feedback). My three amazing Berkeley undergraduate RAs---[Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)---made it possible to complete most of the data analysis in fall 2019.
-- The project is scheduled to present at [the joint PaCSS and PolNet 2020 conference](https://web.northeastern.edu/nulab/pacss/).
+- Co-author: [Andrew Thompson](https://sites.northwestern.edu/athompson/) (Notre Dame)
+- RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
+- [Slides](https://docs.google.com/presentation/d/15IQNQk62wA4hmqkxZuCX3csvi2nc_jNizqurOaQSeEI/edit?usp=sharing): presented at [the joint PaCSS and PolNet 2020 conference](https://web.northeastern.edu/nulab/pacss/)
+
+## Motivation
+
+Causal inference is no easy task. To assess the causal relationship between X and Y, we should be able to observe subjects treated (Y treated) and the same subjects who are not treated (Y untreated) simultaneously. In experimental studies, random assignment, or assigning treatment to one group but not the others, is the best stategy available to address this selection bias/confounding/endogeneity problem (different names in different fields but essentially a similar idea). Still, on rare occasions, we find [natural experiments](https://en.wikipedia.org/wiki/Natural_experiment). Unexpected big events, such as natural disasters and wars, are good examples. These shocks force subjects to be untreated at t-1 but treated at t (within subjects analysis), or they make some subjects treated, but others leave others untreated at the same temporal point (between subjects analysis).
 
 ## Research Design
-
-### Causal Inference and Natural Experiments
-
-Causal inference is no easy task. To assess the causal relationship between X and Y, we should be able to observe subjects treated (Y treated) and the same subjects who are not treated (Y untreated) simultaneously. As an example, these subjects could be patients and the treatment could be a new standard of medical care. The comparison between them would reveal the causal effect of the treatment. However, we are not living in a world of Sci-Fi, and we cannot observe these two groups at the same time. As Holland (1986) explained, this missing information problem is ["the fundamental problem of causal inference."](http://www-stat.wharton.upenn.edu/~hwainer/Readings/Holland_Statistics%20and%20Causal%20Inference.pdf)
-
-In experimental studies, random assignment, or assigning treatment to one group but not the others, is the best stategy available to address this selection bias/confounding/endogeneity problem (different names in different fields but essentially a similar idea). Randomization creates treatment and control groups who only differ in their treatment status on average. No comparable convenient solution is available in observational studies. Observational studies have weaker designs because with this type of study, we do not know enough about variations in conditions (assignment mechanism) where some subjects received treatment and others didn't ([Rubin and Imbens 2015](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB)). For that reason, the statistical models we build to estimate the relationship between X and Y are often poor approximations of the underlying data generating process in observational studies.
-
-Still, on rare occasions, we find [natural experiments](https://en.wikipedia.org/wiki/Natural_experiment). Unexpected big events, such as natural disasters and wars, are good examples. These shocks force subjects to be untreated at t-1 but treated at t (within subjects analysis), or they make some subjects treated, but others leave others untreated at the same temporal point (between subjects analysis).
 
 ### Threats and Information Seeking
 
