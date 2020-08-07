@@ -1,9 +1,6 @@
 # ITS-Text-Classification
 
-
-
 **A Showcase of How Machine Learning Can Be Used to Provide Essential Data for Causal Inference**
-
 
 - The goal of this article is to document how I have developed this machine learning + causal inference project from end to end. I intend to share my successes and failures from the project and what I learned along the journey. What was really challenging about this project was that I needed to apply a wide range of skills (e.g., parsing HTML pages, sampling, classifying texts, and inferring causality in time series data) at the different stages. But, that's also what made working on the project so fun!
 - Many people helped me to push this project forward. [Andrew Thompson](https://sites.northwestern.edu/athompson/) (Northwestern and MIT) was essential in getting the project started in summer 2019. He's also a co-author of the paper based on this project. We plan to present the findings at the upcoming Western Political Science Association annual meeting (we would love to see you there and hear your feedback). My three amazing Berkeley undergraduate RAs---[Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)---made it possible to complete most of the data analysis in fall 2019.
@@ -99,28 +96,7 @@ for filename in os.listdir(os.getcwd()):
 
 #### 05_Classifying Articles Using Machine Learning in Python [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_classification.ipynb)]
 
-- The RAs then trained logistic regression models in Python using these labeled texts. Initial trials did not deliver a promising result. To improve this, we added features (i.e., stratifying variables -- assignment and source variables) that were used in the sampling process. Including these features increased the classification accuracy score of U.S. domestic politics articles by up to `79%` and of non-U.S. domestic politics articles by up to `75%`. Given the complexity of the classification task (low baseline), I assumed that these scores were acceptable.
-
-```python
-# Get addition features from one hot encoding the source, intervention, and group columns
-features_x_train = pd.concat([pd.get_dummies(train[col]) for col in ['source', 'intervention', 'group']], axis=1)
-features_x_train = features_x_train.drop(columns = ["The Arab American View"])
-features_x_train
-```
-
-```python
-# Fit our Logistic Regression model with L1 regularization and determine the training accuracy
-yy_train = train['category']
-NA_model = LogisticRegressionCV(fit_intercept = True, penalty = 'l1', solver = 'saga')
-NA_model.fit(xx_train, yy_train)
-
-accuracy = NA_model.score(xx_train, yy_train)
-print("Training Accuracy: ", accuracy)
-
-Training Accuracy:  0.7897042716319824
-```
-
-
+- The RAs then trained a lasso model in Python using these labeled texts. Initial trials did not deliver a promising result. To improve this, we added features (i.e., stratifying variables -- assignment and source variables) that were used in the sampling process. The classification accuracy rate is 73\%, precision rate is 75\%, and recall rate is 80\%.
 
 ### Causal Inference (Winter 2019 and Spring 2020)
 
@@ -128,8 +104,6 @@ Training Accuracy:  0.7897042716319824
 
 - I finally obtained the time series data needed for the interrupted time series design analysis by combining the classified texts and their publication dates.
 - In Figure 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `non-U.S. domestic politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
-
-
 
 **Figure 2. Scatted Plot**
 
@@ -160,29 +134,6 @@ Training Accuracy:  0.7897042716319824
 - Which combination of `p` and `q` creates the best fitting model is an empirical question. In `R`, we can build a GLS model using the `gls package` and specify AR and MR as arguments in  the`corARMA() function` inside the `gls() function`.
 - I created a function for testing different GLS models and ran for loops to extract AIC (Akaike Information Criterion) from these models. Essentially, AIC [penalizes](https://www.quantstart.com/articles/Autoregressive-Moving-Average-ARMA-p-q-Models-for-Time-Series-Analysis-Part-1/) overfitting models and, thus, the lower AIC score indicates a better model fit. To do that, you need to set the `method` argument inside the `gls() function` to `ML (Maximum Likelihood Estimation)`. The default method is faster, but it does not provide AIC scores.
 - The optimal combination that I found from the for loops is `p = 3` and `q = 1`.
-
-```r
-
-# Create a function
-
-correct_ac <- function(a, b, input){
-
-  model <- gls(count_ts ~ intervention + date + group,
-               data = input,
-               correlation = corARMA(p = a, q = b, form = ~ date | group),
-               na.action = na.omit,
-               method = "ML",
-               verbose = TRUE)
-
-  results <- data.frame('P' = a,
-                        'Q' = b,
-                        'logLik' = logLik(model),
-                        'AIC' = AIC(model)) # data.frame is better than rbind to keep heterogeneous data type
-
-  return(results)
-}
-
-```
 
 
 **Figure 5. Scattered Plot with Predicted Lines from the GLS Model**
