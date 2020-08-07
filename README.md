@@ -6,10 +6,6 @@
 - RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
 - [Slides](https://docs.google.com/presentation/d/15IQNQk62wA4hmqkxZuCX3csvi2nc_jNizqurOaQSeEI/edit?usp=sharing) (presented at [the joint PaCSS and PolNet 2020 conference](https://web.northeastern.edu/nulab/pacss/))
 
-## Motivation
-
-Causal inference is no easy task. To assess the causal relationship between X and Y, we should be able to observe subjects treated (Y treated) and the same subjects who are not treated (Y untreated) simultaneously. In experimental studies, random assignment, or assigning treatment to one group but not the others, is the best stategy available to address this selection bias/confounding/endogeneity problem (different names in different fields but essentially a similar idea). Still, on rare occasions, we find [natural experiments](https://en.wikipedia.org/wiki/Natural_experiment). Unexpected big events, such as natural disasters and wars, are good examples. These shocks force subjects to be untreated at t-1 but treated at t (within subjects analysis), or they make some subjects treated, but others leave others untreated at the same temporal point (between subjects analysis).
-
 ## Research Design
 
 ### Threats and Information Seeking
