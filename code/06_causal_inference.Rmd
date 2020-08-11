@@ -150,7 +150,7 @@ df$date <- as.Date(as.character(df$date), "%Y%m%d")
 df$domestic <- as.character(df$domestic) 
 
 df$domestic[df$domestic == 1] <- "Domestic"
-df$domestic[df$domestic == 0] <- "Non-domestic"
+df$domestic[df$domestic == 0] <- "International"
 
 # Create group variable based on newspaper names 
 
@@ -502,6 +502,45 @@ nondomestic_output <- gls(count_ts ~ intervention +  date + group,
                data = df_nondomestic,
                correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
 
-stargazer(domestic_output, nondomestic_output, type = "html")
+```
+
+\begin{table}[!htbp] \centering 
+  \caption{ITS design aanlysis results} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lcc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{2}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-3} 
+\\[-1.8ex] & \multicolumn{2}{c}{The publication count for Muslim-related articles on} \\ 
+ & Domestic politics & International politics \\ 
+\hline \\[-1.8ex] 
+ Intervention & 2.509$^{***}$ (0.694) & 0.608 (0.576) \\ 
+  Date & $-$0.0002 (0.0004) & $-$0.001$^{**}$ (0.0003) \\ 
+  Indian Americans & 2.292$^{***}$ (0.494) & 2.312$^{***}$ (0.336) \\ 
+  Constant & 3.648 (3.838) & 8.229$^{***}$ (2.965) \\ 
+ \hline \\[-1.8ex] 
+Observations & 818 & 681 \\ 
+Log Likelihood & $-$1,829.933 & $-$1,527.732 \\ 
+Akaike Inf. Crit. & 3,677.866 & 3,073.465 \\ 
+Bayesian Inf. Crit. & 3,720.184 & 3,114.124 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table}
+
+```{r}
+stargazer(domestic_output, nondomestic_output,
+          title = "ITS design aanlysis results",
+          dep.var.labels = c("The publication count for Muslim-related articles on"),
+          header = FALSE,
+          single.row = TRUE,
+          column.labels = c("Domestic politics",
+                            "International politics"),
+          covariate.labels = c("Intervention",
+                               "Date",
+                               "Indian Americans"),
+          model.numbers = FALSE)
 ```
 
