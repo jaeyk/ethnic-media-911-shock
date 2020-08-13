@@ -124,5 +124,5 @@ ggplot(word_frequency, aes(Domestic, International)) +
   geom_abline(color = "red") +
   facet_wrap(~group)
 
-ggsave(here("output", "relative_word_freq.png"), width = 8)
+ggsave(here("output", "relative_word_freq.png"), width = 10)
 ```
