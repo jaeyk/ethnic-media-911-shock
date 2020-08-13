@@ -100,7 +100,7 @@ features_x_train.head()
 
 ### Causal Inference (Winter 2019 and Spring 2020)
 
-#### 06_Estimating the Causal Effect in R [[Data](https://github.com/jaeyk/ITS-Text-Classification/blob/master/processed_data/df.csv)] [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_causal_inference.Rmd)] [[Output](https://github.com/jaeyk/ITS-Text-Classification/tree/master/output)]
+#### 06_Estimating the Causal Effect in R  [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_causal_inference.Rmd)]
 
 - I finally obtained the time series data needed for the interrupted time series design analysis by combining the classified texts and their publication dates.
 - In Figure 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `non-U.S. domestic politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
@@ -168,3 +168,11 @@ features_x_train.head()
 Table 1. GLS analysis resuls
 
 - As shown in Table  1, the results confirm H1 (domestic threats induce information seeking) and reject H2 (international threats induce information seeking).
+
+### Additional text analysis (Summer 2020)
+
+#### 07_Additional Text Analysis in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_topic_modeling.Rmd)]
+
+**Figure 6. Relative Word Frequencies**
+
+<img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/relative_word_freq.png" width="600">

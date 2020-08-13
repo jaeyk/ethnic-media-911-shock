@@ -1,0 +1,128 @@
+---
+title: "Additional text analysis"
+author: "Jae Yeon Kim"
+output:
+html_document:
+  toc: True
+  theme: united
+  number_sections: True
+---
+
+# Setup
+
+```{r}
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(
+        tidyverse, # the tidyverse framework
+        irr, # calculating inter-coder reliability score
+        corrplot, # visualizing correlation coefficients
+        ggpubr, # arranging ggplots
+        ggthemes, # fancy ggplot themes
+        quanteda, # text preprocessing 
+        tidytext, # tidytext
+        stm, # structural topic modeling
+        furrr, # multiprocessing
+        patchwork, # arranging images,
+        future, # parallel and distributed computing  
+        purrr, # functional programming 
+        keyATM, # keyATM
+        here # reproducibility 
+)
+
+
+# devtools::install_github("jaeyk/makereproducible")
+library(makereproducible)
+
+# Import R scripts
+
+script_list <- list.files(paste0(here::here(), "/functions"),
+  pattern = "*.r|*.R",
+  full.names = TRUE
+)
+
+for (i in 1:length(script_list))
+{
+  source(script_list[[i]])
+}
+
+# for publication-friendly theme
+theme_set(theme_pubr())
+
+```
+
+# Import files
+
+```{r}
+
+full_articles <- read_csv(make_here( "/home/jae/ITS-Text-Classification/processed_data/df.csv"))
+
+```
+
+# Clean and wrangle data
+
+```{r}
+
+# Manipulate strings
+full_articles$source <- str_trim(gsub(".*:", "", full_articles$source))
+
+# Dropping the first column 
+full_articles <- full_articles[, -1]
+
+```
+
+# Relative most frequent words 
+
+This part of the code heavily draws on [the tidytext book](https://www.tidytextmining.com/twitter.html).
+
+```{r}
+
+tidy_articles <- full_articles %>%
+  # tokenize 
+  unnest_tokens(word, text) %>%
+  # remove stop words 
+  filter(!word %in% stop_words$word,
+         !word %in% str_remove_all(stop_words$word, "'"), 
+  # only characters 
+         str_detect(word, "[a-z]")
+         ) 
+
+```
+
+```{r}
+
+word_frequency <- tidy_articles %>%
+  # Count by group
+  group_by(domestic, group) %>%
+  count(word, sort = TRUE) %>%
+  # Subjoin 
+  left_join(tidy_articles %>%
+              group_by(domestic, group) %>%
+              summarise(total = n())) %>%
+  # Create freq variable 
+  mutate(freq = n/total)
+
+```
+
+```{r}
+
+word_frequency <- word_frequency %>%
+  # Select only interested columns 
+  select(domestic, group, word, freq) %>%
+  pivot_wider(names_from = c("domestic"),
+              values_from = "freq") %>%
+  arrange("Domestic", "International")
+
+```
+
+```{r}
+ggplot(word_frequency, aes(Domestic, International)) +
+  geom_jitter(alpha = 0.03, size = 2.5, width = 0.25, height = 0.25) +
+  geom_text(aes(label = word), check_overlap =  TRUE, vjust = 1.5) +
+  scale_x_log10(labels = scales::percent_format()) +
+  scale_y_log10(labels = scales::percent_format()) +
+  geom_abline(color = "red") +
+  facet_wrap(~group)
+
+ggsave(here("output", "relative_word_freq.png"), width = 8)
+```

@@ -120,11 +120,6 @@ labeled_selected <- dplyr::select(unlabeled,
 # Row bind the two dataframes  
 
 df <- bind_rows(sample_selected, labeled_selected)
-
-# Save the processed data 
-
-write.csv(df, "/home/jae/ITS-Text-Classification/processed_data/df.csv")
-
 ```
 
 ## 3. Descriptive analysis
@@ -155,6 +150,10 @@ df$domestic[df$domestic == 0] <- "International"
 # Create group variable based on newspaper names 
 
 df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Americans")
+
+# Save the processed data 
+
+write.csv(df, "/home/jae/ITS-Text-Classification/processed_data/df.csv")
 
 ```
 
