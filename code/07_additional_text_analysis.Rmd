@@ -19,15 +19,16 @@ pacman::p_load(
         corrplot, # visualizing correlation coefficients
         ggpubr, # arranging ggplots
         ggthemes, # fancy ggplot themes
-        quanteda, # text preprocessing 
+        quanteda, # text preprocessing
         tidytext, # tidytext
         stm, # structural topic modeling
         furrr, # multiprocessing
         patchwork, # arranging images,
-        future, # parallel and distributed computing  
-        purrr, # functional programming 
+        future, # parallel and distributed computing
+        purrr, # functional programming
         keyATM, # keyATM
-        here # reproducibility 
+        here, # reproducibility
+        kableExtra # dplyr 2 latex
 )
 
 
@@ -57,6 +58,7 @@ theme_set(theme_pubr())
 
 full_articles <- read_csv(make_here( "/home/jae/ITS-Text-Classification/processed_data/df.csv"))
 
+eval_models <- read_csv(here("processed_data", "eval_models.csv"))
 ```
 
 # Clean and wrangle data
@@ -66,26 +68,26 @@ full_articles <- read_csv(make_here( "/home/jae/ITS-Text-Classification/processe
 # Manipulate strings
 full_articles$source <- str_trim(gsub(".*:", "", full_articles$source))
 
-# Dropping the first column 
+# Dropping the first column
 full_articles <- full_articles[, -1]
 
 ```
 
-# Relative most frequent words 
+# Relative most frequent words
 
 This part of the code heavily draws on [the tidytext book](https://www.tidytextmining.com/twitter.html).
 
 ```{r}
 
 tidy_articles <- full_articles %>%
-  # tokenize 
+  # tokenize
   unnest_tokens(word, text) %>%
-  # remove stop words 
+  # remove stop words
   filter(!word %in% stop_words$word,
-         !word %in% str_remove_all(stop_words$word, "'"), 
-  # only characters 
+         !word %in% str_remove_all(stop_words$word, "'"),
+  # only characters
          str_detect(word, "[a-z]")
-         ) 
+         )
 
 ```
 
@@ -95,11 +97,11 @@ word_frequency <- tidy_articles %>%
   # Count by group
   group_by(domestic, group) %>%
   count(word, sort = TRUE) %>%
-  # Subjoin 
+  # Subjoin
   left_join(tidy_articles %>%
               group_by(domestic, group) %>%
               summarise(total = n())) %>%
-  # Create freq variable 
+  # Create freq variable
   mutate(freq = n/total)
 
 ```
@@ -107,7 +109,7 @@ word_frequency <- tidy_articles %>%
 ```{r}
 
 word_frequency <- word_frequency %>%
-  # Select only interested columns 
+  # Select only interested columns
   select(domestic, group, word, freq) %>%
   pivot_wider(names_from = c("domestic"),
               values_from = "freq") %>%
@@ -125,4 +127,25 @@ ggplot(word_frequency, aes(Domestic, International)) +
   facet_wrap(~group)
 
 ggsave(here("output", "relative_word_freq.png"), width = 10)
+```
+
+# Classification results 
+
+\begin{tabular}{lrrr}
+\toprule
+Models & Accuracy & Precision & Recall\\
+\midrule
+Lasso & 0.63 & 0.64 & 0.71\\
+Bayes & 0.68 & 0.73 & 0.68\\
+XGBoost & 0.67 & 0.67 & 0.78\\
+\bottomrule
+\end{tabular}
+
+```{r}
+
+eval_models <- eval_models[,-1]
+
+kable(eval_models, "latex", booktabs = T) %>%
+  kable_styling(position = "center")
+
 ```
