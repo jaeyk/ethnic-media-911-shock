@@ -2,20 +2,18 @@
 title: "ITS design analysis"
 author: "Jae Yeon Kim"
 output:
-  pdf_document:
-    toc: yes
-  html_document:
-    theme: united
-    toc: yes
+html_document:
+  toc: True
+  theme: united
+  number_sections: True
 ---
 
-## 0. Setup
+# Setup
 
 ```{r}
 
 # Import libraries 
 
-if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
         tidyverse, # for the tidyverse framework 
         splitstackshape, # for stacking and reshaping datasets 
@@ -26,6 +24,7 @@ pacman::p_load(
         vcd, # for visualizing categorical variable 
         nlme, # for linear and nonlinear mixed effects models 
         zoo, # S3 infrastructure for regular and irregular time series 
+        simpleboot, # bootstrapping 
         TTR, # for constructing technical trading rules
         ggpmisc, # for detecting peaks and valleys 
         broom, # for tidying model objects 
@@ -44,8 +43,8 @@ pacman::p_load(
         MuMIn, # for selecting models
         ggthemes, # for fancy ggplot themes
         ggpubr, # for arranging plots 
-        stargazer) # for regression table 
-
+        stargazer, # for regression table 
+        here) # for reproducibility 
 
 # devtools::install_github("jaeyk/makereproducible")
 library(makereproducible)
@@ -64,9 +63,10 @@ for (i in 1:length(script_list))
 
 # for publication-friendly theme
 theme_set(theme_pubr())
+
 ```
 
-## 1. Importing files
+# Importing files
 
 Unfortunately, I cannot share the original data because they are proprietary. Proquest holds the copyrights. 
 
@@ -82,7 +82,7 @@ results <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_da
 
 ```
 
-## 2. Merging dataframes 
+# Merging dataframes 
 
 
 ```{r}
@@ -122,11 +122,11 @@ labeled_selected <- dplyr::select(unlabeled,
 df <- bind_rows(sample_selected, labeled_selected)
 ```
 
-## 3. Descriptive analysis
+# Descriptive analysis
 
-### 3.1. Data wrangling
+## Data wrangling
 
-If you want to repliace the analysis, you can start from here using `df.csv` saved in `processed_data` directory..
+If you want to replicate the analysis, you can start from here using `df.csv` saved in `processed_data` directory..
 
 ```{r}
 
@@ -153,13 +153,13 @@ df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Ame
 
 # Save the processed data 
 
-write.csv(df, "/home/jae/ITS-Text-Classification/processed_data/df.csv")
+write.csv(df, make_here("/home/jae/ITS-Text-Classification/processed_data/df.csv"))
 
 ```
 
-### 3.2. Data visualization
+## Data visualization
 
-#### 3.1. Raw data 
+### Raw data 
 
 ```{r}
 
@@ -187,11 +187,11 @@ df_grouped %>%
 
 # Save plot 
 
-ggsave("/home/jae/ITS-Text-Classification/output/raw_data_plot.png", width = 13)
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/raw_data_plot.png"), width = 13)
 
 ```
 
-#### 3.2. No outliers and missing values 
+### No outliers and missing values 
 
 I adapted the code from this Oracle blog post to remove outliers and impute missing values. As the number of missing values in the data is 0, this process focuses on removing outliers. The plot shows that a couple of outliers disappeared in the updated data. 
 
@@ -244,13 +244,14 @@ ggarrange(cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political 
           cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests"),
           nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png", height = 8)
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png"), height = 8)
+
 ```
 
 
-## 4. Interrupted time series design analysis 
+# Interrupted time series design analysis 
 
-### 4.1. Base model
+## Base model
 
 ```{r}
 
@@ -266,57 +267,15 @@ df_domestic <- df_grouped %>%
 df_nondomestic <- df_grouped %>%
   filter(domestic != "Domestic") 
 
-# Create a function for non-adjusted models 
-
-visualize_base <- function(input){
-  
-  # Apply OLS regression
-  
-  model <- lm(count_ts ~ intervention + date +  group, data = input)
-  
-  # Make predictions 
-  
-  input$pred <- predict(model, type = "response", input)
-  
-  # Create confidence intervals  
-  
-  ilink <- family(model)$linkinv # Extracting the inverse link from parameter objects 
-  
-  # Combined prediction outputs 
-  
-  input <-predict(model, input, se.fit = TRUE)[1:2] %>%
-    bind_cols(input) %>%
-    mutate(
-      upr = ilink(fit + (2 * se.fit)),
-      lwr = ilink(fit - (2 * se.fit)))
-  
-  # Visualize the outcome 
-  
-  input %>%
-    ggplot(aes(x = date, y = count_ts)) +
-    geom_point(alpha = 0.2) +
-    facet_wrap(~group) +
-    geom_line(aes(y = pred), size = 1) +
-    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
-    labs(x = "Date",
-         y = "Publication count",
-         subtitle = "All articles mentioned Muslims",
-         caption = "Source: Ethnic Newswatch") +
-    scale_y_continuous(breaks= scales::pretty_breaks()) +
-    geom_ribbon(aes(ymin = lwr, ymax = upr),
-                alpha = 0.3, color = "blue")
-}
-
-
 # Visualize ITS analysis result for each subset of the data 
 
 ggarrange(visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"),
           visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
           nrow = 2, ncol = 1)
 
-ggsave("/home/jae/ITS-Text-Classification/output/its_base_plot.png", height = 8)
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_plot.png"), height = 8)
 ```
-### 4.2. Check for autocorrelation
+## Check for autocorrelation
 
 The base model is naive. To make it more robust, first, I assess the correlation between the series and its time lags (autocorrelation). In both cases, ACF (correlation a time series and its lags) test shows there exits a weak seasonal trend. 
 
@@ -343,38 +302,12 @@ df_domestic <- df_grouped %>%
 df_nondomestic <- df_grouped %>%
   filter(domestic != "Domestic") 
 
-# ACF
-
-acf_plot <- function(input){
-  
-  # Model 
-  
-  model <- lm(count_ts ~ intervention + date +  group, data = input)
-  
-  # Autocorrelation functions 
-  
-  pacf <- ggAcf(resid(model)) 
-}
-
-# PACF
-
-pacf_plot <- function(input){
-  
-  # Model 
-  
-  model <- lm(count_ts ~ intervention + date +  group, data = input)
-  
-  # Autocorrelation functions 
-  
-  pacf <- ggPacf(resid(model)) 
-}
-
 ```
 
 ```{r echo=FALSE}
 # Apply to each data
-ggarrange(acf_plot(df_domestic) + ggtitle("Domestic Political Interests (ACF)"), 
-          acf_plot(df_nondomestic) + ggtitle("International Political Interests (ACF)"),
+ggarrange(acf_plot(df_domestic) + ggtitle("Domestic Political Interests"), 
+          acf_plot(df_nondomestic) + ggtitle("International Political Interests"),
            nrow = 1, ncol =2)
 
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/acf_plot.png"), width = 10)
@@ -382,49 +315,9 @@ ggsave(make_here("/home/jae/ITS-Text-Classification/output/acf_plot.png"), width
 ```
 
 
-### 4.3. Parameterizing correlation
+## Parameterizing correlation
 
 The new model parameterizes autocorrelation by accounting for the correlation between the time series data and its time lags. `corARMA() function` defines correlation structure. `p` argument specifies the autoregressive order, and `q` argument specifies the moving average order of the ARMA structure. I then find the combination of `p` and `q` that yields the minimum Akaike Information Criterion (AIC).
-
-```{r eval=FALSE, include=FALSE}
-
-# Create functions 
-
-correct_ac_domestic <- function(a, b){
-  
-  model <- gls(count_ts ~ intervention + date +  group, 
-               data = df_domestic,
-               correlation = corARMA(p = a, q = b, form = ~ date | group),
-               method = "ML",
-               verbose = TRUE)
-  
-  results <- data.frame('P' = a,
-                        'Q' = b,
-                        'AIC' = AIC(model), 
-                        'BIC' = BIC(model),
-                        'AICc' = AICc(model)) # data.frame is better than rbind to keep heterogeneous data type 
-  
-  return(results)
-}
-
-correct_ac_nondomestic <- function(a, b){
-  
-  model <- gls(count_ts ~ intervention + date +  group, 
-               data = df_nondomestic,
-               correlation = corARMA(p = a, q = b, form = ~ date | group),
-               method = "ML",
-               verbose = TRUE)
-  
-  results <- data.frame('P' = a,
-                        'Q' = b,
-                        'AIC' = AIC(model), 
-                        'BIC' = BIC(model),
-                        'AICc' = AICc(model)) # data.frame is better than rbind to keep heterogeneous data type 
-  
-  return(results)
-}
-
-```
 
 ```{r eval=FALSE, include=FALSE}
 
@@ -437,48 +330,9 @@ pq_domestic
 pq_nondomestic
 ```
 
-### 4.4. Visualization 
+## Visualization 
 
 ```{r}
-
-# A new function 
-
-visualize_adj <- function(input, p.pam, q.pam){
-  
-  model <- gls(count_ts ~ intervention +  date + group, 
-               data = input,
-               correlation = corARMA(p= p.pam, q = q.pam, form = ~ date | group),
-               na.action = na.omit) 
-  
-  # Make predictions 
-  
-  input$pred <- predict(model, type = "response", input)
-  
-  # Combined prediction outputs 
-  
-  input <- predictSE.gls(model, input, se.fit = TRUE) %>%
-    bind_cols(input) %>%
-    mutate(
-      upr = fit + (2 * se.fit),
-      lwr = fit - (2 * se.fit))
-  
-  # Visualize the outcome 
-  
-  input %>%
-    ggplot(aes(x = date, y = count_ts)) +
-    geom_point(alpha = 0.2) +
-    facet_wrap(~group) +
-    geom_line(aes(y = pred), size = 1) +
-    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
-    labs(x = "Date",
-         y = "Publication count",
-         subtitle = "All articles mentioned Muslims",
-         caption = "Source: Ethnic Newswatch") +
-    scale_y_continuous(breaks= scales::pretty_breaks()) +
-    geom_ribbon(aes(ymin = lwr, ymax = upr),
-                alpha = 0.3, color = "blue")
-}
-
 # Visualize each result in the scatted plot 
 
 ggarrange(visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic Political Interests"), 
@@ -489,49 +343,65 @@ ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png
 
 ```
 
-### 4.5. Regression table
+## Bootstrapping analysis 
 
 ```{r}
 
-domestic_output <- gls(count_ts ~ intervention +  date + group, 
-               data = df_domestic,
-               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
+df_domestic <- df_domestic %>%
+    mutate(year = extract_year(df1))
 
-nondomestic_output <- gls(count_ts ~ intervention +  date + group, 
-               data = df_nondomestic,
-               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
+df_nondomestic <- df_nondomestic %>%
+    mutate(year = extract_year(df2))
+
+plot_boot <- plot_boot_analysis(df_domestic,
+                   df_nondomestic)
+
+plot_boot
+
+ggsave(here("output", "boot_analysis.png"))
 
 ```
 
-\begin{table}[!htbp] \centering 
-  \caption{ITS design aanlysis results} 
-  \label{} 
-\begin{tabular}{@{\extracolsep{5pt}}lcc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
- & \multicolumn{2}{c}{\textit{Dependent variable:}} \\ 
-\cline{2-3} 
-\\[-1.8ex] & \multicolumn{2}{c}{The publication count for Muslim-related articles on} \\ 
- & Domestic politics & International politics \\ 
-\hline \\[-1.8ex] 
- Intervention & 2.509$^{***}$ (0.694) & 0.608 (0.576) \\ 
-  Date & $-$0.0002 (0.0004) & $-$0.001$^{**}$ (0.0003) \\ 
-  Indian Americans & 2.292$^{***}$ (0.494) & 2.312$^{***}$ (0.336) \\ 
-  Constant & 3.648 (3.838) & 8.229$^{***}$ (2.965) \\ 
- \hline \\[-1.8ex] 
-Observations & 818 & 681 \\ 
-Log Likelihood & $-$1,829.933 & $-$1,527.732 \\ 
-Akaike Inf. Crit. & 3,677.866 & 3,073.465 \\ 
-Bayesian Inf. Crit. & 3,720.184 & 3,114.124 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
-\end{tabular} 
-\end{table}
+## Regression table
+
+### OLS
 
 ```{r}
-stargazer(domestic_output, nondomestic_output,
-          title = "ITS design aanlysis results",
+
+dom_output_ols <- lm(count_ts ~ intervention +  date + group, 
+               data = df_domestic) 
+
+nondom_output_ols <- lm(count_ts ~ intervention +  date + group, 
+               data = df_nondomestic)
+
+stargazer(dom_output_ols, nondom_output_ols,
+          title = "ITS design analysis results",
+          dep.var.labels = c("The publication count for Muslim-related articles on"),
+          header = FALSE,
+          single.row = TRUE,
+          column.labels = c("Domestic politics",
+                            "International politics"),
+          covariate.labels = c("Intervention",
+                               "Date",
+                               "Indian Americans"),
+          model.numbers = FALSE)
+
+```
+
+### GLS 
+
+```{r}
+
+dom_output_gls <- gls(count_ts ~ intervention +  date + group, 
+               data = df_domestic,
+               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
+
+nondom_output_gls <- gls(count_ts ~ intervention +  date + group, 
+               data = df_nondomestic,
+               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
+
+stargazer(dom_output_gls, nondom_output_gls,
+          title = "ITS design analysis results",
           dep.var.labels = c("The publication count for Muslim-related articles on"),
           header = FALSE,
           single.row = TRUE,
@@ -542,4 +412,3 @@ stargazer(domestic_output, nondomestic_output,
                                "Indian Americans"),
           model.numbers = FALSE)
 ```
-
