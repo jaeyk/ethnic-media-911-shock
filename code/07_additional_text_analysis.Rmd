@@ -119,14 +119,14 @@ word_frequency <- word_frequency %>%
 
 ```{r}
 ggplot(word_frequency, aes(Domestic, International)) +
-  geom_jitter(alpha = 0.03, size = 2.5, width = 0.25, height = 0.25) +
+  geom_jitter(alpha = 0.01, size = 3, width = 0.25, height = 0.25) +
   geom_text(aes(label = word), check_overlap =  TRUE, vjust = 1.5) +
   scale_x_log10(labels = scales::percent_format()) +
   scale_y_log10(labels = scales::percent_format()) +
   geom_abline(color = "red") +
-  facet_wrap(~group)
+  facet_wrap(~group, nrow = 2, ncol = 1)
 
-ggsave(here("output", "relative_word_freq.png"), width = 10)
+ggsave(here("output", "relative_word_freq.png"))
 ```
 
 # Classification results 
