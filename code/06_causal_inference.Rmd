@@ -350,7 +350,7 @@ its_adj_nondom_plot <- visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and M
 
 its_adj_dom_plot / its_adj_nondom_plot
 
-ggsave(here("output", "its_adjusted_plot.png"))
+ggsave(here("output", "its_adjusted_plot.png"), height = 8)
 
 ```
 
