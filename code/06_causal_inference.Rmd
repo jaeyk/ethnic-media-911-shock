@@ -15,36 +15,37 @@ html_document:
 # Import libraries 
 
 pacman::p_load(
-        tidyverse, # for the tidyverse framework 
-        splitstackshape, # for stacking and reshaping datasets 
-        tsModel, # for specifying time series regression models
-        lmtest, # for testing linear regression models
-        Epi, # for statistical analysis in epidemology 
-        splines, # for spline regression
-        vcd, # for visualizing categorical variable 
-        nlme, # for linear and nonlinear mixed effects models 
-        zoo, # S3 infrastructure for regular and irregular time series 
+        tidyverse, # the tidyverse framework 
+        splitstackshape, # stacking and reshaping datasets 
+        tsModel, # specifying time series regression models
+        lmtest, # testing linear regression models
+        Epi, # statistical analysis in epidemology 
+        splines, # spline regression
+        vcd, # visualizing categorical variable 
+        nlme, # linear and nonlinear mixed effects models 
+        zoo, # S3 infrastructure regular and irregular time series 
         simpleboot, # bootstrapping 
-        TTR, # for constructing technical trading rules
-        ggpmisc, # for detecting peaks and valleys 
-        broom, # for tidying model objects 
-        modelr, # for modeling 
-        forecast, # for forecasting 
-        ggseas, # for seasonal and decomposition on the fly
-        itsadug, # for interpreting time series and autocorrelated data 
-        mgcv, # for mixed GAM Computation Vehicle with Automatic Smoothness Estimation
-        tseries, # for computational financial analysis
-        mcp, # for regression with multiple change points
-        lawstat, # for testing stats in biostat, public policy, and law
-        sarima, # for simulation and prediction with seasonal ARIMA models  
-        car, # for Durbin Watson test 
-        tidyr, # for tidying messy daa 
-        AICcmodavg, # for computing predicted values and standard errors 
-        MuMIn, # for selecting models
-        ggthemes, # for fancy ggplot themes
-        ggpubr, # for arranging plots 
-        stargazer, # for regression table 
-        here) # for reproducibility 
+        TTR, # constructing technical trading rules
+        ggpmisc, # detecting peaks and valleys 
+        broom, # tidying model objects 
+        modelr, # modeling 
+        forecast, # forecasting 
+        ggseas, # seasonal and decomposition on the fly
+        itsadug, # interpreting time series and autocorrelated data 
+        mgcv, # mixed GAM Computation Vehicle with Automatic Smoothness Estimation
+        tseries, # computational financial analysis
+        mcp, # regression with multiple change points
+        lawstat, # testing stats in biostat, public policy, and law
+        sarima, # simulation and prediction with seasonal ARIMA models  
+        car, # Durbin Watson test 
+        tidyr, # tidying messy daa 
+        AICcmodavg, # computing predicted values and standard errors 
+        MuMIn, # selecting models
+        ggthemes, # fancy ggplot themes
+        ggpubr, # arranging plots 
+        stargazer, # regression table 
+        here, # reproducibility 
+        patchwork) # rearranging ggplot 
 
 # devtools::install_github("jaeyk/makereproducible")
 library(makereproducible)
@@ -120,6 +121,7 @@ labeled_selected <- dplyr::select(unlabeled,
 # Row bind the two dataframes  
 
 df <- bind_rows(sample_selected, labeled_selected)
+
 ```
 
 # Descriptive analysis
@@ -240,9 +242,11 @@ cleaned_nondomestic_plot <- df_grouped %>%
 
 # Save plot 
   
-ggarrange(cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political Interests"),
-          cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests"),
-          nrow = 2, ncol = 1)
+cleaned_domestic_plot <- cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political Interests") + labs(tag = "A", caption = "")
+
+cleaned_nondomestic_plot <- cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests") + labs(tag = "B")
+
+cleaned_domestic_plot / cleaned_nondomestic_plot
 
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png"), height = 8)
 
@@ -269,11 +273,14 @@ df_nondomestic <- df_grouped %>%
 
 # Visualize ITS analysis result for each subset of the data 
 
-ggarrange(visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests"),
-          visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests"),
-          nrow = 2, ncol = 1)
+its_base_dom_plot <- visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests") + labs(tag = "A", caption = "")
+
+its_base_nondom_plot <- visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests") + labs(tag = "B")
+
+its_base_dom_plot / its_base_nondom_plot
 
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_plot.png"), height = 8)
+
 ```
 ## Check for autocorrelation
 
@@ -306,11 +313,13 @@ df_nondomestic <- df_grouped %>%
 
 ```{r echo=FALSE}
 # Apply to each data
-ggarrange(acf_plot(df_domestic) + ggtitle("Domestic Political Interests"), 
-          acf_plot(df_nondomestic) + ggtitle("International Political Interests"),
-           nrow = 1, ncol =2)
+acf_dom <- acf_plot(df_domestic) + ggtitle("Domestic Political Interests") + labs(tag = "A")
 
-ggsave(make_here("/home/jae/ITS-Text-Classification/output/acf_plot.png"), width = 10)
+acf_nondom <- acf_plot(df_nondomestic) + ggtitle("International Political Interests") + labs(tag = "B")
+
+acf_dom / acf_nondom
+
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/acf_plot.png"))
 
 ```
 
@@ -335,11 +344,13 @@ pq_nondomestic
 ```{r}
 # Visualize each result in the scatted plot 
 
-ggarrange(visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic Political Interests"), 
-          visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and Minority International Political Interests"),
-           nrow = 2, ncol = 1)
+its_adj_dom_plot <- visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic Political Interests") + labs(caption = "", tag = "A")
 
-ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_adjusted_plot.png"), height = 8)
+its_adj_nondom_plot <- visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and Minority International Political Interests") + labs(tag = "B")
+
+its_adj_dom_plot / its_adj_nondom_plot
+
+ggsave(here("output", "its_adjusted_plot.png"))
 
 ```
 

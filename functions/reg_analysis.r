@@ -41,6 +41,31 @@ visualize_adj <- function(input, p.pam, q.pam) {
     )
 }
 
+model_adj <- function(input, p.pam, q.pam) {
+  model <- gls(count_ts ~ intervention + date + group,
+               data = input,
+               correlation = corARMA(p = p.pam, q = q.pam, form = ~ date | group),
+               na.action = na.omit
+  )
+  
+  # Make predictions
+  
+  input$pred <- predict(model, type = "response", input)
+  
+  # Combined prediction outputs
+  
+  input <- predictSE.gls(model, input, se.fit = TRUE) %>%
+    bind_cols(input) %>%
+    mutate(
+      upr = fit + (2 * se.fit),
+      lwr = fit - (2 * se.fit)
+    )
+  
+  # Visualize the outcome
+  
+  input
+}
+
 visualize_base <- function(input) {
 
   # Apply OLS regression
@@ -82,6 +107,35 @@ visualize_base <- function(input) {
     geom_ribbon(aes(ymin = lwr, ymax = upr),
       alpha = 0.3, color = "blue"
     )
+}
+
+
+model_base <- function(input) {
+  
+  # Apply OLS regression
+  
+  model <- lm(count_ts ~ intervention + date + group, data = input)
+  
+  # Make predictions
+  
+  input$pred <- predict(model, type = "response", input)
+  
+  # Create confidence intervals
+  
+  ilink <- family(model)$linkinv # Extracting the inverse link from parameter objects
+  
+  # Combined prediction outputs
+  
+  input <- predict(model, input, se.fit = TRUE)[1:2] %>%
+    bind_cols(input) %>%
+    mutate(
+      upr = ilink(fit + (2 * se.fit)),
+      lwr = ilink(fit - (2 * se.fit))
+    )
+  
+  # Visualize the outcome
+  
+  input
 }
 
 # ACF
