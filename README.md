@@ -1,14 +1,14 @@
 # ITS-Text-Classification
 
-**A Showcase of How Machine Learning Can Be Used to Provide Essential Data for Causal Inference**
+**A showcase of how machine learning can create essential data for causally identifying the long-term effects of threats on marginalized populations**
 
 - Co-author: [Andrew Thompson](https://sites.northwestern.edu/athompson/) (Notre Dame)
 - RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
 - [Slides](https://docs.google.com/presentation/d/15IQNQk62wA4hmqkxZuCX3csvi2nc_jNizqurOaQSeEI/edit?usp=sharing) (presented at [the joint PaCSS and PolNet 2020 conference](https://web.northeastern.edu/nulab/pacss/))
 
-## Motivation 
+## Motivation
 
-Past studies have also looked at how threats induce information seeking ([Valentino et al. 2008](https://onlinelibrary.wiley.com/doi/full/10.1111/j.1467-9221.2008.00625.x?casa_token=AFdpYAvh0rUAAAAA%3AlZ4OrLYGOUc3s-GkdnMusZVZ1d6SDJWSB84H7zu6T7alT3TeAZgR6hx_6M7-QaD-3l2ON1JiaKWyt-A), [Gadarian and Albertson 2013](https://onlinelibrary.wiley.com/doi/full/10.1111/pops.12034?casa_token=jRK3KrzsfR4AAAAA%3AMds8LYY6-Ld62cLOBnXd68_WIitzqqUGX3IvfWajNlfwkU3aUrPGdE1y27Hj8MIcoQgEEilVe5xkCj4) ). Yet, most of these studies were done using associational analyses or survey experiments. Our study contributes to this literature by using novel data (text) and methods (a combination of machine learning and causal inference) that **improve both the internal and external validity of the research design**.
+Although threat has long been considered a central concept in the social sciences, the quantitative scholarship on threat has been limited in its scope. Previous studies have mainly focused on how threats influence majority group members because existing opinion data, such as the American National Election Studies or the General Social Survey, contain only small fractions of observations of minority populations. This study provides a solution to this long-standing problem in the literature by combining a natural experiment with machine learning.
 
 ## Research Design
 
@@ -17,13 +17,13 @@ Past studies have also looked at how threats induce information seeking ([Valent
 - **Design**: The 9/11 attacks are an example of a natural experiment. The intervention---the terrorist attacks---was unexpected. Had the 9/11 attacks not occurred, the world would have continued in the way that it had existed before. This counterfactual world helps identify the causal effects of the intervention, as trends in the pre-intervention period can be compared with those in the post-intervention period. This research design is called [an interrupted time series design](https://en.wikipedia.org/wiki/Interrupted_time_series).
 - **Treatment**: This research design allows us to identify the causal effects of **threats** on the political behaviors of immigrant communities. The 9/11 attacks mean different things to different people. Defining the meaning of the intervention as precisely as possible helps reduce confusion that can arise from different interpretations. Here, my focus is on the impact of the 9/11 attacks on immigrant communities. For these marginalized populations, the hawkish policy (i.e., the War on Terrorism) and the accompanying xenophobic public opinion were threatening in that they caused this population to suffer increasing uncertainty about their safety.
 - **Mechanism**: We hypothesized that **threats** induce **information seeking**. After 9/11, immigrant communities might have been compelled to collect information on the treatment of Muslims in the United States to reduce the uncertainty they felt about their safety in the rapidly changing political climate.
-- **Case selection**: Arab and Indian Americans were ideal cases to test this argument for the ways in which they were **associated** with the image of terrorists. Arab Americans were targeted by the War on Terrorism and the xenophobic public opinion in the post-9.11 period because they came from the Muslim-majority countries and, thus, they were often perceived and treated as "potential terrorists." Indian Americans were also targeted because of their physical resemblance to Arab Americans in the eyes of white Americans.
+- **Case selection**: Arabs and South Asians became subject to U.S. state surveillance and negative media reporting due to their associations with Muslims. These perceived threats would have caused them to experience increasing uncertainty about their safety and compelled them to collect information on the political treatment of Muslims in the U.S.
 
 ### Text Data and Hypotheses
 
 - Text Data: The proof of the pudding is in the eating. What data can provide evidence for this claim? Ideally, we would like to have a large number of observations before and after the intervention. Otherwise, we lack statistical power to reject the null hypothesis (i.e., that the intervention and the observed change have no statistically significant relationship). Political scientists usually track political opinions through surveys. However, many observations of the targeted populations for this study were unlikely to be captured by most political opinion survey data collected at the national level using probability sampling (e.g., American National Election Studies). In this context, text data could serve as an alternative to the survey data. The [Ethnic NewsWatch](https://www.proquest.com/products-services/ethnicnewswatch_hist.html) database, created by Proquest, has compiled more than 2.5 million articles published by ethnic media in the U.S over the last four decades.
-- **H1:** We can take advantage of the text data by re-framing the question. Threats encourage information seeking. Information seeking increases demands for newspaper articles related to these threats. Therefore, the number of articles on threats can be considered as a proxy for measuring the change in information seeking. This is a reasonable assumption, as ethnic newspapers heavily rely on the demands of their ethnic communities. Therefore, the 9/11 attacks would have made Arab and Indian American newspapers publish more articles on **U.S. political news on Muslim communities** in the post-9.11 period compared to the number they had published in previous years (**H1**).
-- **H2:** A related question is the origin issue. To what extent can we be confident that this change in the number of articles published on the treatment of the Muslim populations in the U.S. indicates the origin of the threat is *domestic* (the hawkish U.S. policy and the xenophobic public opinion) not *international* (the spread of terrorism)? Collecting additional data could be useful to validate this theoretical assumption. If the international threat was present, then Arab and Indian American newspapers should have published more articles on the Muslim populations **outside of the U.S.** in the post-9.11 period vis-à-vis the pre-intervention period (**H2**). If only H1 were true and H2 were false, then the tests would confirm that the origin of the threats was domestic. If they were both true, then the sources of threats were both domestic and international sources.
+- **H1:** The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years.
+- **H2:** Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period.
 
 
 
@@ -80,12 +80,12 @@ for filename in os.listdir(os.getcwd()):
 
 #### 04_Labeling the Sample Articles
 
-- I distributed the task of labeling 1,015 sample articles between five people: Andrew (co-author), the 3 RAs, and myself. Initially, we were very ambitious. We wanted to get fine-grained data on the specific kinds of political information that these newspapers provided. However, as we started reading and labeling the sample articles, we realized that a multinominal (many categories) conceptual framework was not going to work. The main problem was that either many articles fit into all the measures that we proposed (false positive), or they didn't fit at all (false negative). The RAs raised this as a critical problem because they felt *they could not be confident that a machine learning algorithm can predict values if they---humans---could not*. This was a fair point. Consequently, we decided to keep things simple and label articles as a binary variable depending on whether they were **about U.S. domestic politics (coded 1) or not (coded 0)**. Interestingly, most of the non-domestic Muslim articles were about international affairs such as the disputes between India and Pakistan.
+- We sampled 1,015 articles from this dataset to train machine learning algorithms. We tried to obtain (1) equal-sized sample articles for the pre- and post-intervention periods (assignment variable) and (2) balanced samples from different kinds of newspapers (source variable). The two coauthors and three undergraduate research assistants labeled these 1,015 sample articles as binary variables depending on whether they were about U.S. domestic politics (coded "1") or not (coded "0").
 - Ideally, we would have calculated inter-coder reliability by assigning the same articles to at least two different coders, but due to time restrictions, we were not able to complete this step. We acknowledge this as one limitation of our study.
 
 #### 05_Classifying Articles Using Machine Learning in Python [[Code for Preprocessing](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)] [[Code for Classification](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.ipynb)]
 
-- The RAs then trained a lasso model in Python using these labeled texts. Initial trials did not deliver a promising result. To improve this, we added features (i.e., stratifying variables -- assignment and source variables) that were used in the sampling process. The classification accuracy rate is **73\%**, precision rate **75\%**, and recall rate **80\%**.
+- Then we trained a Lasso model in Python using the labeled texts with the added features (i.e., stratifying and assignment and source variables) that were used in the sampling process. The classification accuracy rate (the percentage of results accurately classified) was 73%, precision rate (the percentage of relevant results) was 75%, and recall rate (the percentage of total relevant results correctly classified) was 80%.
 
 ```python
 # Get addition features from one hot encoding the source, intervention, and group columns
@@ -102,7 +102,7 @@ features_x_train.head()
 #### 06_Estimating the Causal Effect in R  [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_causal_inference.Rmd)]
 
 - I finally obtained the time series data needed for the interrupted time series design analysis by combining the classified texts and their publication dates.
-- In Figure 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `non-U.S. domestic politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
+- In Figure 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `international politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
 
 **Figure 2. Scatted Plot**
 
@@ -110,12 +110,7 @@ features_x_train.head()
 
 - Looking at the changes in the y-values before and after the intervention (the dotted vertical red line) in Figure 2, one can quickly notice that the publication count for Muslim-related articles increased in the post-intervention period for `U.S. domestic political news`, but not for `the international news`. Yet, one should also be cautious not to draw a strong conclusion from this plot alone. The y-values indicate both the treatment effect as well as seasonal changes, trends, and random noises. Comparing two groups (Arab and Indian American newspapers) reassures that the observed pattern is not group-specific, but a naive model cannot address these other factors.
 
-- Therefore, the next step is to build a model that differentiates the treatment effect from these other factors. Before doing so, it is important to acknowledge how an interrupted time series (ITS) design is different from a regression-discontinuity (RD) design in terms of estimation strategy. In both research designs, a cutoff (an interruption or a discontinuity) in the data is essential to qualify them as natural experiments.
-
-- However, the key difference is that ITS is based on time-series, whereas RD is typically based on cross-sectional data.
-- In an RD analysis, researchers estimate treatment effects within a bandwidth around a certain cutoff. For instance, the winning and the runner-up candidate in close elections might be not so much different, except that one won the election and the other did not. For this reason, [Lee and Lemieux (2010: 289)](https://www.princeton.edu/~davidlee/wp/RDDEconomics.pdf) called RD a local experiment and the data analysis for RD is similar to the analysis of experimental data.
-- In contrast, the main challenge of ITS is time, a variable that is not randomly assigned across the data points. Therefore, researchers need to figure out how they can model time series data and its various components.
-- What is particularly problematic is autocorrelation or the linear correlation between time series data and the lagged version of itself. When this occurs, one of the key assumptions of an OLS model is violated: residuals (error terms) are i.i.d. (independent and identically distributed). In this case, this serial correlation does not influence the unbiased consistency of the estimator, but it [affects their efficiency](https://www3.nd.edu/~rwilliam/stats2/l26.pdf), leading to smaller standard errors and narrower confidence intervals than their correct versions. This problem causes Type I errors (false positives).
+- Therefore, the next step is to build a model that differentiates the treatment effect from these other factors. What is particularly problematic is autocorrelation or the linear correlation between time series data and the lagged version of itself. When this occurs, one of the key assumptions of an OLS model is violated: residuals (error terms) are i.i.d. (independent and identically distributed). In this case, this serial correlation does not influence the unbiased consistency of the estimator, but it [affects their efficiency](https://www3.nd.edu/~rwilliam/stats2/l26.pdf), leading to smaller standard errors and narrower confidence intervals than their correct versions. This problem causes Type I errors (false positives).
 
 
 **Figure 3. Scattered Plot with Predicted Lines from the OLS Model**
@@ -139,7 +134,7 @@ features_x_train.head()
 
 <img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png" width="600">
 
-- It is fascinating to see how these different modeling approaches influence the ways we can interpret the statistical results. Figure 4 and 5 are similar to Figure 2 in terms of the X-axis, Y-axis, and raw data points (they are intentionally blurred to stress predicted lines more). The predicted lines come from the naive OLS model in Figure 4 and the GLS model in Figure 5. In terms of slopes, they are close; what makes them different is the size of the confidence intervals (the gray area surrounding the line plots). This observation is consistent with what we discussed earlier. Autocorrelation influences the efficiency of regression estimators, so that when we take that problem in our modeling approach, the confidence intervals become more conservative.
+- Compared to the OLS results, the GLS results showed much larger standard errors. This change affected the statistical significance of key regression coefficients. For instance, Table 1 shows that the treatment effect for the increase in the number of published articles on international politics was no longer statistically significant even when we lowered the level of significance to p < 0.1. Also, the new modeling approach made effect sizes slightly smaller. The fine-tuned result confirmed H1 (domestic threats prompted information seeking) and rejected H2 (international threats prompted information seeking).
 
 
 <table style="text-align:center"><tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="2"><em>Dependent variable:</em></td></tr>
@@ -166,9 +161,7 @@ features_x_train.head()
 
 Table 1. GLS analysis resuls
 
-- As shown in Table  1, the results confirm H1 (domestic threats induce information seeking) and reject H2 (international threats induce information seeking).
-
-### Additional text analysis (Summer 2020)
+### Additional text analysis for construct validity test (Summer 2020)
 
 #### 07_Additional Text Analysis in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_topic_modeling.Rmd)]
 
