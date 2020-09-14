@@ -104,7 +104,7 @@ features_x_train.head()
 - I finally obtained the time series data needed for the interrupted time series design analysis by combining the classified texts and their publication dates.
 - In Figure 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `international politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
 
-**Figure 2. Scatted Plot**
+**Figure 2. Scatter plot**
 
 <img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png" width="600">
 
