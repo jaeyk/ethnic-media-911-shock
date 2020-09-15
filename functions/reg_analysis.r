@@ -19,6 +19,9 @@ df_grouped %>%
 # Add intervention 
 df_grouped$intervention <- ifelse(df_grouped$date < as.Date("2001-09-11"), 0, 1)
 
+df_grouped
+}
+
 ##### Visualize #####
 
 visualize_raw <- function(data){
