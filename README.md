@@ -71,21 +71,21 @@ for filename in os.listdir(os.getcwd()):
 
 ### Machine Learning (Fall 2019)
 
-#### 03_Random Sampling Articles Stratifying on Assignment and Source Variables in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/03_sampling.Rmd)]
+#### 03_Random Sampling Articles Stratifying on Intervention and Source Variables in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/03_sampling.Rmd)]
 
 - I sampled 1,015 articles from this dataset to train machine learning algorithms.
-- I tried to obtain (1) equal-sized sample articles for the pre- and post-intervention periods (assignment variable) and (2)balanced samples from across different kinds of newspapers (source variable). I did so because I assume that **the variances in these variables matter in training the model and making accurate predictions**.
+- I tried to obtain (1) equal-sized sample articles for the pre- and post-intervention periods (intervention variable) and (2)balanced samples from across different kinds of newspapers (source variable). I did so because I assume that **the variances in these variables matter in training the model and making accurate predictions**.
 
 `sample_articles <- stratified(articles, c("intervention", "source"), 120)`
 
 #### 04_Labeling the Sample Articles
 
-- We sampled 1,015 articles from this dataset to train machine learning algorithms. We tried to obtain (1) equal-sized sample articles for the pre- and post-intervention periods (assignment variable) and (2) balanced samples from different kinds of newspapers (source variable). The two coauthors and three undergraduate research assistants labeled these 1,015 sample articles as binary variables depending on whether they were about U.S. domestic politics (coded "1") or not (coded "0").
+- We sampled 1,015 articles from this dataset to train machine learning algorithms. We tried to obtain (1) equal-sized sample articles for the pre- and post-intervention periods (intervention variable) and (2) balanced samples from different kinds of newspapers (source variable). The two coauthors and three undergraduate research assistants labeled these 1,015 sample articles as binary variables depending on whether they were about U.S. domestic politics (coded "1") or not (coded "0").
 - Ideally, we would have calculated inter-coder reliability by assigning the same articles to at least two different coders, but due to time restrictions, we were not able to complete this step. We acknowledge this as one limitation of our study.
 
 #### 05_Classifying Articles Using Machine Learning in Python [[Code for Preprocessing](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)] [[Code for Classification](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.ipynb)]
 
-- Then we trained a Lasso model in Python using the labeled texts with the added features (i.e., stratifying and assignment and source variables) that were used in the sampling process. The classification accuracy rate (the percentage of results accurately classified) was 73%, precision rate (the percentage of relevant results) was 75%, and recall rate (the percentage of total relevant results correctly classified) was 80%.
+- Then we trained a Lasso model in Python using the labeled texts with the added features (i.e., intervention, source, and group variables). The classification accuracy rate (the percentage of results accurately classified) was 73%, precision rate (the percentage of relevant results) was 75%, and recall rate (the percentage of total relevant results correctly classified) was 80%.
 
 ```python
 # Get addition features from one hot encoding the source, intervention, and group columns
@@ -104,7 +104,7 @@ features_x_train.head()
 - I finally obtained the time series data needed for the interrupted time series design analysis by combining the classified texts and their publication dates.
 - In Figure 2, the X-axis indicates the publication date, and the Y-axis shows the number of published articles. In the upper panel, the y-values show the number of articles published on `U.S. domestic politics`. In the lower panel, the y-values show the number of articles published on `international politics` (mostly about international relations). Note that I removed outliers from the raw data. This step was necessary to fit an Ordinary Least Squares (OLS) regression model to the data because regression coefficients (slopes) are sensitive to outliers. You can check the raw data plot [here](https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/raw_data_plot.png); note that the difference between the raw and the processed data is marginal.
 
-**Figure 2. Scatted Plot**
+**Figure 2. Scatter plot**
 
 <img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png" width="600">
 
