@@ -23,4 +23,8 @@ df_distinct <- df_distinct %>%
 min(df_distinct$date) > 1995
 max(df_distinct$date) < 2007
 
+# Add the intervention variable 
+
+df_distinct$intervention <- ifelse(df_distinct$date < as.Date("2001-09-11"), 0, 1)
+
 write_csv(df_distinct, here("processed_data", "placebo.csv"))
