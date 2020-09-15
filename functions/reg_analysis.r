@@ -1,4 +1,32 @@
 
+replace_outliers <- function(df, dv){
+  
+model <- lm({{dv}} ~ intervention + date + group, data = input)
+
+# Detecting outliers 
+cooksd <- cooks.distance(model)
+
+# For reproducibility 
+set.seed(1234)
+
+influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm = TRUE))])
+
+# Visualizing outliers
+cooksd_df <- data.frame(Index = seq(1:nrow(df)),
+                        CookD = cooksd)
+
+# Replace with NAs
+df$dv[influential] <- NA
+
+# Imputation  
+knnOutput <- knnImputation(df)
+
+df$dv <- round(knnOutput$dv, 0)
+
+df$dv <- as.integer(df$dv)
+
+}
+
 group_df <- function(data, group_var){
   
 # Group by
@@ -20,6 +48,27 @@ df_grouped %>%
 df_grouped$intervention <- ifelse(df_grouped$date < as.Date("2001-09-11"), 0, 1)
 
 df_grouped
+}
+
+
+group_df_placebo <- function(data, time_var){
+  
+  # Group by
+  df_grouped <- data %>%
+    group_by({{time_var}}, domestic) %>% # group by 
+    dplyr::summarize(n = n()) %>% # summarize 
+    as.data.frame()
+  
+  # Count ts 
+  count_ts <- ts(df_grouped[, c('n')])
+  
+  df_grouped$count_ts <- as.integer(tsclean(count_ts))
+  
+  # Get rid of n
+  df_grouped %>%
+    dplyr::select(-n)
+
+  df_grouped
 }
 
 ##### Visualize #####
@@ -146,6 +195,50 @@ visualize_base <- function(input) {
       alpha = 0.3, color = "blue"
     )
 }
+
+
+visualize_placebo <- function(input) {
+  
+  # Apply OLS regression
+  
+  model <- lm(n ~ intervention + date, data = input)
+  
+  # Make predictions
+  
+  input$pred <- predict(model, type = "response", input)
+  
+  # Create confidence intervals
+  
+  ilink <- family(model)$linkinv # Extracting the inverse link from parameter objects
+  
+  # Combined prediction outputs
+  
+  input <- predict(model, input, se.fit = TRUE)[1:2] %>%
+    bind_cols(input) %>%
+    mutate(
+      upr = ilink(fit + (2 * se.fit)),
+      lwr = ilink(fit - (2 * se.fit))
+    )
+  
+  # Visualize the outcome
+  
+  input %>%
+    ggplot(aes(x = date, y = n)) +
+    geom_point(alpha = 0.2) +
+    geom_line(aes(y = pred), size = 1) +
+    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") +
+    labs(
+      x = "Date",
+      y = "Publication count",
+      subtitle = "All articles mentioned Muslims",
+      caption = "Source: Ethnic Newswatch"
+    ) +
+    scale_y_continuous(breaks = scales::pretty_breaks()) +
+    geom_ribbon(aes(ymin = lwr, ymax = upr),
+                alpha = 0.3, color = "blue"
+    )
+}
+
 
 
 model_base <- function(input) {

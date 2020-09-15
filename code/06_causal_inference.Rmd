@@ -19,7 +19,7 @@ pacman::p_load(
         splitstackshape, # stacking and reshaping datasets 
         tsModel, # specifying time series regression models
         lmtest, # testing linear regression models
-        Epi, # statistical analysis in epidemology 
+        Epi, # statistical analysis in epidemiology 
         splines, # spline regression
         vcd, # visualizing categorical variable 
         nlme, # linear and nonlinear mixed effects models 
@@ -81,6 +81,10 @@ sample <- read_csv(make_here("/home/jae/muslim_newspapers-selected/raw_data/samp
 
 results <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/predicted.csv"))
 
+placebo <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/placebo.csv"))
+
+placebo_predicted <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/placebo_predicted.csv"))[,2]
+
 ```
 
 # Merging dataframes 
@@ -101,6 +105,7 @@ sample$domestic <- ifelse(sample$expanding == 1 | sample$distancing == 1 | sampl
 # Create domestic variable for unlabeled and apply predicted values to the variable 
 
 unlabeled$domestic <- results$`0`
+placebo_predicted$domestic <- placebo_predicted$`0`
 
 # Select key variables 
 
@@ -121,6 +126,7 @@ labeled_selected <- dplyr::select(unlabeled,
 # Row bind the two dataframes  
 
 df <- bind_rows(sample_selected, labeled_selected)
+df_placebo <- bind_cols(placebo, placebo_predicted) 
 
 ```
 
@@ -145,9 +151,12 @@ df$date <- as.Date(as.character(df$date), "%Y%m%d")
 # Recode values in domestic variable 
 
 df$domestic <- as.character(df$domestic) 
-
 df$domestic[df$domestic == 1] <- "Domestic"
 df$domestic[df$domestic == 0] <- "International"
+
+df_placebo$domestic <- as.character(df_placebo$domestic) 
+df_placebo$domestic[df_placebo$domestic == 1] <- "Domestic"
+df_placebo$domestic[df_placebo$domestic == 0] <- "International"
 
 # Create group variable based on newspaper names 
 
@@ -235,6 +244,25 @@ its_base_dom_plot / its_base_nondom_plot
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_plot.png"), height = 8)
 
 ```
+
+### Placebo test 
+
+```{r}
+
+# Create assignment variable 
+
+df_placebo_grouped<- group_df_placebo(df_placebo, date)
+
+df_placebo_grouped$intervention <- ifelse(df_placebo_grouped$date < as.Date("2001-09-11"), 0, 1)
+  
+visualize_placebo(df_placebo_grouped) + facet_wrap(~domestic) +
+  labs(title = "Placebo test (10 European ethnic newspapers)")
+
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_placebo_plot.png"), height = 8)
+
+```
+
+
 ## Check for autocorrelation
 
 The base model is naive. To make it more robust, first, I assess the correlation between the series and its time lags (autocorrelation). In both cases, ACF (correlation a time series and its lags) test shows there exits a weak seasonal trend. 
