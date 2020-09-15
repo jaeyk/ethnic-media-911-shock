@@ -1,5 +1,40 @@
 
+group_df <- function(data, group_var){
+  
+# Group by
+df_grouped <- data %>%
+  group_by(date, domestic, {{group_var}}) %>% # group by 
+    dplyr::summarize(n = n()) %>% # summarize 
+    as.data.frame()
+
+# Count ts 
+count_ts <- ts(df_grouped[, c('n')])
+
+df_grouped$count_ts <- as.integer(tsclean(count_ts))
+
+# Get rid of n
+df_grouped %>%
+  dplyr::select(-n)
+    
+# Add intervention 
+df_grouped$intervention <- ifelse(df_grouped$date < as.Date("2001-09-11"), 0, 1)
+
 ##### Visualize #####
+
+visualize_raw <- function(data){
+  
+data %>%
+  ggplot(aes(x = date, y = count_ts)) +
+    geom_line() + # line plot
+    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
+    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
+    labs(x = "Date",
+         y = "Publication count",
+         col = "Issue focus",
+         subtitle = "All articles mentioned Muslims",
+         caption = "Source: Ethnic Newswatch")
+  
+}
 
 visualize_adj <- function(input, p.pam, q.pam) {
   model <- gls(count_ts ~ intervention + date + group,
@@ -272,12 +307,12 @@ plot_boot_analysis <- function(df_domestic, df_nondomestic) {
     ## GLS
     dom_gls <- gls(count_ts ~ intervention + date + group,
       data = subset(df_domestic, year <= 2000 + i),
-      correlation = corARMA(p = 3, q = 1, form = ~ date | group)
+      correlation = corARMA(p = 3, q = 1, form = ~ date | group + source)
     )
 
     nondom_gls <- gls(count_ts ~ intervention + date + group,
       data = subset(df_nondomestic, year <= 2000 + i),
-      correlation = corARMA(p = 3, q = 1, form = ~ date | group)
+      correlation = corARMA(p = 3, q = 1, form = ~ date | group + source)
     )
 
     # Save iterations
@@ -409,5 +444,44 @@ correct_ac_nondomestic <- function(a, b) {
     "AICc" = AICc(model)
   ) # data.frame is better than rbind to keep heterogeneous data type
 
+  return(results)
+}
+
+
+correct_ac_domestic_source <- function(a, b) {
+  model <- gls(count_ts ~ intervention + date + source,
+               data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic == "Domestic"),
+               correlation = corARMA(p = a, q = b, form = ~ date | source),
+               method = "ML",
+               verbose = TRUE
+  )
+  
+  results <- data.frame(
+    "P" = a,
+    "Q" = b,
+    "AIC" = AIC(model),
+    "BIC" = BIC(model),
+    "AICc" = AICc(model)
+  ) # data.frame is better than rbind to keep heterogeneous data type
+  
+  return(results)
+}
+
+correct_ac_nondomestic_source <- function(a, b) {
+  model <- gls(count_ts ~ intervention + date + source,
+               data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic != "Domestic"),
+               correlation = corARMA(p = a, q = b, form = ~ date | source),
+               method = "ML",
+               verbose = TRUE
+  )
+  
+  results <- data.frame(
+    "P" = a,
+    "Q" = b,
+    "AIC" = AIC(model),
+    "BIC" = BIC(model),
+    "AICc" = AICc(model)
+  ) # data.frame is better than rbind to keep heterogeneous data type
+  
   return(results)
 }

@@ -69,7 +69,7 @@ theme_set(theme_pubr())
 
 # Importing files
 
-Unfortunately, I cannot share the original data because they are proprietary. Proquest holds the copyrights. 
+Unfortunately, I cannot share the original data because they are proprietary. ProQuest holds the copyrights. 
 
 ```{r include=FALSE}
 
@@ -163,92 +163,45 @@ write.csv(df, make_here("/home/jae/ITS-Text-Classification/processed_data/df.csv
 
 ### Raw data 
 
-```{r}
-
-# Grouping and summarizing data 
-
-df_grouped <- df %>%
-  group_by(date, domestic, group) %>% # group by 
-  dplyr::summarize(n = n()) %>% # summarize 
-  as.data.frame()
-
-# Raw plot 
-
-df_grouped %>%
-  ggplot(aes(x = date, y = n)) +
-    geom_line() + # line plot
-    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
-    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
-    facet_grid(group~domestic) + # facetting, y scale is free 
-    labs(x = "Date",
-         y = "Publication count",
-         col = "Issue focus",
-         title = "9/11 and Minority Political Interests",
-         subtitle = "All articles mentioned Muslims",
-         caption = "Source: Ethnic Newswatch") 
-
-# Save plot 
-
-ggsave(make_here("/home/jae/ITS-Text-Classification/output/raw_data_plot.png"), width = 13)
-
-```
-
 ### No outliers and missing values 
 
 I adapted the code from this Oracle blog post to remove outliers and impute missing values. As the number of missing values in the data is 0, this process focuses on removing outliers. The plot shows that a couple of outliers disappeared in the updated data. 
 
 ```{r}
 
-# checking whether there's NA
-paste("The number of missing values in the data is", sum(is.na(df_grouped)))
-
-# Clean the dependent variable
-
-count_ts <- ts(df_grouped[, c('n')])
-
-df_grouped$count_ts <- as.integer(tsclean(count_ts))
-
-# Get rid of n
-df_grouped <- df_grouped %>%
-  dplyr::select(-n)
-
-# Cleaned plot 
-
-cleaned_domestic_plot <- df_grouped %>%
-  filter(domestic == "Domestic") %>%
-  ggplot(aes(x = date, y = count_ts)) +
-    geom_line() + # line plot
-    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
-    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
-    facet_wrap(~group, scale = "free_y") + # facetting, y scale is free 
-    labs(x = "Date",
-         y = "Publication count",
-         col = "Issue focus",
-         subtitle = "All articles mentioned Muslims",
-         caption = "Source: Ethnic Newswatch")
-  
-cleaned_nondomestic_plot <- df_grouped %>%
-  filter(domestic != "Domestic") %>%
-  ggplot(aes(x = date, y = count_ts)) +
-    geom_line() + # line plot
-    geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
-    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
-    facet_wrap(~group, scale = "free_y") + # facetting, y scale is free 
-    labs(x = "Date",
-         y = "Publication count",
-         col = "Issue focus",
-         subtitle = "All articles mentioned Muslims",
-         caption = "Source: Ethnic Newswatch")
-
 # Save plot 
   
-cleaned_domestic_plot <- cleaned_domestic_plot + ggtitle("9/11 and Minority Domestic Political Interests") + labs(tag = "A", caption = "")
+cleaned_domestic_plot <- group_df(df, group) %>%
+  filter(domestic == "Domestic") %>% visualize_raw() +     
+  facet_wrap(~group, scale = "free_y") + # facetting, y scale is free   
+  ggtitle("9/11 and Minority Domestic Political Interests") + 
+  labs(tag = "A", caption = "")
 
-cleaned_nondomestic_plot <- cleaned_nondomestic_plot + ggtitle("9/11 and Minority International Political Interests") + labs(tag = "B")
+cleaned_nondomestic_plot <- group_df(df, group) %>%
+  filter(domestic != "Domestic") %>% visualize_raw() + 
+  ggtitle("9/11 and Minority International Political Interests") + 
+  labs(tag = "B") +
+  facet_wrap(~group, scale = "free_y") # facetting, y scale is free 
 
 cleaned_domestic_plot / cleaned_nondomestic_plot
 
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png"), height = 8)
+
+cleaned_domestic_plot_source <- group_df(df, source) %>%
+  filter(domestic == "Domestic") %>% visualize_raw() +  
+  facet_wrap(~source, scale = "free_y") + # facetting, y scale is free   
+  ggtitle("9/11 and Minority Domestic Political Interests") + 
+  labs(tag = "A", caption = "")
+
+cleaned_nondomestic_plot_source <- group_df(df, source) %>%
+  filter(domestic != "Domestic") %>% visualize_raw() +
+  ggtitle("9/11 and Minority International Political Interests") + 
+  labs(tag = "B") +
+  facet_wrap(~source, scale = "free_y") # facetting, y scale is free 
+
+cleaned_domestic_plot_source / cleaned_nondomestic_plot_source
+
+ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot_source.png"), height = 8)
 
 ```
 
@@ -261,7 +214,7 @@ ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png
 
 # Create assignment variable 
 
-df_grouped$intervention <- ifelse(df_grouped$date < as.Date("2001-09-11"), 0, 1)
+df_grouped <- group_df(df, group)
 
 # Divide data 
 
@@ -359,10 +312,10 @@ ggsave(here("output", "its_adjusted_plot.png"), height = 8)
 ```{r}
 
 df_domestic <- df_domestic %>%
-    mutate(year = extract_year(df1))
+    mutate(year = extract_year(df_domestic))
 
 df_nondomestic <- df_nondomestic %>%
-    mutate(year = extract_year(df2))
+    mutate(year = extract_year(df_nondomestic))
 
 plot_boot <- plot_boot_analysis(df_domestic,
                    df_nondomestic)
@@ -423,3 +376,48 @@ stargazer(dom_output_gls, nondom_output_gls,
                                "Indian Americans"),
           model.numbers = FALSE)
 ```
+
+
+### GLS with sourced fixed effects 
+
+```{r}
+
+pq_domestic_source <- mapply(correct_ac_domestic_source, c(1,2,3), c(1))
+
+pq_nondomestic_source <- mapply(correct_ac_nondomestic_source, c(1,2,3), c(1))
+
+pq_domestic_source # [1,1]
+
+pq_nondomestic_source # [2,1]
+
+```
+
+```{r}
+dom_output_gls <- gls(count_ts ~ intervention +  date + source, 
+               data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic == "Domestic"),
+               correlation = corARMA(p= 1, q = 1, form = ~ date | source)) 
+
+nondom_output_gls <- gls(count_ts ~ intervention +  date + source, 
+               data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic != "Domestic"),
+               correlation = corARMA(p= 2, q = 1, form = ~ date | source)) 
+
+stargazer(dom_output_gls, nondom_output_gls,
+          title = "ITS design analysis results",
+          dep.var.labels = c("The publication count for Muslim-related articles on"),
+          header = FALSE,
+          single.row = TRUE,
+          column.labels = c("Domestic politics",
+                            "International politics"),
+          covariate.labels = c("Intervention",
+                               "Date"),
+          model.numbers = FALSE)
+
+
+818 + 681 = 1,499 
+1039 + 915 = 1,954 
+
+2.509 - 0.608
+2.018 - 0.593
+
+```
+
