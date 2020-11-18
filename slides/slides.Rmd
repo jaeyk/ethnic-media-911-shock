@@ -1,0 +1,202 @@
+---
+title: "How Threats Shape the Politics of Marginalized: Evidence from a Natural Experiment and Machine Learning"
+subtitle: "Prepared for ... "
+author: "Jae Yeon Kim (UC Berkeley)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  xaringan::moon_reader:
+    css: custom.css
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+
+library(xaringanthemer)
+
+style_mono_accent(
+  base_color = "#23395b",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono")
+  
+)
+
+```
+
+```{r include=FALSE}
+
+# Install and load packages 
+if (!require(pacman)) install.packages("pacman")
+
+```
+
+# Data availability and social science research 
+
+![](https://axispraxis.files.wordpress.com/2016/03/muttjeff01.jpg?w=800)
+
+The streetlight effect: **data availability** constrains the **scope** of research **questions** and **methods**. 
+
+---
+
+# Quantitative research on marginalized populations 
+
+It's *relatively* easy to assess how majority groups are biased against minority groups, but it's difficult to investigate how minority groups experience and internalize bias using quantitative methods.  
+
+---
+
+# Current options and their limitations 
+
+1. Qualitative research: generalizability
+2. Survey research: temporal scope and group heterogeneity
+3. Experimental research: snapshots and artificial treatments
+  
+---
+
+# Takeaways 
+
+1. Machine learning enables data-intensive research on marginalized populations. (You can think of a prediction as part of the complex research design.)
+
+2. Automating research process helps increase research transparency, reproducibility, and scalability.
+
+---
+
+# 9/11 as a natural experiment 
+
+![](https://images.theconversation.com/files/234736/original/file-20180904-41720-xwahre.jpg?ixlib=rb-1.1.0&q=45&auto=format&w=496&fit=clip)
+
+---
+
+# Threats and information seeking 
+
+![](https://www.aljazeera.com/wp-content/uploads/2015/12/dc5d4b98b6bd4228a01a3ef8b4daedbf_18.jpeg?fit=1000%2C562)
+
+---
+
+# Ethnic newspaper as an alternative data source 
+
+![](arab_american_news.png)
+
+---
+
+# Data sources 
+
+Data source: Ethnic NewsWatch database (2.5 million + articles collected over the last four decades)
+
+Raw data: 1,132 Arab and 4,552 Indian American newspaper articles mentioning Muslims published between 1996 and 2006
+
+---
+
+# Outcome measures and hypotheses
+
+Among the Muslim related articles:
+
+* Domestic politics
+
+* International politics
+
+---
+
+# Argument 
+
+If threats encourage information seeking (Valentino et al. 2008; Albertson and Gadarian 2015) and information seeking increases the demand for news reports on these threats, then ... 
+
+---
+
+# Argument 
+
+H1: The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**TRUE**)
+
+---
+
+# Argument 
+
+H2: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**FALSE**)
+
+---
+
+
+# Workflow 
+
+* Step 1: Digital (text) data collection 
+
+* Step 2: Training classifiers 
+
+* Step 3: Automated text classification 
+
+* Step 4: Interrupted time series design analysis 
+
+---
+
+# What raw data look like 
+
+
+
+---
+
+# Software for automating digital data collection 
+
+---
+
+# Training classifiers 
+
+---
+
+# Relative word frequencies 
+
+---
+
+# Raw data and ITS design 
+
+---
+
+# ITS design analysis results (OLS)
+
+---
+
+# ITS design analysis results (GLS)
+
+---
+
+# Scaling up your research agenda 
+
+---
+
+# Building a research pipeline 
+
+---
+
+# Questions/comments?
+
+---
+
+# Appendix A Ethnic NewsWatch Datbase 
+
+![](enw_db1.png)
+
+---
+
+# Appendix A Ethnic NewsWatch Datbase 
+
+![](enw_db2.png)
+
+---
+
+# Appendix B Autocorrelation test
+
+![](acf.png)
+
+---
+
+# Appendix C Newspaper source analysis
+
+![](source_a.png)
+
+---
+
+# Appendix C Newspaper source analysis
+
+![](source_b.png)

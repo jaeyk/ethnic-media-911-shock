@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Threats Shape the Politics of Marginalized: Evidence from a Natural Experiment and Machine Learning</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Jae Yeon Kim (UC Berkeley)" />
+    <script src="libs/header-attrs-2.5/header-attrs.js"></script>
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# How Threats Shape the Politics of Marginalized: Evidence from a Natural Experiment and Machine Learning
+## Prepared for …
+### Jae Yeon Kim (UC Berkeley)
+### 18 November, 2020
+
+---
+
+
+
+
+
+
+# Data availability and social science research 
+
+![](https://axispraxis.files.wordpress.com/2016/03/muttjeff01.jpg?w=800)
+
+The streetlight effect: **data availability** constrains the **scope** of research **questions** and **methods**. 
+
+---
+
+# Quantitative research on marginalized populations 
+
+It's *relatively* easy to assess how majority groups are biased against minority groups, but it's difficult to investigate how minority groups experience and internalize bias using quantitative methods.  
+
+---
+
+# Current options and their limitations 
+
+1. Qualitative research: generalizability
+2. Survey research: temporal scope and group heterogeneity
+3. Experimental research: snapshots and artificial treatments
+  
+---
+
+# Takeaways 
+
+1. Machine learning enables data-intensive research on marginalized populations. (You can think of a prediction as part of the complex research design.)
+
+2. Automating research process helps increase research transparency, reproducibility, and scalability.
+
+---
+
+# 9/11 as a natural experiment 
+
+![](https://images.theconversation.com/files/234736/original/file-20180904-41720-xwahre.jpg?ixlib=rb-1.1.0&amp;q=45&amp;auto=format&amp;w=496&amp;fit=clip)
+
+---
+
+# Threats and information seeking 
+
+![](https://www.aljazeera.com/wp-content/uploads/2015/12/dc5d4b98b6bd4228a01a3ef8b4daedbf_18.jpeg?fit=1000%2C562)
+
+---
+
+# Ethnic newspaper as an alternative data source 
+
+![](arab_american_news.png)
+
+---
+
+# Data sources 
+
+Data source: Ethnic NewsWatch database (2.5 million + articles collected over the last four decades)
+
+Raw data: 1,132 Arab and 4,552 Indian American newspaper articles mentioning Muslims published between 1996 and 2006
+
+---
+
+# Outcome measures and hypotheses
+
+Among the Muslim related articles:
+
+* Domestic politics
+
+* International politics
+
+---
+
+# Argument 
+
+If threats encourage information seeking (Valentino et al. 2008; Albertson and Gadarian 2015) and information seeking increases the demand for news reports on these threats, then ... 
+
+---
+
+# Argument 
+
+H1: The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**TRUE**)
+
+---
+
+# Argument 
+
+H2: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**FALSE**)
+
+---
+
+
+# Workflow 
+
+* Step 1: Digital (text) data collection 
+
+* Step 2: Training classifiers 
+
+* Step 3: Automated text classification 
+
+* Step 4: Interrupted time series design analysis 
+
+---
+
+# What raw data look like 
+
+
+
+---
+
+# Software for automating digital data collection 
+
+---
+
+# Training classifiers 
+
+---
+
+# Relative word frequencies 
+
+---
+
+# Raw data and ITS design 
+
+---
+
+# ITS design analysis results (OLS)
+
+---
+
+# ITS design analysis results (GLS)
+
+---
+
+# Scaling up your research agenda 
+
+---
+
+# Building a research pipeline 
+
+---
+
+# Questions/comments?
+
+---
+
+# Appendix A Ethnic NewsWatch Datbase 
+
+![](enw_db1.png)
+
+---
+
+# Appendix A Ethnic NewsWatch Datbase 
+
+![](enw_db2.png)
+
+---
+
+# Appendix B Autocorrelation test
+
+![](acf.png)
+
+---
+
+# Appendix C Newspaper source analysis
+
+![](source_a.png)
+
+---
+
+# Appendix C Newspaper source analysis
+
+![](source_b.png)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
