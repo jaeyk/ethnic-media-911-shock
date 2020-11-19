@@ -27,13 +27,6 @@ style_mono_accent(
 
 ```
 
-```{r include=FALSE}
-
-# Install and load packages 
-if (!require(pacman)) install.packages("pacman")
-
-```
-
 # Data availability and social science research 
 
 ![](https://axispraxis.files.wordpress.com/2016/03/muttjeff01.jpg?w=800)
@@ -44,19 +37,27 @@ The streetlight effect: **data availability** constrains the **scope** of resear
 
 # Quantitative research on marginalized populations 
 
-It's *relatively* easy to assess how majority groups are biased against minority groups, but it's difficult to investigate how minority groups experience and internalize bias using quantitative methods.  
+It's **relatively** easy to assess how the majority group is **biased** against minority groups, but it's difficult to investigate how minority groups **experience** and **internalize** bias using quantitative methods.  
 
 ---
 
 # Current options and their limitations 
 
 1. Qualitative research: generalizability
+
 2. Survey research: temporal scope and group heterogeneity
+
 3. Experimental research: snapshots and artificial treatments
-  
+
 ---
 
-# Takeaways 
+# Main challenge and opportunity 
+
+* How can we do a **large-scale**, **well-designed**, and **efficient** observational study on marginalized populations?
+
+---
+
+# Why ML and automation matter
 
 1. Machine learning enables data-intensive research on marginalized populations. (You can think of a prediction as part of the complex research design.)
 
@@ -66,7 +67,21 @@ It's *relatively* easy to assess how majority groups are biased against minority
 
 # 9/11 as a natural experiment 
 
-![](https://images.theconversation.com/files/234736/original/file-20180904-41720-xwahre.jpg?ixlib=rb-1.1.0&q=45&auto=format&w=496&fit=clip)
+
+.pull-left[
+![](https://images.theconversation.com/files/234736/original/file-20180904-41720-xwahre.jpg?ixlib=rb-1.1.0&q=45&auto=format&w=496&fit=clip) September 11 attacks]
+
+.pull-right[
+* Exogenous shock -> Interrupted time series design 
+
+* Time is not random!
+]
+---
+
+# 9/11 as a natural experiment 
+
+![](lit_review.png)
+]
 
 ---
 
@@ -84,37 +99,37 @@ It's *relatively* easy to assess how majority groups are biased against minority
 
 # Data sources 
 
-Data source: Ethnic NewsWatch database (2.5 million + articles collected over the last four decades)
+Data source: Ethnic NewsWatch database (**2.5 million** articles collected over the last **four decades**)
 
-Raw data: 1,132 Arab and 4,552 Indian American newspaper articles mentioning Muslims published between 1996 and 2006
-
----
-
-# Outcome measures and hypotheses
-
-Among the Muslim related articles:
-
-* Domestic politics
-
-* International politics
+Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentioning **Muslims** published between **1996 and 2006**
 
 ---
 
-# Argument 
+# Argument
 
-If threats encourage information seeking (Valentino et al. 2008; Albertson and Gadarian 2015) and information seeking increases the demand for news reports on these threats, then ... 
+* Threats -> information seeking (Valentino et al. 2008; Albertson and Gadarian 2015)
 
----
-
-# Argument 
-
-H1: The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**TRUE**)
+* Information seeking -> the demand for news reports on these threats.
 
 ---
 
-# Argument 
+# Research question and outcome measures 
 
-H2: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**FALSE**)
+**Q**: When immigrant communities become more interested in U.S. domestic rather than home country politics?
+
+**DV**: The Muslim related articles: Domestic politics (e.g., War on Terrorism) + International politics (e.g., territorial disputes)
+
+---
+
+# Hypotheses
+
+**H1** (domestic politics): The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**Strong**)
+
+---
+
+# Hypotheses 
+
+**H2** (international politics: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**Null/Weak**)
 
 ---
 
@@ -123,7 +138,7 @@ H2: Arab American and Indian American newspapers published more articles on Musl
 
 * Step 1: Digital (text) data collection 
 
-* Step 2: Training classifiers 
+* Step 2: Training algorithms (classifiers) 
 
 * Step 3: Automated text classification 
 
@@ -133,46 +148,113 @@ H2: Arab American and Indian American newspapers published more articles on Musl
 
 # What raw data look like 
 
-
-
----
-
-# Software for automating digital data collection 
+![](raw_data.png)
 
 ---
 
-# Training classifiers 
+# Automating digital data collection 
+
+* Developed an [R package]( https://jaeyk.github.io/tidyethnicnews/) for turning Ethnic NewsWatch search results into tidy dataframe
+
+* The package took average 0.0005 seconds to parse 100 newspaper articles (it took only 12.34 seconds to parse 5,684 articles for this research).
+
+---
+
+# Labeling articles = prediction problem 
+
+1. Annotators (two authors + three RAs) label 1,015 articles (18% of the total data).
+
+2. Machines learn how to label articles using the human-labeled articles (training).
+
+3. Algorithms (classifiers) label the rest of the articles.  
+
+---
+
+# Machine learning approach 
+
+- Used Lasso (Least Absolute Shrinkage and Selection Operator). Or OLS + penalty for the sum of the absolve coefficients of the model parameters (i.e., terms).
+
+- Reasonable because (1) text data is high-dimensional and (2) the pattern could be explained by few key terms (simpler + faster). 
+
+---
+
+# Machine learning performance 
+
+* Accuracy (overall performance): 73%
+
+* Precision (aka positive predictive value): 75%
+
+* Recall (aka true positive rate): 80%
+
+Replication code is available at https://github.com/jaeyk/ITS-Text-Classification
 
 ---
 
 # Relative word frequencies 
 
----
-
-# Raw data and ITS design 
+![](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/relative_word_freq.png)
 
 ---
 
-# ITS design analysis results (OLS)
+.pull-left[ **Raw data**
+<img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/cleaned_data_plot.png" height = "500"/>]
+
+.pull-right[ **ITS design**
+<img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/its_base_plot.png" height = "500"/>]
 
 ---
 
-# ITS design analysis results (GLS)
+.pull-left[ **Placebo test**
+<img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/its_base_placebo_plot.png" height = "500"/>]
+
+.pull-right[ **GLS model**
+<img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/its_adjusted_plot.png" height = "500"/>]
 
 ---
 
-# Scaling up your research agenda 
+# Regression table 
+
+![](gls_out.png)
 
 ---
 
-# Building a research pipeline 
+# Research pipeline 
+
+1. Mining text data + applying ML (1 forthcoming, 2 under review papers)
+
+2. Building original organizational data + combining with other data sources (1 published and 1 R&R) 
+
+* Big & complex data + ML + other methods -> data-intensive social science research on marginalized groups
 
 ---
 
-# Questions/comments?
+# Research software 
+
+* All of my research projects are computationally reproducible and available on the GitHub. 
+
+* These computational projects produce 1) articles, 2) software, and 3) new datasets. 
+
+* So far, I have developed two R packages that help researchers collecting large text data at scale.
 
 ---
 
+# Current research focus 
+
+Mapping the Modern Agora project (with Hahrie Han and Milan de Vries at P3 Lab at the SNF Agora Institute at JHU):
+
+Creating big data infrastructure for investing political organizing in the US based on more than 3 million tax reports.
+
+---
+
+# Conclusion 
+
+* Data science + Social science (=computational social science) for social good
+
+* Giving voice to the marginalized groups 
+
+* Analyzing how people organize, build power, and respond to and change policies 
+
+---
 # Appendix A Ethnic NewsWatch Datbase 
 
 ![](enw_db1.png)
@@ -200,3 +282,15 @@ H2: Arab American and Indian American newspapers published more articles on Musl
 # Appendix C Newspaper source analysis
 
 ![](source_b.png)
+
+---
+
+# Appendix C Newspaper FE
+
+![](source_fe.png)
+
+---
+
+# Appendix D OLS
+
+![](ols_out.png)

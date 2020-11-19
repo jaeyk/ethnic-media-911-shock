@@ -1,16 +1,4 @@
----
-title: "ITS design analysis"
-author: "Jae Yeon Kim"
-output:
-html_document:
-  toc: True
-  theme: united
-  number_sections: True
----
-
-# Setup
-
-```{r}
+## -----------------------------
 
 # Import libraries 
 
@@ -65,13 +53,9 @@ for (i in 1:length(script_list))
 # for publication-friendly theme
 theme_set(theme_pubr())
 
-```
 
-# Importing files
 
-Unfortunately, I cannot share the original data because they are proprietary. ProQuest holds the copyrights. 
-
-```{r include=FALSE}
+## ----include=FALSE------------
 
 # Import files 
 
@@ -85,12 +69,9 @@ placebo <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_da
 
 placebo_predicted <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/placebo_predicted.csv"))[,2]
 
-```
-
-# Merging dataframes 
 
 
-```{r}
+## -----------------------------
 
 # Replace NAs with 0s in sample articles 
 
@@ -128,15 +109,9 @@ labeled_selected <- dplyr::select(unlabeled,
 df <- bind_rows(sample_selected, labeled_selected)
 df_placebo <- bind_cols(placebo, placebo_predicted) 
 
-```
 
-# Descriptive analysis
 
-## Data wrangling
-
-If you want to replicate the analysis, you can start from here using `df.csv` saved in `processed_data` directory..
-
-```{r}
+## -----------------------------
 
 # df <- read_csv("/home/jae/ITS-Text-Classification/processed_data.df.csv")
 
@@ -166,15 +141,9 @@ df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Ame
 
 write.csv(df, make_here("/home/jae/ITS-Text-Classification/processed_data/df.csv"))
 
-```
 
-## Data visualization
 
-### Raw data 
-
-### No outliers and missing values 
-
-```{r}
+## -----------------------------
 
 # Save plot 
   
@@ -212,14 +181,9 @@ ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot_sou
        height = 8,
        width = 8)
 
-```
 
 
-# Interrupted time series design analysis 
-
-## Base model
-
-```{r}
+## -----------------------------
 
 # Create assignment variable 
 
@@ -243,11 +207,9 @@ its_base_dom_plot / its_base_nondom_plot
 
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_plot.png"), height = 8)
 
-```
 
-### Placebo test 
 
-```{r}
+## -----------------------------
 
 # Create assignment variable 
 
@@ -260,14 +222,9 @@ visualize_placebo(df_placebo_grouped) + facet_wrap(~domestic) +
 
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_placebo_plot.png"))
 
-```
 
 
-## Check for autocorrelation
-
-The base model is naive. To make it more robust, first, I assess the correlation between the series and its time lags (autocorrelation). In both cases, ACF (correlation a time series and its lags) test shows there exits a weak seasonal trend. 
-
-```{r}
+## -----------------------------
 
 # Create the full date 
 
@@ -290,9 +247,9 @@ df_domestic <- df_grouped %>%
 df_nondomestic <- df_grouped %>%
   filter(domestic != "Domestic") 
 
-```
 
-```{r echo=FALSE}
+
+## ----echo=FALSE---------------
 # Apply to each data
 acf_dom <- acf_plot(df_domestic) + ggtitle("Domestic Political Interests") + labs(tag = "A")
 
@@ -302,27 +259,20 @@ acf_dom / acf_nondom
 
 ggsave(make_here("/home/jae/ITS-Text-Classification/output/acf_plot.png"))
 
-```
 
 
-## Parameterizing correlation
+## ----eval=FALSE, include=FALSE----
+## 
+## pq_domestic <- mapply(correct_ac_domestic, c(1,2,3), c(1))
+## 
+## pq_nondomestic <- mapply(correct_ac_nondomestic, c(1,2,3), c(1))
+## 
+## pq_domestic
+## 
+## pq_nondomestic
 
-The new model parameterizes autocorrelation by accounting for the correlation between the time series data and its time lags. `corARMA() function` defines correlation structure. `p` argument specifies the autoregressive order, and `q` argument specifies the moving average order of the ARMA structure. I then find the combination of `p` and `q` that yields the minimum Akaike Information Criterion (AIC).
 
-```{r eval=FALSE, include=FALSE}
-
-pq_domestic <- mapply(correct_ac_domestic, c(1,2,3), c(1))
-
-pq_nondomestic <- mapply(correct_ac_nondomestic, c(1,2,3), c(1))
-
-pq_domestic
-
-pq_nondomestic
-```
-
-## Visualization 
-
-```{r}
+## -----------------------------
 # Visualize each result in the scatted plot 
 
 its_adj_dom_plot <- visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic Political Interests") + labs(caption = "", tag = "A")
@@ -333,11 +283,9 @@ its_adj_dom_plot / its_adj_nondom_plot
 
 ggsave(here("output", "its_adjusted_plot.png"), height = 8)
 
-```
 
-## Bootstrapping analysis 
 
-```{r}
+## -----------------------------
 
 df_domestic <- df_domestic %>%
     mutate(year = extract_year(df_domestic))
@@ -352,13 +300,9 @@ plot_boot
 
 ggsave(here("output", "boot_analysis.png"))
 
-```
 
-## Regression table
 
-### OLS
-
-```{r}
+## -----------------------------
 
 dom_output_ols <- lm(count_ts ~ intervention +  date + group, 
                data = df_domestic) 
@@ -378,11 +322,9 @@ stargazer(dom_output_ols, nondom_output_ols,
                                "Indian Americans"),
           model.numbers = FALSE)
 
-```
 
-### GLS 
 
-```{r}
+## -----------------------------
 
 dom_output_gls <- gls(count_ts ~ intervention +  date + group, 
                data = df_domestic,
@@ -403,12 +345,9 @@ stargazer(dom_output_gls, nondom_output_gls,
                                "Date",
                                "Indian Americans"),
           model.numbers = FALSE)
-```
 
 
-### GLS with sourced fixed effects 
-
-```{r}
+## -----------------------------
 
 pq_domestic_source <- mapply(correct_ac_domestic_source, c(1,2,3), c(1))
 
@@ -418,9 +357,9 @@ pq_domestic_source # [1,1]
 
 pq_nondomestic_source # [2,1]
 
-```
 
-```{r}
+
+## -----------------------------
 dom_output_gls <- gls(count_ts ~ intervention +  date + source, 
                data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic == "Domestic"),
                correlation = corARMA(p= 1, q = 1, form = ~ date | source)) 
@@ -440,11 +379,9 @@ stargazer(dom_output_gls, nondom_output_gls,
                                "Date"),
           model.numbers = FALSE)
 
-```
 
-# Extract and export R code 
 
-```{r eval=FALSE}
-knitr::purl(input = here("code", "06_causal_inference.Rmd"), 
-            output = here("slides", "06_causal_inference.r"))
-```
+## ----eval=FALSE---------------
+## knitr::purl(input = here("code", "06_causal_inference.Rmd"),
+##             output = here("slides", "06_causal_inference.r"))
+
