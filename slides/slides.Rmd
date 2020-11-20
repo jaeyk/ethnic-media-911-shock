@@ -8,10 +8,75 @@ output:
     css: custom.css
     lib_dir: libs
     nature:
+      slideNumberFormat: '%current%' 
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
 ---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  fig.showtext = TRUE,
+  fig.width = 16, 
+  fig.height = 8, 
+  dpi = 300
+)
+
+
+# Import libraries 
+
+pacman::p_load(
+        tidyverse, # the tidyverse framework 
+        splitstackshape, # stacking and reshaping datasets 
+        tsModel, # specifying time series regression models
+        lmtest, # testing linear regression models
+        Epi, # statistical analysis in epidemiology 
+        splines, # spline regression
+        vcd, # visualizing categorical variable 
+        nlme, # linear and nonlinear mixed effects models 
+        zoo, # S3 infrastructure regular and irregular time series 
+        simpleboot, # bootstrapping 
+        TTR, # constructing technical trading rules
+        ggpmisc, # detecting peaks and valleys 
+        broom, # tidying model objects 
+        modelr, # modeling 
+        forecast, # forecasting 
+        ggseas, # seasonal and decomposition on the fly
+        itsadug, # interpreting time series and autocorrelated data 
+        mgcv, # mixed GAM Computation Vehicle with Automatic Smoothness Estimation
+        tseries, # computational financial analysis
+        mcp, # regression with multiple change points
+        lawstat, # testing stats in biostat, public policy, and law
+        sarima, # simulation and prediction with seasonal ARIMA models  
+        car, # Durbin Watson test 
+        tidyr, # tidying messy daa 
+        AICcmodavg, # computing predicted values and standard errors 
+        MuMIn, # selecting models
+        ggthemes, # fancy ggplot themes
+        ggpubr, # arranging plots 
+        stargazer, # regression table 
+        here, # reproducibility 
+        patchwork, # rearranging ggplot 
+        kableExtra) # table formatting
+
+# devtools::install_github("jaeyk/makereproducible")
+library(makereproducible)
+
+# Import R scripts
+
+script_list <- list.files(paste0(here::here(), "/functions"),
+  pattern = "*.r|*.R",
+  full.names = TRUE
+)
+
+for (i in 1:length(script_list))
+{
+  source(script_list[[i]])
+}
+
+# for publication-friendly theme
+theme_set(theme_pubr())
+```
 
 ```{r xaringan-themer, include=FALSE, warning=FALSE}
 
@@ -27,6 +92,20 @@ style_mono_accent(
 
 ```
 
+```{r, load_refs, include=FALSE, cache=FALSE}
+
+library(RefManageR)
+
+BibOptions(check.entries = FALSE,
+           bib.style = "authoryear",
+           cite.style = "alphabetic",
+           style = "markdown",
+           hyperlink = FALSE,
+           dashed = FALSE)
+
+myBib <- ReadBib("sample.bib", check = FALSE)
+```
+
 # Data availability and social science research 
 
 ![](https://axispraxis.files.wordpress.com/2016/03/muttjeff01.jpg?w=800)
@@ -37,7 +116,11 @@ The streetlight effect: **data availability** constrains the **scope** of resear
 
 # Quantitative research on marginalized populations 
 
-It's **relatively** easy to assess how the majority group is **biased** against minority groups, but it's difficult to investigate how minority groups **experience** and **internalize** bias using quantitative methods.  
+Using **quantitative methods**, it's ...
+
+* **Relatively easy** to assess how the majority group is **biased** against minority groups
+
+* **Relatively difficult** to investigate how minority groups **experience** and **internalize bias**
 
 ---
 
@@ -51,13 +134,13 @@ It's **relatively** easy to assess how the majority group is **biased** against 
 
 ---
 
-# Main challenge and opportunity 
+# Main challenge
 
-* How can we do a **large-scale**, **well-designed**, and **efficient** observational study on marginalized populations?
+* How can we do a 1) **large-scale**, 2) **well-designed**, and 3) **efficient** observational study on marginalized populations?
 
 ---
 
-# Why ML and automation matter
+# ML and automation
 
 1. Machine learning enables data-intensive research on marginalized populations. (You can think of a prediction as part of the complex research design.)
 
@@ -74,7 +157,7 @@ It's **relatively** easy to assess how the majority group is **biased** against 
 .pull-right[
 * Exogenous shock -> Interrupted time series design 
 
-* Time is not random!
+* Caveat: Time is not random.
 ]
 ---
 
@@ -107,9 +190,14 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 
 # Argument
 
-* Threats -> information seeking (Valentino et al. 2008; Albertson and Gadarian 2015)
+* Threats -> information seeking (measured by the demand for a specific type of news reports) (Valentino et al. 2008; Albertson and Gadarian 2015)
 
-* Information seeking -> the demand for news reports on these threats.
+* Post-9.11: state surveillance + negative media reporting + xenophobic pubic opinion -> gathering information on the political treatment of Muslims in the U.S.
+
+```{r include = FALSE}
+Citep(bib = myBib, 
+      key =  c("valentino2008worried","albertson2015anxious"))
+```
 
 ---
 
@@ -123,13 +211,13 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 
 # Hypotheses
 
-**H1** (domestic politics): The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**Strong**)
+**H1** (domestic politics): The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**Large and significant effect.**)
 
 ---
 
 # Hypotheses 
 
-**H2** (international politics: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**Null/Weak**)
+**H2** (international politics: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**Small and insignificant effect**)
 
 ---
 
@@ -152,7 +240,28 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 
 ---
 
-# Automating digital data collection 
+# How to parse text data 
+
+$$
+\begin{equation}
+\label{equation1}
+Y_{t} = \beta_{0} + \beta_{1}\textrm{Intervention} + \beta_{2}{Date}_{t} + \beta_{3}\textrm{Group} + \epsilon
+\end{equation}
+$$
+
+```{r include = FALSE}
+
+df <- read_csv(make_here("/home/jae/ITS-Text-Classification/processed_data/df.csv"))
+
+df[,-1] %>%
+  select(domestic, everything()) %>%
+  slice(1:6) %>%
+  knitr::kable('html')
+```
+
+---
+
+# Automating data wrangling process
 
 * Developed an [R package]( https://jaeyk.github.io/tidyethnicnews/) for turning Ethnic NewsWatch search results into tidy dataframe
 
@@ -161,7 +270,6 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 ---
 
 # Labeling articles = prediction problem 
-
 1. Annotators (two authors + three RAs) label 1,015 articles (18% of the total data).
 
 2. Machines learn how to label articles using the human-labeled articles (training).
@@ -190,7 +298,7 @@ Replication code is available at https://github.com/jaeyk/ITS-Text-Classificatio
 
 ---
 
-# Relative word frequencies 
+# Relative word frequency 
 
 ![](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/relative_word_freq.png)
 
@@ -224,35 +332,43 @@ Replication code is available at https://github.com/jaeyk/ITS-Text-Classificatio
 
 2. Building original organizational data + combining with other data sources (1 published and 1 R&R) 
 
-* Big & complex data + ML + other methods -> data-intensive social science research on marginalized groups
-
 ---
 
 # Research software 
 
 * All of my research projects are computationally reproducible and available on the GitHub. 
 
-* These computational projects produce 1) articles, 2) software, and 3) new datasets. 
+* These computational projects produce 1) research articles, 2) open-source research software, and 3) large-scale original datasets. 
 
-* So far, I have developed two R packages that help researchers collecting large text data at scale.
+* I developed and maintain two R packages that help researchers collecting large text data at scale.
 
 ---
 
 # Current research focus 
 
-Mapping the Modern Agora project (with Hahrie Han and Milan de Vries at P3 Lab at the SNF Agora Institute at JHU):
+Mapping the Modern Agora project (with [Hahrie Han](https://politicalscience.jhu.edu/directory/hahrie-han/) and [Milan de Vries](https://www.linkedin.com/in/milan-de-vries-567b7376) at P3 Lab at the SNF Agora Institute at JHU):
 
 Creating big data infrastructure for investing political organizing in the US based on more than 3 million tax reports.
 
 ---
 
-# Conclusion 
+# Conclusions 
 
-* Data science + Social science (=computational social science) for social good
+* Using big & complex data + ML + other methods for solving social problems 
 
-* Giving voice to the marginalized groups 
+* Conducting data-intensive research on the politics of marginalized groups 
 
-* Analyzing how people organize, build power, and respond to and change policies 
+* Analyzing how people organize, respond to and change policies 
+
+---
+
+# References
+
+```{r refs1, echo=FALSE, results="asis"}
+
+PrintBibliography(myBib)
+
+```
 
 ---
 # Appendix A Ethnic NewsWatch Datbase 
@@ -294,3 +410,9 @@ Creating big data infrastructure for investing political organizing in the US ba
 # Appendix D OLS
 
 ![](ols_out.png)
+
+---
+
+# Appendix E Duration effect analysis 
+
+![]

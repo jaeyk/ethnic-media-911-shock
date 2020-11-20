@@ -376,6 +376,31 @@ spread_cis <- function(cis) {
 
 ##### Automating boot analysis work flow #####
 
+model_spec <- function(i){
+  ## OLS
+  dom_ols <- lm(count_ts ~ intervention + date + group,
+                data = subset(df_domestic, year <= 2000 + i)
+  )
+  
+  nondom_ols <- lm(count_ts ~ intervention + date + group,
+                   data = subset(df_nondomestic, year <= 2000 + i)
+  )
+  
+  ## GLS
+  dom_gls <- gls(count_ts ~ intervention + date + group,
+                 data = subset(df_domestic, year <= 2000 + i),
+                 correlation = corARMA(p = 3, q = 1, form = ~ date | group )
+  )
+  
+  nondom_gls <- gls(count_ts ~ intervention + date + group,
+                    data = subset(df_nondomestic, year <= 2000 + i),
+                    correlation = corARMA(p = 3, q = 1, form = ~ date | group)
+  )
+  
+  # Outputs 
+  return(list(dom_ols, nondom_ols, dom_gls, nondom_gls))
+}
+
 plot_boot_analysis <- function(df_domestic, df_nondomestic) {
   
   ### Coefficients
@@ -403,12 +428,12 @@ plot_boot_analysis <- function(df_domestic, df_nondomestic) {
     ## GLS
     dom_gls <- gls(count_ts ~ intervention + date + group,
       data = subset(df_domestic, year <= 2000 + i),
-      correlation = corARMA(p = 3, q = 1, form = ~ date | group + source)
+      correlation = corARMA(p = 3, q = 1, form = ~ date | group )
     )
 
     nondom_gls <- gls(count_ts ~ intervention + date + group,
       data = subset(df_nondomestic, year <= 2000 + i),
-      correlation = corARMA(p = 3, q = 1, form = ~ date | group + source)
+      correlation = corARMA(p = 3, q = 1, form = ~ date | group)
     )
 
     # Save iterations
@@ -522,6 +547,43 @@ correct_ac_domestic <- function(a, b) {
   ) # data.frame is better than rbind to keep heterogeneous data type
 
   return(results)
+}
+
+model_spec <- function(i){
+  ## OLS
+  dom_ols <- lm(count_ts ~ intervention + date + group,
+                data = subset(df_domestic, year <= 2000 + i)
+  )
+  
+  nondom_ols <- lm(count_ts ~ intervention + date + group,
+                   data = subset(df_nondomestic, year <= 2000 + i)
+  )
+  
+  ## GLS
+  dom_gls <- gls(count_ts ~ intervention + date + group,
+                 data = subset(df_domestic, year <= 2000 + i),
+                 correlation = corARMA(p = 3, q = 1, form = ~ date | group )
+  )
+  
+  nondom_gls <- gls(count_ts ~ intervention + date + group,
+                    data = subset(df_nondomestic, year <= 2000 + i),
+                    correlation = corARMA(p = 3, q = 1, form = ~ date | group)
+  )
+  
+  # Save iterations
+  dom_ols_effect <- dom_ols$coefficients[2] %>% as.numeric()
+  nondom_ols_effect <- nondom_ols$coefficients[2] %>% as.numeric()
+  dom_gls_effect <- dom_gls$coefficients[2] %>% as.numeric()
+  nondom_gls_effect <- nondom_gls$coefficients[2] %>% as.numeric()
+  
+  # Outputs 
+  tribble(
+    ~Category, ~Model, ~Estimate, 
+    "Domestic", "OLS", dom_ols_effect,
+    "International", "OLS", nondom_gls_effect,
+    "Domestic", "GLS", dom_gls_effect,
+    "International", "GLS", nondom_gls_effect
+  )
 }
 
 correct_ac_nondomestic <- function(a, b) {

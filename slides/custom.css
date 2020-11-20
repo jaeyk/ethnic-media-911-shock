@@ -21,7 +21,7 @@
 @import url(https://fonts.googleapis.com/css?family=Montserrat:400,400i&display=swap);
 @import url(https://fonts.googleapis.com/css?family=Josefin+Sans&display=swap);
 @import url(https://fonts.googleapis.com/css?family=Fira+Mono&display=swap);
-
+@import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
 :root {
   /* Fonts */
@@ -74,9 +74,13 @@ h1, h2, h3 {
   font-weight: 600;
   color: var(--header-color);
 }
+.remark.macros.scale = function (percentage) {
+  var url = this;
+  return '<img src="' + url + '" style="width: ' + percentage + '" />';
+}
 .remark-slide-content {
   background-color: var(--background-color);
-  font-size: 2rem;
+  font-size: 1.8rem;
   padding: 16px 64px 16px 64px;
   width: 100%;
   height: 100%;
@@ -171,6 +175,17 @@ blockquote {
   border-left: solid 5px #23395b80;
   padding-left: 1em;
 }
+ /* Table width = 100% max-width */
+
+.remark-slide table{
+        width: 100%;
+    }
+
+    /* Change the background color to white for shaded rows (even rows) */
+
+.remark-slide thead, .remark-slide tr:nth-child(2n) {
+        background-color: white;
+    }
 .remark-slide table {
   margin: auto;
   border-top: 1px solid #666;
@@ -251,3 +266,7 @@ table.dataTable.hover tbody tr:hover, table.dataTable.display tbody tr:hover {
 .bg-black {
   background-color: var(--black);
 }
+
+    /* formatting math equations */
+
+.mjx-chtml{ font-size: 100% !important;}

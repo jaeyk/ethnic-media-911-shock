@@ -14,9 +14,13 @@ class: center, middle, inverse, title-slide
 # How Threats Shape the Politics of Marginalized: Evidence from a Natural Experiment and Machine Learning
 ## Prepared for …
 ### Jae Yeon Kim (UC Berkeley)
-### 18 November, 2020
+### 19 November, 2020
 
 ---
+
+
+
+
 
 
 
@@ -31,7 +35,11 @@ The streetlight effect: **data availability** constrains the **scope** of resear
 
 # Quantitative research on marginalized populations 
 
-It's **relatively** easy to assess how the majority group is **biased** against minority groups, but it's difficult to investigate how minority groups **experience** and **internalize** bias using quantitative methods.  
+Using **quantitative methods**, it's ...
+
+* **Relatively easy** to assess how the majority group is **biased** against minority groups
+
+* **Relatively difficult** to investigate how minority groups **experience** and **internalize bias**
 
 ---
 
@@ -45,13 +53,13 @@ It's **relatively** easy to assess how the majority group is **biased** against 
 
 ---
 
-# Main challenge and opportunity 
+# Main challenge
 
-* How can we do a **large-scale**, **well-designed**, and **efficient** observational study on marginalized populations?
+* How can we do a 1) **large-scale**, 2) **well-designed**, and 3) **efficient** observational study on marginalized populations?
 
 ---
 
-# Why ML and automation matter
+# ML and automation
 
 1. Machine learning enables data-intensive research on marginalized populations. (You can think of a prediction as part of the complex research design.)
 
@@ -68,7 +76,7 @@ It's **relatively** easy to assess how the majority group is **biased** against 
 .pull-right[
 * Exogenous shock -&gt; Interrupted time series design 
 
-* Time is not random!
+* Caveat: Time is not random.
 ]
 ---
 
@@ -101,9 +109,11 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 
 # Argument
 
-* Threats -&gt; information seeking (Valentino et al. 2008; Albertson and Gadarian 2015)
+* Threats -&gt; information seeking (measured by the demand for a specific type of news reports) (Valentino et al. 2008; Albertson and Gadarian 2015)
 
-* Information seeking -&gt; the demand for news reports on these threats.
+* Post-9.11: state surveillance + negative media reporting + xenophobic pubic opinion -&gt; gathering information on the political treatment of Muslims in the U.S.
+
+
 
 ---
 
@@ -117,13 +127,13 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 
 # Hypotheses
 
-**H1** (domestic politics): The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**Strong**)
+**H1** (domestic politics): The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**Large and significant effect.**)
 
 ---
 
 # Hypotheses 
 
-**H2** (international politics: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**Null/Weak**)
+**H2** (international politics: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**Small and insignificant effect**)
 
 ---
 
@@ -146,7 +156,20 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 
 ---
 
-# Automating digital data collection 
+# How to parse data 
+
+$$
+`\begin{equation}
+\label{equation1}
+Y_{t} = \beta_{0} + \beta_{1}\textrm{Intervention} + \beta_{2}{Date}_{t} + \beta_{3}\textrm{Group} + \epsilon
+\end{equation}`
+$$
+
+
+
+---
+
+# Automating data wrangling process
 
 * Developed an [R package]( https://jaeyk.github.io/tidyethnicnews/) for turning Ethnic NewsWatch search results into tidy dataframe
 
@@ -155,7 +178,6 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 ---
 
 # Labeling articles = prediction problem 
-
 1. Annotators (two authors + three RAs) label 1,015 articles (18% of the total data).
 
 2. Machines learn how to label articles using the human-labeled articles (training).
@@ -184,7 +206,7 @@ Replication code is available at https://github.com/jaeyk/ITS-Text-Classificatio
 
 ---
 
-# Relative word frequencies 
+# Relative word frequency 
 
 ![](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/relative_word_freq.png)
 
@@ -218,23 +240,21 @@ Replication code is available at https://github.com/jaeyk/ITS-Text-Classificatio
 
 2. Building original organizational data + combining with other data sources (1 published and 1 R&amp;R) 
 
-* Big &amp; complex data + ML + other methods -&gt; data-intensive social science research on marginalized groups
-
 ---
 
 # Research software 
 
 * All of my research projects are computationally reproducible and available on the GitHub. 
 
-* These computational projects produce 1) articles, 2) software, and 3) new datasets. 
+* These computational projects produce 1) research articles, 2) open-source research software, and 3) large-scale original datasets. 
 
-* So far, I have developed two R packages that help researchers collecting large text data at scale.
+* I developed and maintain two R packages that help researchers collecting large text data at scale.
 
 ---
 
 # Current research focus 
 
-Mapping the Modern Agora project (with Hahrie Han and Milan de Vries at P3 Lab at the SNF Agora Institute at JHU):
+Mapping the Modern Agora project (with [Hahrie Han](https://politicalscience.jhu.edu/directory/hahrie-han/) and [Milan de Vries](https://www.linkedin.com/in/milan-de-vries-567b7376) at P3 Lab at the SNF Agora Institute at JHU):
 
 Creating big data infrastructure for investing political organizing in the US based on more than 3 million tax reports.
 
@@ -242,11 +262,23 @@ Creating big data infrastructure for investing political organizing in the US ba
 
 # Conclusion 
 
-* Data science + Social science (=computational social science) for social good
+* Using big &amp; complex data + ML + other methods for solving social problems 
 
-* Giving voice to the marginalized groups 
+* Conducting data-intensive research on the politics of marginalized groups 
 
-* Analyzing how people organize, build power, and respond to and change policies 
+* Analyzing how people organize, respond to and change policies 
+
+---
+
+# References
+
+Albertson, B. and S. K. Gadarian (2015). _Anxious Politics: Democratic
+citizenship in a Threatening World_. Cambridge University Press.
+
+Valentino, N. A., V. L. Hutchings, A. J. Banks, et al. (2008). "Is a
+Worried Citizen a Good citizen? Emotions, Political Information
+Seeking, and Learning via the Internet". In: _Political Psychology_
+29.2, pp. 247-273.
 
 ---
 # Appendix A Ethnic NewsWatch Datbase 
@@ -292,6 +324,7 @@ Creating big data infrastructure for investing political organizing in the US ba
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
 "highlightStyle": "github",
 "highlightLines": true,
 "countIncrementalSlides": false
