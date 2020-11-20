@@ -156,7 +156,26 @@ Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentio
 
 ---
 
-# How to parse data 
+# How to parse text data 
+
+
+
+
+
+```r
+df %&gt;%
+  select(intervention, date, group, text) %&gt;%
+  head(3)
+```
+
+```
+## # A tibble: 3 x 4
+##   intervention date       group       text                                      
+##   &lt;chr&gt;        &lt;date&gt;     &lt;chr&gt;       &lt;chr&gt;                                     
+## 1 post         1997-10-24 Indian Ame… "Third Rate Or Not, No Meddling Please! B…
+## 2 post         2001-03-23 Indian Ame… "Phagwah Parade Draws Many By DHARMVIR GE…
+## 3 post         1998-01-23 Indian Ame… "Advani Blames Congress And UF DALTONGUNJ…
+```
 
 $$
 `\begin{equation}
@@ -164,8 +183,6 @@ $$
 Y_{t} = \beta_{0} + \beta_{1}\textrm{Intervention} + \beta_{2}{Date}_{t} + \beta_{3}\textrm{Group} + \epsilon
 \end{equation}`
 $$
-
-
 
 ---
 
@@ -260,7 +277,7 @@ Creating big data infrastructure for investing political organizing in the US ba
 
 ---
 
-# Conclusion 
+# Conclusions 
 
 * Using big &amp; complex data + ML + other methods for solving social problems 
 
@@ -320,6 +337,12 @@ Seeking, and Learning via the Internet". In: _Political Psychology_
 # Appendix D OLS
 
 ![](ols_out.png)
+
+---
+
+# Appendix E Duration effect analysis 
+
+![](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/duration_effect.png)
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
@@ -327,6 +350,9 @@ Seeking, and Learning via the Internet". In: _Political Psychology_
 "slideNumberFormat": "%current%",
 "highlightStyle": "github",
 "highlightLines": true,
+"navigation": {
+"scroll": true
+},
 "countIncrementalSlides": false
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {

@@ -11,6 +11,8 @@ output:
       slideNumberFormat: '%current%' 
       highlightStyle: github
       highlightLines: true
+      navigation:
+        scroll: true
       countIncrementalSlides: false
 ---
 
@@ -242,22 +244,23 @@ Citep(bib = myBib,
 
 # How to parse text data 
 
+
+```{r include = FALSE}
+df <- read_csv(make_here("/home/jae/ITS-Text-Classification/processed_data/df.csv"))[,-1]
+```
+
+```{r}
+df %>%
+  select(intervention, date, group, text) %>%
+  head(3)
+```
+
 $$
 \begin{equation}
 \label{equation1}
 Y_{t} = \beta_{0} + \beta_{1}\textrm{Intervention} + \beta_{2}{Date}_{t} + \beta_{3}\textrm{Group} + \epsilon
 \end{equation}
 $$
-
-```{r include = FALSE}
-
-df <- read_csv(make_here("/home/jae/ITS-Text-Classification/processed_data/df.csv"))
-
-df[,-1] %>%
-  select(domestic, everything()) %>%
-  slice(1:6) %>%
-  knitr::kable('html')
-```
 
 ---
 
@@ -415,4 +418,4 @@ PrintBibliography(myBib)
 
 # Appendix E Duration effect analysis 
 
-![]
+![](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/duration_effect.png)
