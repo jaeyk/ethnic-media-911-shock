@@ -2,5 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-slides/*
-raw_data/*
+slides/.
+raw_data/.
