@@ -1,6 +1,6 @@
 ---
 title: "How Threats Shape the Politics of Marginalized: Evidence from a Natural Experiment and Machine Learning"
-subtitle: "Prepared for ... "
+subtitle: "Prepared for the KDI School of Public Policy and Development"
 author: "Jae Yeon Kim (UC Berkeley)"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
