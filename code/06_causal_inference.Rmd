@@ -46,8 +46,9 @@ pacman::p_load(
         stargazer, # regression table 
         here, # reproducibility 
         patchwork, # rearranging ggplot 
-        purrr) # functional programming 
-
+        purrr, # functional programming 
+        testthat) # unit testing 
+        
 # devtools::install_github("jaeyk/makereproducible")
 library(makereproducible)
 
@@ -128,6 +129,22 @@ labeled_selected <- dplyr::select(unlabeled,
 
 df <- bind_rows(sample_selected, labeled_selected)
 df_placebo <- bind_cols(placebo, placebo_predicted) 
+
+# Fix the coding error in the intervention variable (reversing values)
+
+df$intervention[df$intervention == "post"] <- "1"
+df$intervention[df$intervention == "pre"] <- "0"
+
+df$intervention[df$intervention == "1"] <- "pre"
+df$intervention[df$intervention == "0"] <- "post"
+
+# Add unit testing 
+
+test_that("Check the intervention variable coding", {
+
+  expect_equal(sum(subset(df, intervention == "post")$date > 20010911) == length(subset(df, intervention == "post")$date), TRUE)
+
+  })
 
 ```
 
@@ -252,7 +269,7 @@ ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_plot.png"), 
 
 # Create assignment variable 
 
-df_placebo_grouped<- group_df_placebo(df_placebo, date)
+df_placebo_grouped <- group_df_placebo(df_placebo, date)
 
 df_placebo_grouped$intervention <- ifelse(df_placebo_grouped$date < as.Date("2001-09-11"), 0, 1)
   
@@ -353,16 +370,7 @@ model_out %>%
     geom_point() +
     facet_grid(Category ~ Model)
 
-ggsave("output", "duration_effect.png")
-
-```
-
-
-```{r}
-plot_boot <- plot_boot_analysis(df_domestic,
-                   df_nondomestic)
-
-ggsave(here("output", "boot_analysis.png"))
+ggsave(here("output", "duration_effect.png"))
 
 ```
 
@@ -433,13 +441,14 @@ pq_nondomestic_source # [2,1]
 ```
 
 ```{r}
+
 dom_output_gls <- gls(count_ts ~ intervention +  date + source, 
                data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic == "Domestic"),
-               correlation = corARMA(p= 1, q = 1, form = ~ date | source)) 
+               correlation = corARMA(p = 1, q = 1, form = ~ date | source)) 
 
 nondom_output_gls <- gls(count_ts ~ intervention +  date + source, 
                data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic != "Domestic"),
-               correlation = corARMA(p= 2, q = 1, form = ~ date | source)) 
+               correlation = corARMA(p = 2, q = 1, form = ~ date | source)) 
 
 stargazer(dom_output_gls, nondom_output_gls,
           title = "ITS design analysis results",

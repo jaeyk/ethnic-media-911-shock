@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Threats Shape the Politics of Marginalized: Evidence from a Natural Experiment and Machine Learning</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Jae Yeon Kim (UC Berkeley)" />
+    <script src="libs/header-attrs-2.6.0/header-attrs.js"></script>
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# How Threats Shape the Politics of Marginalized: Evidence from a Natural Experiment and Machine Learning
+## Prepared for the KDI School of Public Policy and Development
+### Jae Yeon Kim (UC Berkeley)
+### 21 December, 2020
+
+---
+
+
+
+
+
+
+
+
+# Data availability and empirical social science research 
+
+![](https://axispraxis.files.wordpress.com/2016/03/muttjeff01.jpg?w=800)
+
+The streetlight effect: **data availability** constrains the **scope** of research **questions** and **methods**. 
+
+---
+
+# Quantitative research on marginalized populations 
+
+Using **quantitative methods**, it's ...
+
+* **Relatively easy** to assess how the majority group is **biased** against minority groups
+
+* **Relatively difficult** to investigate how minority groups **experience** and **internalize such bias**
+
+---
+
+# Current options and their limitations 
+
+1. Qualitative research: generalizability
+
+2. Survey research: temporal scope and group heterogeneity
+
+3. Experimental research: snapshots and artificial treatments
+
+---
+
+# Main challenge
+
+* How can we do a 1) **large-scale**, 2) **well-designed**, and 3) **cost-effective** observational study on marginalized populations?
+
+---
+
+# ML and automation
+
+1. Machine learning enables data-intensive research on marginalized populations. (You can think of a prediction as part of the complex research design.)
+
+2. Automating research process helps increase research transparency, reproducibility, and scalability.
+
+---
+
+# 9/11 as a natural experiment 
+
+
+.pull-left[
+![](https://images.theconversation.com/files/234736/original/file-20180904-41720-xwahre.jpg?ixlib=rb-1.1.0&amp;q=45&amp;auto=format&amp;w=496&amp;fit=clip) September 11 attacks]
+
+.pull-right[
+* Exogenous shock -&gt; Interrupted time series design 
+
+* Caveat: Time is not random.
+]
+---
+
+# 9/11 as a natural experiment 
+
+![](lit_review.png)
+]
+
+---
+
+# Threats and information seeking 
+
+![](https://www.aljazeera.com/wp-content/uploads/2015/12/dc5d4b98b6bd4228a01a3ef8b4daedbf_18.jpeg?fit=1000%2C562)
+
+---
+
+# Ethnic newspaper as an alternative data source 
+
+![](arab_american_news.png)
+
+---
+
+# Data sources 
+
+Data source: Ethnic NewsWatch database (**2.5 million** articles collected over the last **four decades**)
+
+Raw data: 1,132 **Arab** and 4,552 **Indian American** newspaper articles mentioning **Muslims** published between **1996 and 2006**
+
+---
+
+# Argument
+
+* Threats -&gt; information seeking (measured by the demand for a specific type of news reports) (Valentino et al. 2008; Albertson and Gadarian 2015)
+
+* Post-9.11: state surveillance + negative media reporting + xenophobic pubic opinion -&gt; gathering information on the political treatment of Muslims in the U.S.
+
+
+
+---
+
+# Research question and outcome measures 
+
+**Q**: When immigrant communities become more interested in U.S. domestic rather than home country politics?
+
+**DV**: The Muslim related articles: Domestic politics (e.g., War on Terrorism) + International politics (e.g., territorial disputes)
+
+---
+
+# Hypotheses
+
+**H1** (domestic politics): The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years. (**Large and significant effect.**)
+
+---
+
+# Hypotheses 
+
+**H2** (international politics: Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period. (**Small and insignificant effect**)
+
+---
+
+
+# Workflow 
+
+* Step 1: Digital (text) data collection 
+
+* Step 2: Training algorithms (classifiers) 
+
+* Step 3: Automated text classification 
+
+* Step 4: Interrupted time series design analysis 
+
+---
+
+# What raw data look like 
+
+![](raw_data.png)
+
+---
+
+# How to parse text data 
+
+
+
+
+
+```r
+df %&gt;%
+  select(intervention, date, group, text) %&gt;%
+  head(3)
+```
+
+```
+## # A tibble: 3 x 4
+##   intervention date       group       text                                      
+##   &lt;chr&gt;        &lt;date&gt;     &lt;chr&gt;       &lt;chr&gt;                                     
+## 1 post         1997-10-24 Indian Ame… "Third Rate Or Not, No Meddling Please! B…
+## 2 post         2001-03-23 Indian Ame… "Phagwah Parade Draws Many By DHARMVIR GE…
+## 3 post         1998-01-23 Indian Ame… "Advani Blames Congress And UF DALTONGUNJ…
+```
+
+$$
+`\begin{equation}
+\label{equation1}
+Y_{t} = \beta_{0} + \beta_{1}\textrm{Intervention} + \beta_{2}{Date}_{t} + \beta_{3}\textrm{Group} + \epsilon
+\end{equation}`
+$$
+
+---
+
+# Automating data wrangling process
+
+* Developed an [R package]( https://jaeyk.github.io/tidyethnicnews/) for turning Ethnic NewsWatch search results into tidy dataframe
+
+* The package took average 0.0005 seconds to parse 100 newspaper articles (it took only 12.34 seconds to parse 5,684 articles for this research).
+
+---
+
+# Labeling articles = prediction problem 
+1. Annotators (two authors + three RAs) label 1,015 articles (18% of the total data).
+
+2. Machines learn how to label articles using the human-labeled articles (training).
+
+3. Algorithms (classifiers) label the rest of the articles.  
+
+---
+
+# Machine learning approach 
+
+- Used Lasso (Least Absolute Shrinkage and Selection Operator). Or OLS + penalty for the sum of the absolve coefficients of the model parameters (i.e., terms).
+
+- Reasonable because (1) text data is high-dimensional and (2) the pattern could be explained by few key terms (simpler + faster). 
+
+---
+
+# Machine learning performance 
+
+* Accuracy (overall performance): 73%
+
+* Precision (aka positive predictive value): 75%
+
+* Recall (aka true positive rate): 80%
+
+Replication code is available at https://github.com/jaeyk/ITS-Text-Classification
+
+---
+
+# Relative word frequency 
+
+![](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/relative_word_freq.png)
+
+---
+
+.pull-left[ **Raw data**
+&lt;img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/cleaned_data_plot.png" height = "500"/&gt;]
+
+.pull-right[ **ITS design**
+&lt;img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/its_base_plot.png" height = "500"/&gt;]
+
+---
+
+.pull-left[ **Placebo test**
+&lt;img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/its_base_placebo_plot.png" height = "500"/&gt;]
+
+.pull-right[ **GLS model**
+&lt;img src="https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/its_adjusted_plot.png" height = "500"/&gt;]
+
+---
+
+# Regression table 
+
+![](gls_out.png)
+
+---
+
+# Research pipeline 
+
+1. Mining text data + applying ML (1 forthcoming, 2 under review papers)
+
+2. Building original organizational data + combining with other data sources (1 published and 1 R&amp;R) 
+
+---
+
+# Research software 
+
+* All of my research projects are computationally reproducible and available on the GitHub. 
+
+* These computational projects produce 1) research articles, 2) open-source research software, and 3) large-scale original datasets. 
+
+* I developed and maintain two R packages that help researchers collecting large text data at scale.
+
+---
+
+# Current research focus 
+
+Mapping the Modern Agora project (with [Hahrie Han](https://politicalscience.jhu.edu/directory/hahrie-han/) and [Milan de Vries](https://www.linkedin.com/in/milan-de-vries-567b7376) at P3 Lab at the SNF Agora Institute at JHU):
+
+Creating big data infrastructure for investing political organizing in the US based on more than 3 million tax reports.
+
+---
+
+# Conclusions 
+
+* Using big &amp; complex data + ML + other methods for solving social problems 
+
+* Conducting data-intensive research on the politics of marginalized groups 
+
+* Analyzing how people organize, respond to and change policies 
+
+---
+
+# References
+
+Albertson, B. and S. K. Gadarian (2015). _Anxious Politics: Democratic
+citizenship in a Threatening World_. Cambridge University Press.
+
+Valentino, N. A., V. L. Hutchings, A. J. Banks, et al. (2008). "Is a
+Worried Citizen a Good citizen? Emotions, Political Information
+Seeking, and Learning via the Internet". In: _Political Psychology_
+29.2, pp. 247-273.
+
+---
+# Appendix A Ethnic NewsWatch Datbase 
+
+![](enw_db1.png)
+
+---
+
+# Appendix A Ethnic NewsWatch Datbase 
+
+![](enw_db2.png)
+
+---
+
+# Appendix B Autocorrelation test
+
+![](acf.png)
+
+---
+
+# Appendix C Newspaper source analysis
+
+![](source_a.png)
+
+---
+
+# Appendix C Newspaper source analysis
+
+![](source_b.png)
+
+---
+
+# Appendix C Newspaper FE
+
+![](source_fe.png)
+
+---
+
+# Appendix D OLS
+
+![](ols_out.png)
+
+---
+
+# Appendix E Duration effect analysis 
+
+![](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/duration_effect.png)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"navigation": {
+"scroll": true
+},
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
