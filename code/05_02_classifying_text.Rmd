@@ -1,0 +1,86 @@
+---
+title: "Text classification"
+author: "Jae Yeon Kim"
+date: "3/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages 
+
+```{r}
+if (!require(pacman)) install.packages("pacman")
+
+p_load(here, tidyverse, tidymodels, textrecipes)
+```
+
+# Load data 
+
+```{r}
+# Drop the first column as it's meaningless 
+articles <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)] 
+
+placebo_articles <- read.csv(here("processed_data/placebo.csv"))[,-1]
+```
+
+# Split data 
+
+```{r}
+# for reproducibility 
+set.seed(1234)
+
+# split (stratified random sampling)
+split_class <- initial_split(articles, 
+                             mutate(category = as.factor(category)),
+                             strata = category,
+                             prop = 0.9)
+
+# training set 
+raw_train_x_class <- training(split_class)
+raw_test_x_class <- testing(split_class)
+```
+
+# Feature engineering 
+
+```{r}
+rec_articles <- articles %>% 
+  recipe(category ~ text + source + group + intervention) %>%
+  step_tokenize(text) %>%
+  step_stopwords(text) %>%
+  step_tfidf(text) 
+
+prep_articles <- rec_articles %>% prep(retain = TRUE)
+```
+
+```{r}
+# x features 
+train_x_class <- juice(prep_articles, all_predictors())
+test_x_class <- bake(prep_articles, 
+                     raw_test_x_class, all_predictors())
+
+# y outcomes 
+train_y_class <- juice(prep_articles, all_outcomes())$category %>% as.factor()
+test_y_class <- bake(prep_articles, raw_test_x_class, all_outcomes())$category %>% as.factor()
+```
+
+# Model building 
+
+```{r}
+# lasso spec 
+lasso_spec <- logistic_reg(penalty = 0.1, # tuning hyperparameter 
+                         mixture = 1) %>% # 1 = lasso, 0 = ridge 
+  set_engine("glmnet") %>%
+  set_mode("classification") 
+
+lasso_spec %>% translate() # See the documentation
+```
+
+```{r}
+lasso_fit <- lasso_spec %>%
+  fit_xy(x = train_x_class, y = train_y_class) 
+```
+
+

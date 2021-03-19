@@ -1,0 +1,97 @@
+---
+title: "Sampling"
+author: "Jae Yeon Kim"
+output:
+  html_document: 
+    toc: true
+    theme: united
+---
+
+## 0. Setup
+
+```{r}
+
+# Clean up the environment  
+
+rm(list = ls())
+
+# Import librarires (adapted from this link: https://stackoverflow.com/questions/4090169/elegant-way-to-check-for-missing-packages-and-install-them)
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(
+        tidyverse, # for the tidyverse framework 
+        splitstackshape) # for stratified random sampling
+
+```
+
+## 1. Import files
+```{r}
+
+# Import files 
+
+articles <- read_csv("/home/jae/muslim_newspapers-selected/preprocessed_articles.csv")
+
+# Convert into date
+
+articles$date <- as.Date(articles$date, format = "%d %B %Y")
+
+# Convert into character 
+
+articles$date <- as.character(articles$date)
+
+# Get rid of -
+
+articles$date <- gsub("-", "", articles$date) %>%
+  as.numeric() # back to numeric 
+
+# Check 
+
+class(articles$date)
+
+```
+
+# 2. Stratified random sampling 
+
+## 2.1 Create intervention variable 
+
+```{r}
+
+# Create intervention variable 
+
+articles$intervention <- ifelse(articles$date < 20010911, "post", "pre")
+
+# Check
+
+table(articles$intervention)
+```
+
+## 2.2. Stratified random sampling
+
+```{r}
+
+# For reproducibility
+
+set.seed(1234)
+
+# Stratified random sampling
+
+sample_articles <- stratified(articles, c("intervention", "source"), 120)
+
+# Check
+
+length(sample_articles$text)
+
+# Double check
+
+table(sample_articles$source, sample_articles$intervention)
+```
+
+
+# 3. Save files
+
+```{r}
+
+  write.csv(sample_articles, file = "sample_articles.csv")
+
+```
+
