@@ -14,7 +14,15 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 if (!require(pacman)) install.packages("pacman")
 
-p_load(here, tidyverse, tidymodels, textrecipes)
+p_load(here, # creating computationally reproducible file paths 
+       glue, # gluing strings and objects 
+       patchwork, # arranging ggplots 
+       tidyverse, # tidyverse framework 
+       tidymodels, # ML framework 
+       textrecipes, # preprocessing text data 
+       doParallel) # parallel processing
+
+source(here("functions", "utils.r"))
 ```
 
 # Load data 
@@ -25,6 +33,25 @@ articles <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)]
 
 placebo_articles <- read.csv(here("processed_data/placebo.csv"))[,-1]
 ```
+
+# Preproceessing text 
+
+```{r}
+rec_articles <- articles %>% 
+  recipe(category ~ text + source + group + intervention) %>%
+  # If character or factor variables are included, you should dummify them 
+  step_dummy(c(source, group, intervention)) %>%
+  # Used bigrams 
+  step_tokenize(text, token = "ngrams", options = list(n = 2)) %>%
+  # Removed stopwords 
+  step_stopwords(text) %>%
+  # Filtered tokens 
+  step_tokenfilter(text, max_tokens = 1000) %>%
+  # Normalized document length 
+  step_tfidf(text) %>%
+  prep()
+```
+
 
 # Split data 
 
@@ -41,46 +68,185 @@ split_class <- initial_split(articles,
 # training set 
 raw_train_x_class <- training(split_class)
 raw_test_x_class <- testing(split_class)
-```
 
-# Feature engineering 
-
-```{r}
-rec_articles <- articles %>% 
-  recipe(category ~ text + source + group + intervention) %>%
-  step_tokenize(text) %>%
-  step_stopwords(text) %>%
-  step_tfidf(text) 
-
-prep_articles <- rec_articles %>% prep(retain = TRUE)
-```
-
-```{r}
 # x features 
-train_x_class <- juice(prep_articles, all_predictors())
-test_x_class <- bake(prep_articles, 
+train_x_class <- juice(rec_articles, all_predictors())
+test_x_class <- bake(rec_articles, 
                      raw_test_x_class, all_predictors())
 
 # y outcomes 
-train_y_class <- juice(prep_articles, all_outcomes())$category %>% as.factor()
-test_y_class <- bake(prep_articles, raw_test_x_class, all_outcomes())$category %>% as.factor()
+train_y_class <- juice(rec_articles, all_outcomes())$category %>% as.factor()
+test_y_class <- bake(rec_articles, raw_test_x_class, all_outcomes())$category %>% as.factor()
 ```
 
 # Model building 
 
 ```{r}
-# lasso spec 
-lasso_spec <- logistic_reg(penalty = 0.1, # tuning hyperparameter 
+# Lasso spec 
+lasso_spec <- logistic_reg(penalty = tune(), # tuning hyperparameter 
                          mixture = 1) %>% # 1 = lasso, 0 = ridge 
   set_engine("glmnet") %>%
   set_mode("classification") 
 
-lasso_spec %>% translate() # See the documentation
+# Random forest spec
+rand_spec <- 
+  rand_forest(
+           mode = "classification",
+           
+           # Tuning hyperparameters
+           mtry = tune(), 
+           min_n = tune()) %>%
+  set_engine("ranger",
+             seed = 1234, 
+             importance = "permutation")
+
+# XGBoost spec 
+xg_spec <- boost_tree(
+  
+           # Mode 
+           mode = "classification",
+           
+           # Tuning hyperparameters
+           
+           # The number of trees to fit, aka boosting iterations
+           trees = tune(),
+           # The depth of the decision tree (how many levels of splits).
+           tree_depth = tune(), 
+           # Learning rate: lower means the ensemble will adapt more slowly.
+           learn_rate = tune(),
+           # Stop splitting a tree if we only have this many obs in a tree node.
+           min_n = tune(),
+           loss_reduction = tune(),
+           # The number of randomly selected hyperparameters 
+           mtry = tune(), 
+           # The size of the data set used for modeling within an iteration
+           sample_size = tune()
+          ) %>% 
+  set_engine("xgboost")
 ```
 
+# Model tuning 
+
+## Parallel processing 
+
 ```{r}
-lasso_fit <- lasso_spec %>%
-  fit_xy(x = train_x_class, y = train_y_class) 
+# Determine the number of cores
+no_cores <- detectCores() - 1
+
+# Initiate
+cl <- makeCluster(no_cores)
+
+registerDoParallel(cl)
 ```
+
+## Setup 
+
+```{r}
+# penalty() searches 50 possible combinations 
+
+lambda_grid <- grid_regular(penalty(), levels = 50)
+
+rand_grid <- grid_regular(mtry(range = c(1, 10)),
+                          min_n(range = c(2, 10)),
+                          levels = 5)
+
+
+xg_grid <- grid_latin_hypercube(
+  trees(),
+  tree_depth(),
+  learn_rate(),
+  min_n(),
+  loss_reduction(), 
+  sample_size = sample_prop(),
+  finalize(mtry(), train_x_class),
+  size = 30
+  )
+
+# 10-fold cross-validation
+
+set.seed(1234) # for reproducibility 
+
+rec_folds <- vfold_cv(train_x_class %>% bind_cols(tibble(category = train_y_class)),
+                      strata = category)
+```
+
+## Add setup to workflow 
+
+```{r}
+# Lasso 
+lasso_wf <- workflow() %>%
+  add_model(lasso_spec) %>%
+  add_formula(category ~ . )
+
+# Random forest
+rand_wf <- lasso_wf %>%
+  update_model(rand_spec)
+
+# XGBoost 
+xg_wf <- lasso_wf %>%
+  update_model(xg_spec)
+```
+
+## Tuning results 
+
+```{r}
+metrics <- yardstick::metric_set(accuracy, precision, recall)
+
+# Lasso
+lasso_res <- lasso_wf %>%
+  tune_grid(
+    resamples = rec_folds, 
+    grid = lambda_grid, 
+    metrics = metrics 
+  )
+
+# Random forest
+rand_res <- rand_wf %>%
+  tune_grid(
+    resamples = rec_folds, 
+    grid = rand_grid,
+    metrics = metrics
+  )
+
+# XGBoost 
+xg_res <- xg_wf %>%
+  tune_grid(
+    resamples = xg_folds, 
+    grid = xg_grid,
+    control = control_grid(save_pred = TRUE)
+  )
+```
+
+## Selecting the best performing model 
+
+```{r}
+best_lasso <- select_best(lasso_res, metric = "accuracy")
+best_rand <- select_best(rand_res, metric = "accuracy")
+best_xg <- select_best(xg_res, metric = "accuracy")
+```
+
+## Finalizing the workflow
+
+```{r}
+
+lasso_fit <- lasso_wf %>% finalize_workflow(best_lasso) %>%
+  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+
+rand_fit <- rand_wf %>% finalize_workflow(best_rand) %>%
+  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+
+xg_fit <- xg_wf %>% finalize_workflow(best_xg) %>%
+  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+
+```
+
+# Model evaluation 
+
+```{r}
+visualize_class_eval(lasso_fit) + labs(title = "Lasso") / 
+visualize_class_eval(rand_fit) + labs(title = "Random forest") /
+visualize_class_eval(xg_fit) + labs(title = "XGBoost")
+```
+
 
 
