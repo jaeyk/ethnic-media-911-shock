@@ -16,6 +16,7 @@ if (!require(pacman)) install.packages("pacman")
 
 p_load(here, # creating computationally reproducible file paths 
        glue, # gluing strings and objects 
+       janitor, # data cleaning tool 
        patchwork, # arranging ggplots 
        tidyverse, # tidyverse framework 
        tidymodels, # ML framework 
@@ -32,6 +33,9 @@ source(here("functions", "utils.r"))
 articles <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)] 
 
 placebo_articles <- read.csv(here("processed_data/placebo.csv"))[,-1]
+
+articles %>%
+  janitor::tabyl(category)
 ```
 
 # Preproceessing text 
@@ -211,9 +215,10 @@ rand_res <- rand_wf %>%
 # XGBoost 
 xg_res <- xg_wf %>%
   tune_grid(
-    resamples = xg_folds, 
+    resamples = rec_folds, 
     grid = xg_grid,
-    control = control_grid(save_pred = TRUE)
+    control = control_grid(save_pred = TRUE),
+    metrics = metrics
   )
 ```
 
@@ -228,7 +233,6 @@ best_xg <- select_best(xg_res, metric = "accuracy")
 ## Finalizing the workflow
 
 ```{r}
-
 lasso_fit <- lasso_wf %>% finalize_workflow(best_lasso) %>%
   fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
 
@@ -243,9 +247,13 @@ xg_fit <- xg_wf %>% finalize_workflow(best_xg) %>%
 # Model evaluation 
 
 ```{r}
-visualize_class_eval(lasso_fit) + labs(title = "Lasso") / 
-visualize_class_eval(rand_fit) + labs(title = "Random forest") /
-visualize_class_eval(xg_fit) + labs(title = "XGBoost")
+
+(visualize_class_eval(lasso_fit) + labs(title = "Lasso")) /
+(visualize_class_eval(rand_fit) + labs(title = "Random forest"))  /
+(visualize_class_eval(xg_fit) + labs(title = "XGBoost"))
+
+ggsave(here("output", "ml_eval.png"), height = 10)
+
 ```
 
 

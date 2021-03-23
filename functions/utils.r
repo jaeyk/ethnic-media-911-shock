@@ -45,7 +45,7 @@ evaluate_class <- function(model){
 
 visualize_class_eval <- function(model){
   evaluate_class(model) %>%
-    ggplot(aes(x = fct_reorder(glue("{toupper(.metric)}"), .estimate), y = .estimate)) +
+    ggplot(aes(x = glue("{toupper(.metric)}"), y = .estimate)) +
     geom_col() +
     labs(x = "Metrics",
          y = "Estimate") +
