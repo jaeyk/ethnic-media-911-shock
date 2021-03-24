@@ -63,10 +63,6 @@ for (i in 1:length(script_list))
 {
   source(script_list[[i]])
 }
-
-# for publication-friendly theme
-theme_set(theme_pubr())
-
 ```
 
 # Importing files

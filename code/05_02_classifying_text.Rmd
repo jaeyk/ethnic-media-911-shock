@@ -21,9 +21,23 @@ p_load(here, # creating computationally reproducible file paths
        tidyverse, # tidyverse framework 
        tidymodels, # ML framework 
        textrecipes, # preprocessing text data 
-       doParallel) # parallel processing
+       parallel, # parallel processing 
+       doParallel, # parallel processing
+       doFuture, # parallel processing 
+       vip, # variable importance plots
+       purrr) # functional programming 
 
-source(here("functions", "utils.r"))
+# Import R scripts
+
+script_list <- list.files(paste0(here::here(), "/functions"),
+  pattern = "*.r|*.R",
+  full.names = TRUE
+)
+
+for (i in 1:length(script_list))
+{
+  source(script_list[[i]])
+}
 ```
 
 # Load data 
@@ -56,31 +70,29 @@ rec_articles <- articles %>%
   prep()
 ```
 
-
-# Split data 
+ Split data 
 
 ```{r}
 # for reproducibility 
 set.seed(1234)
-
 # split (stratified random sampling)
 split_class <- initial_split(articles, 
                              mutate(category = as.factor(category)),
                              strata = category,
                              prop = 0.9)
-
 # training set 
-raw_train_x_class <- training(split_class)
-raw_test_x_class <- testing(split_class)
+raw_train_class <- training(split_class)
+raw_test_class <- testing(split_class)
 
-# x features 
-train_x_class <- juice(rec_articles, all_predictors())
+# x features (predictors)
+train_x_class <- bake(rec_articles, 
+                      raw_train_class, all_predictors())
 test_x_class <- bake(rec_articles, 
-                     raw_test_x_class, all_predictors())
-
-# y outcomes 
-train_y_class <- juice(rec_articles, all_outcomes())$category %>% as.factor()
-test_y_class <- bake(rec_articles, raw_test_x_class, all_outcomes())$category %>% as.factor()
+                     raw_test_class, all_predictors())
+# y outcomes (outcomes)
+train_y_class <- bake(rec_articles, 
+                      raw_train_class, all_outcomes())$category %>% as.factor()
+test_y_class <- bake(rec_articles, raw_test_class, all_outcomes())$category %>% as.factor()
 ```
 
 # Model building 
@@ -91,7 +103,6 @@ lasso_spec <- logistic_reg(penalty = tune(), # tuning hyperparameter
                          mixture = 1) %>% # 1 = lasso, 0 = ridge 
   set_engine("glmnet") %>%
   set_mode("classification") 
-
 # Random forest spec
 rand_spec <- 
   rand_forest(
@@ -103,7 +114,6 @@ rand_spec <-
   set_engine("ranger",
              seed = 1234, 
              importance = "permutation")
-
 # XGBoost spec 
 xg_spec <- boost_tree(
   
@@ -131,19 +141,16 @@ xg_spec <- boost_tree(
 
 # Model tuning 
 
-## Parallel processing 
+## Setup 
 
 ```{r}
-# Determine the number of cores
-no_cores <- detectCores() - 1
+all_cores <- parallel::detectCores(logical = FALSE)
+registerDoFuture()
 
-# Initiate
-cl <- makeCluster(no_cores)
+cl <- makeCluster(all_cores[1] - 1)
 
 registerDoParallel(cl)
 ```
-
-## Setup 
 
 ```{r}
 # penalty() searches 50 possible combinations 
@@ -153,8 +160,7 @@ lambda_grid <- grid_regular(penalty(), levels = 50)
 rand_grid <- grid_regular(mtry(range = c(1, 10)),
                           min_n(range = c(2, 10)),
                           levels = 5)
-
-
+  
 xg_grid <- grid_latin_hypercube(
   trees(),
   tree_depth(),
@@ -172,6 +178,10 @@ set.seed(1234) # for reproducibility
 
 rec_folds <- vfold_cv(train_x_class %>% bind_cols(tibble(category = train_y_class)),
                       strata = category)
+
+save(lambda_grid, rand_grid, xg_grid, file = here("output/grids.RData"))
+          
+save(rec_folds, file = here("output", glue("folds.RData")))
 ```
 
 ## Add setup to workflow 
@@ -194,7 +204,7 @@ xg_wf <- lasso_wf %>%
 ## Tuning results 
 
 ```{r}
-metrics <- yardstick::metric_set(accuracy, precision, recall)
+metrics <- yardstick::metric_set(accuracy, precision, recall, f_meas)
 
 # Lasso
 lasso_res <- lasso_wf %>%
@@ -209,6 +219,7 @@ rand_res <- rand_wf %>%
   tune_grid(
     resamples = rec_folds, 
     grid = rand_grid,
+    control = control_grid(save_pred = TRUE),
     metrics = metrics
   )
 
@@ -220,6 +231,8 @@ xg_res <- xg_wf %>%
     control = control_grid(save_pred = TRUE),
     metrics = metrics
   )
+
+save(lasso_res, rand_res, xg_res, file = here("output/res.RData"))
 ```
 
 ## Selecting the best performing model 
@@ -233,28 +246,56 @@ best_xg <- select_best(xg_res, metric = "accuracy")
 ## Finalizing the workflow
 
 ```{r}
-lasso_fit <- lasso_wf %>% finalize_workflow(best_lasso) %>%
-  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+# Lasso
+lasso_wf <- lasso_wf %>% finalize_workflow(best_lasso) 
 
-rand_fit <- rand_wf %>% finalize_workflow(best_rand) %>%
-  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+# Random forest 
+rand_wf <- rand_wf %>% finalize_workflow(best_rand)
 
-xg_fit <- xg_wf %>% finalize_workflow(best_xg) %>%
-  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
-
+# XGBoost 
+xg_wf <- xg_wf %>% finalize_workflow(best_xg)
 ```
+
+## Training fit 
+
+```{r}
+# Lasso 
+lasso_fit <- lasso_wf %>%
+  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+
+# Random forest 
+rand_fit <- rand_wf %>%
+  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+
+# XGBoost 
+xg_fit <- xg_wf %>%
+  fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
+
+write_rds(lasso_fit, here("output", "lasso_fit.rds"))
+write_rds(rand_fit, here("output", "rand_fit.rds"))
+write_rds(xg_fit, here("output", "xg_fit.rds"))
+```
+
+## Testing fit
 
 # Model evaluation 
 
-```{r}
+## Training data 
 
+```{r}
 (visualize_class_eval(lasso_fit) + labs(title = "Lasso")) /
+
 (visualize_class_eval(rand_fit) + labs(title = "Random forest"))  /
 (visualize_class_eval(xg_fit) + labs(title = "XGBoost"))
 
 ggsave(here("output", "ml_eval.png"), height = 10)
-
 ```
 
+# Turn an R markdown into an R script 
+
+```{r eval = FALSE}
+knitr::purl(input = here("code/05_02_classifying_text.Rmd"),
+            output = here("code/05_02_classifying_text.r"))
+```
 
 
