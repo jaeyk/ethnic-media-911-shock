@@ -55,22 +55,29 @@ articles %>%
 # Preproceessing text 
 
 ```{r}
+#Install spacyr and spacy 
+#p_load(spacyr)
+#spacyr::spacy_install()
+
 rec_articles <- articles %>% 
   recipe(category ~ text + source + group + intervention) %>%
   # If character or factor variables are included, you should dummify them 
   step_dummy(c(source, group, intervention)) %>%
-  # Used bigrams 
-  step_tokenize(text, token = "ngrams", options = list(n = 2)) %>%
-  # Removed stopwords 
+  # Tokenize (make sure you installed spacy in Python)
+  step_tokenize(text,
+                engine = "spacyr") %>%
+  # Lemmatization
+  step_lemma(text) %>%
+  # Remove stopwords 
   step_stopwords(text) %>%
-  # Filtered tokens 
+  # Filter tokens  
   step_tokenfilter(text, max_tokens = 1000) %>%
-  # Normalized document length 
+  # Normalize document length 
   step_tfidf(text) %>%
   prep()
 ```
 
- Split data 
+# Split data 
 
 ```{r}
 # for reproducibility 
@@ -93,6 +100,8 @@ test_x_class <- bake(rec_articles,
 train_y_class <- bake(rec_articles, 
                       raw_train_class, all_outcomes())$category %>% as.factor()
 test_y_class <- bake(rec_articles, raw_test_class, all_outcomes())$category %>% as.factor()
+
+spacy_finalize()
 ```
 
 # Model building 
