@@ -46,10 +46,9 @@ for (i in 1:length(script_list))
 # Drop the first column as it's meaningless 
 articles <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)] 
 
-placebo_articles <- read.csv(here("processed_data/placebo.csv"))[,-1]
-
 articles %>%
   janitor::tabyl(category)
+
 ```
 
 # Preproceessing text 
@@ -64,16 +63,14 @@ rec_articles <- articles %>%
   # If character or factor variables are included, you should dummify them 
   step_dummy(c(source, group, intervention)) %>%
   # Tokenize (make sure you installed spacy in Python)
-  step_tokenize(text,
-                engine = "spacyr") %>%
-  # Lemmatization
-  step_lemma(text) %>%
-  # Remove stopwords 
+  step_tokenize(text, token = "ngrams", options = list(n = 2)) %>% # Removed stopwords 
   step_stopwords(text) %>%
-  # Filter tokens  
+  # Filtered tokens 
   step_tokenfilter(text, max_tokens = 1000) %>%
   # Normalize document length 
   step_tfidf(text) %>%
+  # Normalize all predictors 
+  step_normalize(all_predictors()) %>%
   prep()
 ```
 
@@ -83,10 +80,9 @@ rec_articles <- articles %>%
 # for reproducibility 
 set.seed(1234)
 # split (stratified random sampling)
-split_class <- initial_split(articles, 
-                             mutate(category = as.factor(category)),
-                             strata = category,
+split_class <- initial_split(articles, strata = category, 
                              prop = 0.9)
+
 # training set 
 raw_train_class <- training(split_class)
 raw_test_class <- testing(split_class)
@@ -96,12 +92,12 @@ train_x_class <- bake(rec_articles,
                       raw_train_class, all_predictors())
 test_x_class <- bake(rec_articles, 
                      raw_test_class, all_predictors())
+
 # y outcomes (outcomes)
 train_y_class <- bake(rec_articles, 
                       raw_train_class, all_outcomes())$category %>% as.factor()
 test_y_class <- bake(rec_articles, raw_test_class, all_outcomes())$category %>% as.factor()
 
-spacy_finalize()
 ```
 
 # Model building 
@@ -265,7 +261,7 @@ rand_wf <- rand_wf %>% finalize_workflow(best_rand)
 xg_wf <- xg_wf %>% finalize_workflow(best_xg)
 ```
 
-## Training fit 
+## Fit models 
 
 ```{r}
 # Lasso 
@@ -280,16 +276,15 @@ rand_fit <- rand_wf %>%
 xg_fit <- xg_wf %>%
   fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
 
-write_rds(lasso_fit, here("output", "lasso_fit.rds"))
-write_rds(rand_fit, here("output", "rand_fit.rds"))
-write_rds(xg_fit, here("output", "xg_fit.rds"))
-```
+save(lasso_fit, rand_fit, xg_fit, file = here("output/fits.RData"))
 
-## Testing fit
+```
 
 # Model evaluation 
 
-## Training data 
+This result is based on the test data. 
+
+## Confusion matrix 
 
 ```{r}
 (visualize_class_eval(lasso_fit) + labs(title = "Lasso")) /
@@ -298,6 +293,33 @@ write_rds(xg_fit, here("output", "xg_fit.rds"))
 (visualize_class_eval(xg_fit) + labs(title = "XGBoost"))
 
 ggsave(here("output", "ml_eval.png"), height = 10)
+```
+
+## Variable importance 
+
+```{r}
+vi_plot_else(rand_fit, "Random forest") 
+
+ggsave(here("output", "vip_eval.png"))
+```
+
+# Predict unseen data 
+
+```{r}
+# Munging data 
+unlabeled_articles <- read.csv(here("raw_data/unlabeled_articles.csv"))[,-1]
+  
+unlabeled_articles$date <- lubridate::ymd(unlabeled_articles$date)
+
+unlabeled_articles$group <- ifelse(unlabeled_articles$source == "The Arab American News", "Arab", "Indian")
+
+# Preprocessing 
+unlabeled_articles_preprocessed <- bake(rec_articles, unlabeled_articles)
+
+# Prediction 
+unlabeled_articles$category <- predict(rand_fit, unlabeled_articles_preprocessed)$.pred_class
+
+write.csv(unlabeled_articles, here("processed_data/predicted.csv"))
 ```
 
 # Turn an R markdown into an R script 

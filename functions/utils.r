@@ -39,6 +39,7 @@ evaluate_class <- function(model){
   
   # Calculate metrics 
   df %>% metrics(truth = truth, estimate = .pred_class) 
+  
 }
 
 # The following visualization code draws on [Diego Usai's medium post](https://towardsdatascience.com/modelling-with-tidymodels-and-parsnip-bae2c01c131c).
@@ -67,4 +68,66 @@ visualize_class_conf <- function(model){
               color = "red", 
               alpha = 1, 
               size = 13) 
+}
+
+############# Variable importance #############
+
+# The following function is adapted from https://juliasilge.com/blog/animal-crossing/
+
+topn_vip <- function(df) {
+  df %>%
+  top_n(20, wt = abs(Importance)) %>%
+  ungroup() %>%
+  mutate(
+    Importance = abs(Importance),
+    Variable = str_remove(Variable, "tfidf_text_"),
+    # str_remove only removed one of the two `
+    Variable = gsub("`", "", Variable),
+    Variable = fct_reorder(Variable, Importance)
+  ) %>%
+  ggplot(aes(x = Importance, y = Variable)) +
+  geom_col(show.legend = FALSE) +
+  labs(y = NULL) +
+  theme(text = element_text(size = 20))
+}
+
+vi_plot_else <- function(fit, title) {
+
+  pos <- pull_workflow_fit(fit) %>%
+    vi() %>%
+    filter(Importance > 0) %>%
+    topn_vip() +
+    labs(title = title,
+         subtitle = "Positive")
+
+  nev <- pull_workflow_fit(fit) %>%
+    vi() %>%
+    filter(Importance < 0) %>%
+    topn_vip() +
+    labs(subtitle = "Negative")
+  
+  out <- pos + nev
+  
+  return(out)
+}
+
+vi_plot_lasso <- function(fit, title) {
+  
+  pos <- pull_workflow_fit(fit) %>%
+    vi() %>%
+    filter(Sign == "POS") %>%
+    topn_vip() +
+    labs(title = title,
+         subtitle = "Positive")
+  
+  nev <- pull_workflow_fit(fit) %>%
+    vi() %>%
+    filter(Sign != "POS") %>%
+    topn_vip() +
+    labs(subtitle = "Negative")
+  
+  out <- pos + nev
+  
+  return(out)
+ 
 }

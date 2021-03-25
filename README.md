@@ -9,7 +9,7 @@
 
 ## Motivation
 
-Although threat has long been considered a central concept in the social sciences, the quantitative scholarship on threat has been limited in its scope. Previous studies have mainly focused on how threats influence majority group members because existing opinion data, such as the American National Election Studies or the General Social Survey, contain only small fractions of observations of minority populations. This study provides a solution to this long-standing problem in the literature by combining a natural experiment with machine learning.
+Although threat has long been considered a central concept in the social sciences, the quantitative scholarship on threat has been limited in its scope. This study provides a solution to this long-standing problem in the literature by combining a natural experiment with machine learning.
 
 ## Research Design
 
@@ -22,16 +22,15 @@ Although threat has long been considered a central concept in the social science
 
 ### Text Data and Hypotheses
 
-- Text Data: The proof of the pudding is in the eating. What data can provide evidence for this claim? Ideally, we would like to have a large number of observations before and after the intervention. Otherwise, we lack statistical power to reject the null hypothesis (i.e., that the intervention and the observed change have no statistically significant relationship). Political scientists usually track political opinions through surveys. However, many observations of the targeted populations for this study were unlikely to be captured by most political opinion survey data collected at the national level using probability sampling (e.g., American National Election Studies). In this context, text data could serve as an alternative to the survey data. The [Ethnic NewsWatch](https://www.proquest.com/products-services/ethnicnewswatch_hist.html) database, created by Proquest, has compiled more than 2.5 million articles published by ethnic media in the U.S over the last four decades.
+- Text Data: Ideally, we would like to have a large number of observations before and after the intervention. Otherwise, we lack statistical power to reject the null hypothesis (i.e., that the intervention and the observed change have no statistically significant relationship). Political scientists usually track political opinions through surveys. However, many observations of the targeted populations for this study were unlikely to be captured by most political opinion survey data collected at the national level using probability sampling (e.g., American National Election Studies). In this context, text data could serve as an alternative to the survey data. The [Ethnic NewsWatch](https://www.proquest.com/products-services/ethnicnewswatch_hist.html) database, created by Proquest, has compiled more than 2.5 million articles published by ethnic media in the U.S over the last four decades.
+
 - **H1:** The September 11 attacks made Arab American and Indian American newspapers publish more articles on U.S. political news related to Muslim communities in the post-9/11 period than in previous years.
+
 - **H2:** Arab American and Indian American newspapers published more articles on Muslim populations outside than inside the U.S. in the post-9/11 period than in the pre-intervention period.
-
-
 
 ## Research Process
 
-In this section, I document how I implemented the research design step-by-step. If possible, I also provide the Python or R code used in each step. Aside from the text classification, all the Python and R code was written by me.
-
+In this section, I document how I implemented the research design step-by-step. If possible, I also provide the Python or R code used in each step.
 
 ### Data Collection (Summer 2019)
 
@@ -46,31 +45,17 @@ In this section, I document how I implemented the research design step-by-step. 
 
 #### 02_Parsing Original HTML Files into a CSV File in Python [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/02_html_parsing.ipynb)]
 
-- As the next step, I created a function named `parsing_proquest` in Python that takes one of these HTML files, extracts key features, puts these features together, and turns them in a data frame. In this case, the key features are the texts and publication dates. The texts are important to train machine learning algorithms and make predictions. The publication dates are critical to creating the time series data based on these texts.
+**Previous version**
 
-```python
-# extracting features of the HTML file using beautiful soup
- doc_text = soup.findAll("text")
- doc_date = soup.findAll("", {"class": "abstract_Text col-xs-12 col-sm-10 col-md-10 col-lg-10"})
-```
+- As the next step, I created a function named `parsing_proquest` in Python that takes one of these HTML files, extracts key features, puts these features together, and turns them in a data frame. In this case, the key features are the texts and publication dates. The texts are important to train machine learning algorithms and make predictions. The publication dates are critical to creating the time series data based on these texts.
 
 - I then plugged this function into a for loop. The for loop turned 57 HTML newspaper files into a tidy dataset saved in a single CSV file. If we tried to do this manually, assuming that parsing one HTML file (100 newspaper articles) takes 5 hours, then this process would take 285 hours in comparison to the several seconds needed to complete the process using methods explained above.
 
-```python
-# plugging the function into a for loop over entire page results
+**Current version**
 
-n = 0
+I created an R package called [tidyethnicnews](https://jaeyk.github.io/tidyethnicnews/), which turns search results from Ethnic NewsWatch into a cleaned and wrangled dataset. The package takes an average of 0.0005 seconds to turn 100 newspaper articles into a tidy dataframe.
 
-temp_dataset = []
-for filename in os.listdir(os.getcwd()):
-    if filename.endswith(".html"):
-        n  = n + 1
-        print("file",n, filename)
-        temp_dataset.append(parsing_proquest(filename))
-```
-
-
-### Machine Learning (Fall 2019)
+### Machine Learning (Fall 2019-Spring 2021)
 
 #### 03_Random Sampling Articles Stratifying on Intervention and Source Variables in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/03_sampling.Rmd)]
 
@@ -84,19 +69,20 @@ for filename in os.listdir(os.getcwd()):
 - We sampled 1,015 articles from this dataset to train machine learning algorithms. We tried to obtain (1) equal-sized sample articles for the pre- and post-intervention periods (intervention variable) and (2) balanced samples from different kinds of newspapers (source variable). The two coauthors and three undergraduate research assistants labeled these 1,015 sample articles as binary variables depending on whether they were about U.S. domestic politics (coded "1") or not (coded "0").
 - Ideally, we would have calculated inter-coder reliability by assigning the same articles to at least two different coders, but due to time restrictions, we were not able to complete this step. We acknowledge this as one limitation of our study.
 
-#### 05_Classifying Articles Using Machine Learning in Python [[Code for Preprocessing](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)] [[Code for Classification](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.ipynb)]
+#### 05_Classifying Articles Using Machine Learning in Python [[Code for Preprocessing](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)] [[Code for Classification (previous)](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.ipynb)] [[Code for Classification (new)](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.Rmd)]
+
+**Previous version (Fall 2019)**
 
 - Then we trained a Lasso model in Python using the labeled texts with the added features (i.e., intervention, source, and group variables). The classification accuracy rate (the percentage of results accurately classified) was 73%, precision rate (the percentage of relevant results) was 75%, and recall rate (the percentage of total relevant results correctly classified) was 80%.
 
-```python
-# Get addition features from one hot encoding the source, intervention, and group columns
+**Current version (Spring 2021)**
 
-features_x_train = pd.concat([pd.get_dummies(train[col]) for col in ['source', 'intervention', 'group']], axis=1)
+I re-classified the texts using the tidymodels framework in R. Here are the updates I have made. 
 
-features_x_train = features_x_train.drop(columns = ["The Arab American View"])
-
-features_x_train.head()
-```
+- Preprocessed text data a little bit further (e.g., using tf-idf). 
+- Expanded algorithms (lasso, random forest, and XGBoost) 
+- Tuned hyperparameters of all of these classifiers 
+- Evaluated the classifiers based on the training and testing data fit 
 
 ### Causal Inference (Winter 2019 and Spring 2020)
 
@@ -110,7 +96,6 @@ features_x_train.head()
 <img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/cleaned_data_plot.png" width="600">
 
 - Looking at the changes in the y-values before and after the intervention (the dotted vertical red line) in Figure 2, one can quickly notice that the publication count for Muslim-related articles increased in the post-intervention period for `U.S. domestic political news`, but not for `the international news`. Yet, one should also be cautious not to draw a strong conclusion from this plot alone. The y-values indicate both the treatment effect as well as seasonal changes, trends, and random noises. Comparing two groups (Arab and Indian American newspapers) reassures that the observed pattern is not group-specific, but a naive model cannot address these other factors.
-
 - Therefore, the next step is to build a model that differentiates the treatment effect from these other factors. What is particularly problematic is autocorrelation or the linear correlation between time series data and the lagged version of itself. When this occurs, one of the key assumptions of an OLS model is violated: residuals (error terms) are i.i.d. (independent and identically distributed). In this case, this serial correlation does not influence the unbiased consistency of the estimator, but it [affects their efficiency](https://www3.nd.edu/~rwilliam/stats2/l26.pdf), leading to smaller standard errors and narrower confidence intervals than their correct versions. This problem causes Type I errors (false positives).
 
 
@@ -128,6 +113,7 @@ features_x_train.head()
 - After getting this result, I shifted from OLS to [Generalized Least Squares](https://en.wikipedia.org/wiki/Generalized_least_squares) (GLS) for statistical modeling to parametrize autocorrelation. Unlike OLS, GLS relaxes the i.i.d. assumption and instead assumes a certain degree of correlation between the residuals and a regression model. Specifically, two key parameters define the correlation structure: `the autoregressive (AR) order` and `the moving average (MA) order`. AR specifies the ways in which earlier lags predict later ones. MA determines the ways we average and reduce the degree of random noise.
 - Which combination of `p` and `q` creates the best fitting model is an empirical question. In `R`, we can build a GLS model using the `gls package` and specify AR and MR as arguments in  the`corARMA() function` inside the `gls() function`.
 - I created a function for testing different GLS models and ran for loops to extract AIC (Akaike Information Criterion) from these models. Essentially, AIC [penalizes](https://www.quantstart.com/articles/Autoregressive-Moving-Average-ARMA-p-q-Models-for-Time-Series-Analysis-Part-1/) overfitting models and, thus, the lower AIC score indicates a better model fit. To do that, you need to set the `method` argument inside the `gls() function` to `ML (Maximum Likelihood Estimation)`. The default method is faster, but it does not provide AIC scores.
+
 - The optimal combination that I found from the for loops is `p = 3` and `q = 1`.
 
 
@@ -136,31 +122,6 @@ features_x_train.head()
 <img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png" width="600">
 
 - Compared to the OLS results, the GLS results showed much larger standard errors. This change affected the statistical significance of key regression coefficients. For instance, Table 1 shows that the treatment effect for the increase in the number of published articles on international politics was no longer statistically significant even when we lowered the level of significance to p < 0.1. Also, the new modeling approach made effect sizes slightly smaller. The fine-tuned result confirmed H1 (domestic threats prompted information seeking) and rejected H2 (international threats prompted information seeking).
-
-
-<table style="text-align:center"><tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="2"><em>Dependent variable:</em></td></tr>
-<tr><td></td><td colspan="2" style="border-bottom: 1px solid black"></td></tr>
-<tr><td style="text-align:left"></td><td>Domestic</td><td>Non-domestic</td></tr>
-<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Intervention</td><td>2.507<sup>***</sup></td><td>0.601</td></tr>
-<tr><td style="text-align:left"></td><td>(0.693)</td><td>(0.579)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td></tr>
-<tr><td style="text-align:left">Date</td><td>-0.0002</td><td>-0.001<sup>**</sup></td></tr>
-<tr><td style="text-align:left"></td><td>(0.0004)</td><td>(0.0003)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td></tr>
-<tr><td style="text-align:left">Indian Americans</td><td>2.291<sup>***</sup></td><td>2.316<sup>***</sup></td></tr>
-<tr><td style="text-align:left"></td><td>(0.488)</td><td>(0.339)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td></tr>
-<tr><td style="text-align:left">Constant</td><td>3.656</td><td>8.197<sup>***</sup></td></tr>
-<tr><td style="text-align:left"></td><td>(3.818)</td><td>(2.982)</td></tr>
-<tr><td style="text-align:left"></td><td></td><td></td></tr>
-<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>818</td><td>681</td></tr>
-<tr><td style="text-align:left">Log Likelihood</td><td>-1,829.846</td><td>-1,528.902</td></tr>
-<tr><td style="text-align:left">Akaike Inf. Crit.</td><td>3,677.691</td><td>3,075.804</td></tr>
-<tr><td style="text-align:left">Bayesian Inf. Crit.</td><td>3,720.009</td><td>3,116.463</td></tr>
-<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="2" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
-</table>
-
-Table 1. GLS analysis resuls
 
 ### Additional text analysis for construct validity test (Summer 2020)
 

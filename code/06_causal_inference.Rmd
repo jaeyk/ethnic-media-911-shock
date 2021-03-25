@@ -77,19 +77,13 @@ unlabeled <- read_csv(make_here("/home/jae/muslim_newspapers-selected/raw_data/u
 
 sample <- read_csv(make_here("/home/jae/muslim_newspapers-selected/raw_data/sample_articles.csv"))
 
-results <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/predicted.csv"))
-
-placebo <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/placebo.csv"))
-
-placebo_predicted <- read_csv(make_here("/home/jae/muslim_newspapers-selected/processed_data/placebo_predicted.csv"))[,2]
-
+results <- read_csv(here("processed_data/predicted.csv"))[,-1]
 ```
 
 # Merging dataframes 
 
 
 ```{r}
-
 # Replace NAs with 0s in sample articles 
 
 sample$expanding[is.na(sample$expanding)] <- 0
@@ -102,9 +96,12 @@ sample$domestic <- ifelse(sample$expanding == 1 | sample$distancing == 1 | sampl
 
 # Create domestic variable for unlabeled and apply predicted values to the variable 
 
-unlabeled$domestic <- results$`0`
-placebo_predicted$domestic <- placebo_predicted$`0`
+unlabeled$domestic <- results$category
 
+```
+
+
+```{r}
 # Select key variables 
 
 sample_selected <- dplyr::select(sample, 
@@ -124,7 +121,6 @@ labeled_selected <- dplyr::select(unlabeled,
 # Row bind the two dataframes  
 
 df <- bind_rows(sample_selected, labeled_selected)
-df_placebo <- bind_cols(placebo, placebo_predicted) 
 
 # Fix the coding error in the intervention variable (reversing values)
 
@@ -133,14 +129,6 @@ df$intervention[df$intervention == "pre"] <- "0"
 
 df$intervention[df$intervention == "1"] <- "pre"
 df$intervention[df$intervention == "0"] <- "post"
-
-# Add unit testing 
-
-test_that("Check the intervention variable coding", {
-
-  expect_equal(sum(subset(df, intervention == "post")$date > 20010911) == length(subset(df, intervention == "post")$date), TRUE)
-
-  })
 
 ```
 
@@ -167,10 +155,6 @@ df$date <- as.Date(as.character(df$date), "%Y%m%d")
 df$domestic <- as.character(df$domestic) 
 df$domestic[df$domestic == 1] <- "Domestic"
 df$domestic[df$domestic == 0] <- "International"
-
-df_placebo$domestic <- as.character(df_placebo$domestic) 
-df_placebo$domestic[df_placebo$domestic == 1] <- "Domestic"
-df_placebo$domestic[df_placebo$domestic == 0] <- "International"
 
 # Create group variable based on newspaper names 
 
