@@ -1,11 +1,8 @@
 # ITS-Text-Classification
 
-**A showcase of how machine learning can create essential data for causally identifying the long-term effects of threats on marginalized populations**
-
 - The preprint version of this project is available at https://osf.io/preprints/socarxiv/y65sd/
 - Co-author: [Andrew Thompson](https://sites.northwestern.edu/athompson/) (Notre Dame)
 - RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
-- [Slides](https://docs.google.com/presentation/d/15IQNQk62wA4hmqkxZuCX3csvi2nc_jNizqurOaQSeEI/edit?usp=sharing) (presented at [the joint PaCSS and PolNet 2020 conference](https://web.northeastern.edu/nulab/pacss/))
 
 ## Motivation
 
@@ -77,12 +74,16 @@ I created an R package called [tidyethnicnews](https://jaeyk.github.io/tidyethni
 
 **Current version (Spring 2021)**
 
-I re-classified the texts using the tidymodels framework in R. Here are the updates I have made. 
+I re-classified the texts using the tidymodels framework in R. Here are the updates I have made.
 
-- Preprocessed text data a little bit further (e.g., using tf-idf). 
-- Expanded algorithms (lasso, random forest, and XGBoost) 
-- Tuned hyperparameters of all of these classifiers 
-- Evaluated the classifiers based on the training and testing data fit 
+- Preprocessed text data a little bit further (e.g., using tf-idf).
+- Expanded algorithms (lasso, random forest, and XGBoost)
+- Tuned hyperparameters of all of these classifiers
+- Evaluated the classifiers based on the training and testing data fit
+
+[Confusion matrix](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/ml_eval.png)
+
+[Variable importance](https://github.com/jaeyk/ITS-Text-Classification/raw/master/output/vip_eval.png)
 
 ### Causal Inference (Winter 2019 and Spring 2020)
 
