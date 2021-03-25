@@ -300,7 +300,8 @@ ggsave(here("output", "ml_eval.png"), height = 10)
 ```{r}
 vi_plot_else(rand_fit, "Random forest") 
 
-ggsave(here("output", "vip_eval.png"))
+ggsave(here("output", "vip_eval.png"), width = 13, 
+       height = 10)
 ```
 
 # Predict unseen data 
