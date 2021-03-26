@@ -123,11 +123,3 @@ I re-classified the texts using the tidymodels framework in R. Here are the upda
 <img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/its_adjusted_plot.png" width="600">
 
 - Compared to the OLS results, the GLS results showed much larger standard errors. This change affected the statistical significance of key regression coefficients. For instance, Table 1 shows that the treatment effect for the increase in the number of published articles on international politics was no longer statistically significant even when we lowered the level of significance to p < 0.1. Also, the new modeling approach made effect sizes slightly smaller. The fine-tuned result confirmed H1 (domestic threats prompted information seeking) and rejected H2 (international threats prompted information seeking).
-
-### Additional text analysis for construct validity test (Summer 2020)
-
-#### 07_Additional Text Analysis in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_topic_modeling.Rmd)]
-
-**Figure 6. Relative Word Frequencies**
-
-<img src="https://github.com/jaeyk/ITS-Text-Classification/blob/master/output/relative_word_freq.png" width="600">
