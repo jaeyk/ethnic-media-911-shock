@@ -28,7 +28,10 @@ pacman::p_load(
         purrr, # functional programming
         keyATM, # keyATM
         here, # reproducibility
-        kableExtra # dplyr 2 latex
+        kableExtra, # dplyr 2 latex
+        nytimes, # NYT analysis 
+        jsonlite, # parsing JSON
+        glue # gluing objects and strings 
 )
 
 
@@ -48,16 +51,65 @@ for (i in 1:length(script_list))
 }
 ```
 
-# Import files
+# NYT data analysis 
+
+```{r}
+Sys.setenv(nyt_key = "<Insert the NYT API key>")
+key <- Sys.getenv("nyt_key")
+```
+
+```{r}
+# Parameters 
+
+begin_date <- "19960911"
+
+end_date <- "20060911"
+
+term <- "muslim+muslims"
+
+baseurl <- "http://api.nytimes.com/svc/search/v2/articlesearch.json?q="
+
+# URL request 
+
+url_request <- glue("{baseurl}{term}&begin_date={begin_date}&end_date={end_date}&facet_filter=true&api-key={key}")
+
+# Extract function 
+
+extract_nyt_data <- function(i){
+  
+  out <- fromJSON(glue("{url_request}&page={i}"), flatten = TRUE) %>% 
+    data.frame() 
+  
+  message(glue("Scraping {i} page"))
+  
+  return(out)
+  
+}
+
+# Making the function to process slow 
+
+slowly_extract_nyt_data <- slowly(extract_nyt_data, rate = rate_delay(7)) # 6 seconds sleep is the default requirement. 
+
+# Looping the function over the list
+
+max_pages <- round((fromJSON(url_request)$response$meta$hits[1] / 10) - 1)
+
+vec <- 0:max_pages 
+
+df <- map(vec, slowly_extract_nyt_data)
+```
+
+# Word frequency analysis 
+
+## Import files
 
 ```{r}
 
 full_articles <- read_csv(make_here( "/home/jae/ITS-Text-Classification/processed_data/df.csv"))
 
-eval_models <- read_csv(here("processed_data", "eval_models.csv"))
 ```
 
-# Clean and wrangle data
+## Clean and wrangle data
 
 ```{r}
 
@@ -69,7 +121,7 @@ full_articles <- full_articles[, -1]
 
 ```
 
-# Relative most frequent words
+## Relative most frequent words
 
 This part of the code heavily draws on [the tidytext book](https://www.tidytextmining.com/twitter.html).
 
@@ -123,25 +175,4 @@ ggplot(word_frequency, aes(Domestic, International)) +
   facet_wrap(~group, nrow = 2, ncol = 1)
 
 ggsave(here("output", "relative_word_freq.png"))
-```
-
-# Classification results 
-
-\begin{tabular}{lrrr}
-\toprule
-Models & Accuracy & Precision & Recall\\
-\midrule
-Lasso & 0.63 & 0.64 & 0.71\\
-Bayes & 0.68 & 0.73 & 0.68\\
-XGBoost & 0.67 & 0.67 & 0.78\\
-\bottomrule
-\end{tabular}
-
-```{r}
-
-eval_models <- eval_models[,-1]
-
-kable(eval_models, "latex", booktabs = T) %>%
-  kable_styling(position = "center")
-
 ```
