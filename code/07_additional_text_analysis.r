@@ -9,7 +9,6 @@ pacman::p_load(
         patchwork, # arranging images,
         purrr, # functional programming
         here, # reproducibility
-        nytimes, # NYT analysis 
         jsonlite, # parsing JSON
         glue # gluing objects and strings 
 )
@@ -59,8 +58,8 @@ extract_nyt_data <- function(i){
 ## --------------------------------------------------------------------------------------
 # Extract function 
 
-# 6 seconds sleep is the default requirement
-rate <- rate_delay(pause = 7)
+# 6 seconds sleep between calls, max 4000 requests per day 
+rate <- rate_delay(pause = 6, max_times = 4000)
 
 slowly_extract <- slowly(extract_nyt_data, rate = rate)
   
@@ -95,6 +94,8 @@ vec_list <- map(seq(0, max_pages, by = 199), interval)
 extract_all_compact <- function(element) {
   
   df <- map_dfr(vec_list %>% pluck(element), extract_all)
+  
+  return(df)
   
   }
 
