@@ -15,20 +15,12 @@ html_document:
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
         tidyverse, # the tidyverse framework
-        irr, # calculating inter-coder reliability score
-        corrplot, # visualizing correlation coefficients
         ggpubr, # arranging ggplots
         ggthemes, # fancy ggplot themes
-        quanteda, # text preprocessing
         tidytext, # tidytext
-        stm, # structural topic modeling
-        furrr, # multiprocessing
         patchwork, # arranging images,
-        future, # parallel and distributed computing
         purrr, # functional programming
-        keyATM, # keyATM
         here, # reproducibility
-        kableExtra, # dplyr 2 latex
         nytimes, # NYT analysis 
         jsonlite, # parsing JSON
         glue # gluing objects and strings 
@@ -54,7 +46,7 @@ for (i in 1:length(script_list))
 # NYT data analysis 
 
 ```{r}
-Sys.setenv(nyt_key = "<Insert the NYT API key>")
+Sys.setenv(nyt_key = "<insert key>")
 key <- Sys.getenv("nyt_key")
 ```
 
@@ -77,8 +69,15 @@ url_request <- glue("{baseurl}{term}&begin_date={begin_date}&end_date={end_date}
 
 extract_nyt_data <- function(i){
   
+  # JSON object 
   out <- fromJSON(glue("{url_request}&page={i}"), flatten = TRUE) %>% 
     data.frame() 
+  
+  # Select fields
+  out <- out[,c("response.docs.news_desk", "response.docs.section_name", "response.docs.subsection_name", "response.docs.type_of_material", "response.docs._id", "response.docs.headline.main")]
+  
+  # Page numbering 
+  out$page <- i
   
   message(glue("Scraping {i} page"))
   
@@ -88,91 +87,52 @@ extract_nyt_data <- function(i){
 
 # Making the function to process slow 
 
-slowly_extract_nyt_data <- slowly(extract_nyt_data, rate = rate_delay(7)) # 6 seconds sleep is the default requirement. 
+# 6 seconds sleep is the default requirement
+slowly_extract <- slowly(extract_nyt_data,
+                         rate = rate_delay(pause = 7,
+           max_times = 200))
+```
 
+
+```{r}
+# Extract function 
+
+extract_all <- function(page_list) {
+
+  df <- map(page_list, safely(slowly_extract)) 
+  
+  compact_df <- df %>% 
+    map_dfr("result") %>%
+    compact() 
+  
+  return(compact_df)
+  
+}
+```
+
+```{r}
 # Looping the function over the list
 
 max_pages <- round((fromJSON(url_request)$response$meta$hits[1] / 10) - 1)
 
-vec <- 0:max_pages 
+interval <- function(x) {
+  
+  out <- c(x:(x + 200))
 
-df <- map(vec, slowly_extract_nyt_data)
+  return(out)
+  
+}
+
+# I created this list of numeric vectors to avoid API rate limit. 
+
+vec_list <- map(seq(0, max_pages, by = 200), interval)
 ```
 
-# Word frequency analysis 
-
-## Import files
 
 ```{r}
-
-full_articles <- read_csv(make_here( "/home/jae/ITS-Text-Classification/processed_data/df.csv"))
-
-```
-
-## Clean and wrangle data
-
-```{r}
-
-# Manipulate strings
-full_articles$source <- str_trim(gsub(".*:", "", full_articles$source))
-
-# Dropping the first column
-full_articles <- full_articles[, -1]
-
-```
-
-## Relative most frequent words
-
-This part of the code heavily draws on [the tidytext book](https://www.tidytextmining.com/twitter.html).
-
-```{r}
-
-tidy_articles <- full_articles %>%
-  # tokenize
-  unnest_tokens(word, text) %>%
-  # remove stop words
-  filter(!word %in% stop_words$word,
-         !word %in% str_remove_all(stop_words$word, "'"),
-  # only characters
-         str_detect(word, "[a-z]")
-         )
-
+combined_df <- map(vec_list, extract_all)
 ```
 
 ```{r}
-
-word_frequency <- tidy_articles %>%
-  # Count by group
-  group_by(domestic, group) %>%
-  count(word, sort = TRUE) %>%
-  # Subjoin
-  left_join(tidy_articles %>%
-              group_by(domestic, group) %>%
-              summarise(total = n())) %>%
-  # Create freq variable
-  mutate(freq = n/total)
-
-```
-
-```{r}
-
-word_frequency <- word_frequency %>%
-  # Select only interested columns
-  select(domestic, group, word, freq) %>%
-  pivot_wider(names_from = c("domestic"),
-              values_from = "freq") %>%
-  arrange("Domestic", "International")
-
-```
-
-```{r}
-ggplot(word_frequency, aes(Domestic, International)) +
-  geom_jitter(alpha = 0.01, size = 3, width = 0.25, height = 0.25) +
-  geom_text(aes(label = word), check_overlap =  TRUE, vjust = 1.5) +
-  scale_x_log10(labels = scales::percent_format()) +
-  scale_y_log10(labels = scales::percent_format()) +
-  geom_abline(color = "red") +
-  facet_wrap(~group, nrow = 2, ncol = 1)
-
-ggsave(here("output", "relative_word_freq.png"))
+saveRDS(combined_df, file = here("processed_data/nyt_articles.Rdata"))
 ```
