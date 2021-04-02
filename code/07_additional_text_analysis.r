@@ -77,7 +77,7 @@ max_pages <- round((fromJSON(url_request)$response$meta$hits[1] / 10) - 1)
 
 interval <- function(x) {
   
-  out <- c(x:(x + 200)) 
+  out <- c(x:(x + 199)) 
 
   return(out)
   
@@ -85,7 +85,7 @@ interval <- function(x) {
 
 # I created this list of numeric vectors to avoid API rate limit. 
 
-vec_list <- map(seq(0, max_pages, by = 200), interval)
+vec_list <- map(seq(0, max_pages, by = 199), interval)
 
 
 ## ------------------------------------------------
@@ -125,4 +125,3 @@ df12 <- extract_all_compact(12)
 ## ----eval=FALSE----------------------------------
 ## knitr::purl(input = here("code", "07_additional_text_analysis.Rmd"),
 ##             output = here("code", "07_additional_text_analysis.r"))
-
