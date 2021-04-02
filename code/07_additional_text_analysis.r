@@ -1,4 +1,4 @@
-## ------------------------------------------------
+## --------------------------------------------------------------------------------------
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
@@ -14,12 +14,13 @@ pacman::p_load(
         glue # gluing objects and strings 
 )
 
-## ------------------------------------------------
-Sys.setenv(nyt_key = "lJWFqmFXKLE8yoxN95xLjnyqMFk67a5I")
+
+## --------------------------------------------------------------------------------------
+#Sys.setenv(nyt_key = "<insert key>")
 key <- Sys.getenv("nyt_key")
 
 
-## ------------------------------------------------
+## --------------------------------------------------------------------------------------
 # Parameters 
 
 begin_date <- "19960911"
@@ -45,22 +46,24 @@ extract_nyt_data <- function(i){
   # Select fields
   out <- out[,c("response.docs.news_desk", "response.docs.section_name", "response.docs.subsection_name", "response.docs.type_of_material", "response.docs._id", "response.docs.headline.main")]
   
+  # Page numbering 
+  out$page <- i
+  
   message(glue("Scraping {i} page"))
   
   return(out)
   
 }
 
-# Making the function to process slow 
 
-# 6 seconds sleep is the default requirement
-slowly_extract <- slowly(extract_nyt_data,
-                         rate = rate_delay(pause = 6))
-
-
-## ------------------------------------------------
+## --------------------------------------------------------------------------------------
 # Extract function 
 
+# 6 seconds sleep is the default requirement
+rate <- rate_delay(pause = 7)
+
+slowly_extract <- slowly(extract_nyt_data, rate = rate)
+  
 extract_all <- function(page_list) {
 
   df <- map_dfr(page_list, slowly_extract) 
@@ -70,7 +73,7 @@ extract_all <- function(page_list) {
 }
 
 
-## ------------------------------------------------
+## --------------------------------------------------------------------------------------
 # Looping the function over the list
 
 max_pages <- round((fromJSON(url_request)$response$meta$hits[1] / 10) - 1)
@@ -88,23 +91,19 @@ interval <- function(x) {
 vec_list <- map(seq(0, max_pages, by = 199), interval)
 
 
-## ------------------------------------------------
-
+## --------------------------------------------------------------------------------------
 extract_all_compact <- function(element) {
   
-  df <- map(vec_list %>% pluck(element), safely(extract_all))
-  
-  df <- df %>%
-    map_dfr("result") %>%
-    compact()
+  df <- map_dfr(vec_list %>% pluck(element), extract_all)
   
   }
+
+
+## --------------------------------------------------------------------------------------
 
 # iter <- seq(vec_list)
 # glue("df{iter} <- extract_all_compact({iter})")
 
-# I am running this list element one by one to avoid the daily API rate limit.
- 
 df1 <- extract_all_compact(1)
 df2 <- extract_all_compact(2)
 df3 <- extract_all_compact(3)
@@ -118,10 +117,14 @@ df10 <- extract_all_compact(10)
 df11 <- extract_all_compact(11)
 df12 <- extract_all_compact(12)
 
-## ------------------------------------------------
-# saveRDS(combined_df, file = here("processed_data/nyt_articles.Rdata"))
+
+## --------------------------------------------------------------------------------------
+save(df1, df2, df3, df4, df5, df6, df7, df8, df9, df10, df11, df12, here("processed_data/nyt_parts.Rdata"))
+
+#saveRDS(combined_df, file = here("processed_data/nyt_articles.Rdata"))
 
 
-## ----eval=FALSE----------------------------------
+## ----eval=FALSE------------------------------------------------------------------------
 ## knitr::purl(input = here("code", "07_additional_text_analysis.Rmd"),
 ##             output = here("code", "07_additional_text_analysis.r"))
+

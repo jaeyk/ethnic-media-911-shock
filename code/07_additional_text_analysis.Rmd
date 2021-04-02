@@ -25,13 +25,12 @@ pacman::p_load(
         jsonlite, # parsing JSON
         glue # gluing objects and strings 
 )
-
 ```
 
 # NYT data analysis 
 
 ```{r}
-Sys.setenv(nyt_key = "<insert key>")
+#Sys.setenv(nyt_key = "<insert key>")
 key <- Sys.getenv("nyt_key")
 ```
 
@@ -69,18 +68,17 @@ extract_nyt_data <- function(i){
   return(out)
   
 }
-
-# Making the function to process slow 
-
-# 6 seconds sleep is the default requirement
-slowly_extract <- slowly(extract_nyt_data,
-                         rate = rate_delay(pause = 6))
 ```
 
 
 ```{r}
 # Extract function 
 
+# 6 seconds sleep is the default requirement
+rate <- rate_delay(pause = 7)
+
+slowly_extract <- slowly(extract_nyt_data, rate = rate)
+  
 extract_all <- function(page_list) {
 
   df <- map_dfr(page_list, slowly_extract) 
@@ -111,11 +109,7 @@ vec_list <- map(seq(0, max_pages, by = 199), interval)
 ```{r}
 extract_all_compact <- function(element) {
   
-  df <- map(vec_list %>% pluck(element), safely(extract_all))
-  
-  df <- df %>%
-    map_dfr("result") %>%
-    compact()
+  df <- map_dfr(vec_list %>% pluck(element), extract_all)
   
   }
 ```
@@ -142,7 +136,9 @@ df12 <- extract_all_compact(12)
 ```
 
 ```{r}
-saveRDS(combined_df, file = here("processed_data/nyt_articles.Rdata"))
+save(df1, df2, df3, df4, df5, df6, df7, df8, df9, df10, df11, df12, here("processed_data/nyt_parts.Rdata"))
+
+#saveRDS(combined_df, file = here("processed_data/nyt_articles.Rdata"))
 ```
 
 # Extract and export R code 
