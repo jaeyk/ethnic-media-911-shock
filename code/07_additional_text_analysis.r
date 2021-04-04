@@ -1,5 +1,4 @@
 ## --------------------------------------------------------------------------------------
-
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
         tidyverse, # the tidyverse framework
@@ -9,15 +8,16 @@ pacman::p_load(
         patchwork, # arranging images,
         purrr, # functional programming
         here, # reproducibility
+        httr, # httr connection 
         jsonlite, # parsing JSON
-        glue # gluing objects and strings 
+        glue, # gluing objects and strings         
+        rio # import and export files  
 )
 
 
 ## --------------------------------------------------------------------------------------
 #Sys.setenv(nyt_key = "<insert key>")
 key <- Sys.getenv("nyt_key")
-
 
 ## --------------------------------------------------------------------------------------
 # Parameters 
@@ -28,23 +28,26 @@ end_date <- "20060911"
 
 term <- "muslim+muslims"
 
-baseurl <- "http://api.nytimes.com/svc/search/v2/articlesearch.json?q="
+baseurl <- "http://api.nytimes.com/svc/search/v2/articlesearch.json"
 
 # URL request 
 
-url_request <- glue("{baseurl}{term}&begin_date={begin_date}&end_date={end_date}&facet_filter=true&api-key={key}")
+r <- GET(baseurl, 
+         query = list('q' = term, 
+                      'begin_date' = begin_date, 
+                      'end_date' = end_date,
+                      'api-key' = key))
 
+
+
+## --------------------------------------------------------------------------------------
 # Extract function 
 
 extract_nyt_data <- function(i){
   
   # JSON object 
-  out <- fromJSON(glue("{url_request}&page={i}"), flatten = TRUE) %>% 
-    data.frame() 
-  
-  # Select fields
-  out <- out[,c("response.docs.news_desk", "response.docs.section_name", "response.docs.subsection_name", "response.docs.type_of_material", "response.docs._id", "response.docs.headline.main")]
-  
+  out <- fromJSON(httr::content(r, "text", encoding = "UTF-8"), simplifyDataFrame = TRUE, flatten = TRUE) 
+    
   # Page numbering 
   out$page <- i
   
@@ -74,12 +77,11 @@ extract_all <- function(page_list) {
 
 ## --------------------------------------------------------------------------------------
 # Looping the function over the list
-
-max_pages <- round((fromJSON(url_request)$response$meta$hits[1] / 10) - 1)
+max_pages <- round((fromJSON(httr::content(r, "text"), simplifyDataFrame = TRUE, flatten = TRUE)$response$meta$hits[1] / 10) - 1)
 
 interval <- function(x) {
   
-  out <- c(x:(x + 199)) 
+  out <- c(x:(x + 198)) 
 
   return(out)
   
@@ -87,13 +89,13 @@ interval <- function(x) {
 
 # I created this list of numeric vectors to avoid API rate limit. 
 
-vec_list <- map(seq(0, max_pages, by = 199), interval)
+vec_list <- map(seq(0, max_pages, by = 198), interval)
 
 
 ## --------------------------------------------------------------------------------------
 extract_all_compact <- function(element) {
   
-  df <- map_dfr(vec_list %>% pluck(element), extract_all)
+  df <- map(vec_list %>% pluck(element), safely(extract_all))
   
   return(df)
   
@@ -102,11 +104,11 @@ extract_all_compact <- function(element) {
 
 ## --------------------------------------------------------------------------------------
 
-# iter <- seq(vec_list)
-# glue("df{iter} <- extract_all_compact({iter})")
+#iter <- seq(vec_list)
+#glue("df{iter} <- extract_all_compact({iter})")
 
-df1 <- extract_all_compact(1)
-df2 <- extract_all_compact(2)
+#df1 <- extract_all_compact(1)
+#df2 <- extract_all_compact(2)
 df3 <- extract_all_compact(3)
 df4 <- extract_all_compact(4)
 df5 <- extract_all_compact(5)
@@ -117,12 +119,25 @@ df9 <- extract_all_compact(9)
 df10 <- extract_all_compact(10)
 df11 <- extract_all_compact(11)
 df12 <- extract_all_compact(12)
+df13 <- extract_all_compact(13)
 
+#glue("export(df{iter}, here('processed_data/nyt_part{iter}.rds'))")
 
-## --------------------------------------------------------------------------------------
-save(df1, df2, df3, df4, df5, df6, df7, df8, df9, df10, df11, df12, here("processed_data/nyt_parts.Rdata"))
+#export(df1, here('processed_data/nyt_part1.rds'))
+#export(df2, here('processed_data/nyt_part2.rds'))
+export(df3, here('processed_data/nyt_part3.rds'))
+export(df4, here('processed_data/nyt_part4.rds'))
+export(df5, here('processed_data/nyt_part5.rds'))
+export(df6, here('processed_data/nyt_part6.rds'))
+export(df7, here('processed_data/nyt_part7.rds'))
+export(df8, here('processed_data/nyt_part8.rds'))
+export(df9, here('processed_data/nyt_part9.rds'))
+export(df10, here('processed_data/nyt_part10.rds'))
+export(df11, here('processed_data/nyt_part11.rds'))
+export(df12, here('processed_data/nyt_part12.rds'))
+export(df13, here('processed_data/nyt_part13.rds'))
 
-#saveRDS(combined_df, file = here("processed_data/nyt_articles.Rdata"))
+#export(combined_df, file = here("processed_data/nyt_articles.rds"))
 
 
 ## ----eval=FALSE------------------------------------------------------------------------
