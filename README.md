@@ -1,7 +1,7 @@
 # ITS-Text-Classification
 
 - The preprint version of this project is available at https://osf.io/preprints/socarxiv/y65sd/
-- Co-author: [Andrew Thompson](https://sites.northwestern.edu/athompson/) (Notre Dame)
+- Co-author: [Andrew Thompson](https://sites.northwestern.edu/athompson/) (George Washington University)
 - RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
 
 ## Motivation
