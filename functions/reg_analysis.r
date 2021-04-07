@@ -44,6 +44,9 @@ ts_df <- function(data){
   df_grouped %>%
     dplyr::select(-n)
   
+  # Add intervention 
+  df_grouped$intervention <- ifelse(df_grouped$date < as.Date("2001-09-11"), 0, 1)
+  
   df_grouped
 }
 
@@ -173,6 +176,8 @@ model_adj <- function(input, p.pam, q.pam) {
   input
 }
 
+
+
 visualize_base <- function(input) {
 
   # Apply OLS regression
@@ -215,7 +220,6 @@ visualize_base <- function(input) {
       alpha = 0.3, color = "blue"
     )
 }
-
 
 visualize_placebo <- function(input) {
   

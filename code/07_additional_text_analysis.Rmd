@@ -185,6 +185,56 @@ ggsave(here("output/nyt_ethnic_raw_comp.png"), height = 8)
 
 ## ITS analysis
 
+### Base model
+
+```{r}
+# Create assignment variable 
+df_grouped <- ts_df(df)
+comp_df_grouped <- group_df(comp_df)
+
+# Divide data 
+
+df_domestic <- df_grouped %>%
+  filter(domestic == "Domestic") 
+comp_df_domestic <- comp_df_grouped %>%
+  filter(domestic == "Domestic") 
+
+df_nondomestic <- df_grouped %>%
+  filter(domestic != "Domestic") 
+comp_df_nondomestic <- comp_df_grouped %>%
+  filter(domestic != "Domestic")
+```
+
+
+```{r}
+# Visualize ITS analysis result for each subset of the data 
+
+its_dom_plot <- visualize_placebo(df_domestic) + 
+  ggtitle("Majority Interests in Domestic News on Muslims") + 
+  labs(tag = "A", caption = "") +
+  ylim(c(0,20))
+its_nondom_plot <- visualize_placebo(df_nondomestic) + 
+  ggtitle("Majority Interests in International News on Muslims") + 
+  labs(tag = "C", 
+       caption = "Source: New York Times") +
+  ylim(c(0,20))
+
+comp_its_dom_plot <- visualize_placebo(comp_df_domestic) + 
+  ggtitle("Minority Interests in Doemstic News on Muslims") + 
+  labs(tag = "B", caption = "") +
+  ylim(c(0,20))
+
+comp_its_nondom_plot <- visualize_placebo(comp_df_nondomestic) + 
+  ggtitle("Minority Interests in International News on Muslims") + 
+  labs(tag = "D", caption = "Source: Ethnic NewsWatch") +
+  ylim(c(0,20))
+
+(its_dom_plot + comp_its_dom_plot) /
+(its_nondom_plot + comp_its_nondom_plot)
+
+ggsave(here("output/nyt_ethnic_its_comp.png"), height = 8)
+
+```
 # Extract and export R code 
 
 ```{r eval=FALSE}
