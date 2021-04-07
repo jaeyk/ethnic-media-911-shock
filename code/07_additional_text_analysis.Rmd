@@ -14,6 +14,7 @@ html_document:
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
         tidyverse, # the tidyverse framework
+        lubridate, # wrangling date and time
         ggpubr, # arranging ggplots
         ggthemes, # fancy ggplot themes
         tidytext, # tidytext
@@ -23,12 +24,24 @@ pacman::p_load(
         httr, # httr connection 
         jsonlite, # parsing JSON
         glue, # gluing objects and strings         
-        rio # import and export files  
+        rio, # import and export files  
+        forecast # forecasting 
 )
 
 devtools::install_github("jaeyk/rnytapi", dependencies = TRUE)
 
 library(rnytapi)
+```
+
+```{r}
+# Import R scripts
+
+script_list <- list.files(here("functions"),
+  pattern = "*.r|*.R",
+  full.names = TRUE
+)
+
+walk(script_list, source)
 ```
 
 # Collecting data using the NYT API
@@ -86,6 +99,91 @@ df <- df %>%
 
 write_rds(df, here("processed_data/nyt_articles.Rdata"))
 ```
+
+# Munging data 
+
+```{r}
+df <- read_rds(here("processed_data/nyt_articles.Rdata"))
+
+# Rename columns 
+colnames(df) <- str_remove(colnames(df), "response.docs.")
+```
+
+
+```{r}
+# Select columns and filter rows 
+df <- df %>%
+  select(pub_date, section_name, subsection_name) %>%
+  filter(!(section_name %in% c("Style", "Business Day", "Books", "Arts", "Magazine", "Movies", "Theater", "Sports", "Your Money", "Science", "Technology", "Food", "Health", "Real Estate", "Job Market", "Great Homes & Destinations", "Automobiles", "Fashion & Style", "Home & Garden", "Travel")))
+
+nrow(df)
+```
+
+
+```{r}
+# Format date column and rename it
+df$pub_date <- lubridate::ymd(str_replace(df$pub_date, "T.*", ""))
+
+df <- df %>% rename(date = pub_date)
+```
+
+
+```{r}
+# Filter rows and mutate domestic column 
+df <- df %>%
+  mutate(domestic = ifelse(section_name == "World", "International", "Domestic"))
+
+df$intervention <- ifelse(df$date > as.Date("2001-09-11"), 1, 0)
+
+table(df$section_name)
+```
+
+# Data visualization
+
+```{r}
+comp_df <- read.csv(here("processed_data/df.csv"))
+comp_df$date <- as.Date(comp_df$date)
+```
+
+## Raw data 
+
+```{r}
+domestic_plot <- ts_df(df) %>%
+  filter(domestic == "Domestic") %>%
+  visualize_raw() +
+  ggtitle("Majority Interests in Domestic News on Muslims") + 
+  labs(tag = "A", caption = "") +
+  ylim(c(0,17))
+
+nondomestic_plot <- ts_df(df) %>%
+  filter(domestic != "Domestic") %>% 
+  visualize_raw() +
+  ggtitle("Majority Interests in International News on Muslims") + 
+  labs(tag = "C", 
+       caption = "Source: New York Times") +
+  ylim(c(0,17))
+
+comp_domestic_plot <- ts_df(comp_df) %>%
+  filter(domestic == "Domestic") %>% 
+  visualize_raw() +
+  ggtitle("Minority Interests in Doemstic News on Muslims") + 
+  labs(tag = "B", caption = "") +
+  ylim(c(0,17))
+
+comp_nondomestic_plot <- ts_df(comp_df) %>%
+  filter(domestic != "Domestic") %>%
+  visualize_raw() +  
+  ggtitle("Minority Interests in International News on Muslims") + 
+  labs(tag = "D", caption = "Source: Ethnic NewsWatch") +
+  ylim(c(0,17))
+
+(domestic_plot + comp_domestic_plot) /
+(nondomestic_plot + comp_nondomestic_plot) 
+
+ggsave(here("output/nyt_ethnic_raw_comp.png"), height = 8)
+```
+
+## ITS analysis
 
 # Extract and export R code 
 

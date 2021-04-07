@@ -27,6 +27,26 @@ df$dv <- as.integer(df$dv)
 
 }
 
+ts_df <- function(data){
+  
+  # Group by
+  df_grouped <- data %>%
+    group_by(date, domestic) %>% # group by 
+    dplyr::summarize(n = n()) %>% # summarize 
+    as.data.frame()
+  
+  # Count ts 
+  count_ts <- ts(df_grouped[, c('n')])
+  
+  df_grouped$count_ts <- as.integer(tsclean(count_ts))
+  
+  # Get rid of n
+  df_grouped %>%
+    dplyr::select(-n)
+  
+  df_grouped
+}
+
 group_df <- function(data, group_var){
   
 # Group by
@@ -79,7 +99,7 @@ data %>%
   ggplot(aes(x = date, y = count_ts)) +
     geom_line() + # line plot
     geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
-    scale_y_continuous(breaks= scales::pretty_breaks()) + # pretty breaks on transformed scale 
+    scale_y_continuous(breaks = scales::pretty_breaks()) + 
     labs(x = "Date",
          y = "Publication count",
          col = "Issue focus",

@@ -73,7 +73,6 @@ for (i in 1:length(script_list))
 Unfortunately, I cannot share the original data because they are proprietary. ProQuest holds the copyrights. 
 
 ```{r include=FALSE}
-
 # Import files 
 sample <- readr::read_csv(here("processed_data/cleaned_text.csv"))[,-1]
 unlabeled <- readr::read_csv(here("processed_data/predicted.csv"))[,-1]
@@ -128,8 +127,6 @@ If you want to replicate the analysis, you can start from here using `df.csv` sa
 
 ```{r}
 
-# df <- read_csv("/home/jae/ITS-Text-Classification/processed_data.df.csv")
-
 # Recode values in domestic variable 
 
 df$domestic <- as.character(df$domestic) 
@@ -142,7 +139,7 @@ df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Ame
 
 # Save the processed data 
 
-write.csv(df, make_here("/home/jae/ITS-Text-Classification/processed_data/df.csv"))
+write.csv(df, here("processed_data/df.csv"))
 
 ```
 
