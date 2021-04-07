@@ -25,7 +25,8 @@ pacman::p_load(
         jsonlite, # parsing JSON
         glue, # gluing objects and strings         
         rio, # import and export files  
-        forecast # forecasting 
+        forecast, # forecasting 
+        stargazer
 )
 
 devtools::install_github("jaeyk/rnytapi", dependencies = TRUE)
@@ -46,7 +47,7 @@ walk(script_list, source)
 
 # Collecting data using the NYT API
 
-```{r}
+```{r eval = FALSE}
 #Sys.setenv(nyt_key = "<insert key>")
 key <- Sys.getenv("nyt_key")
 
@@ -59,7 +60,7 @@ term <- "muslim+muslims"
 
 I need to split the date ranges to get around the NYT API policy on pagination (max 200 pages for a search result).
 
-```{r}
+```{r eval = FALSE}
 df1996 <- extract_all(term = 'muslim+muslims', begin_date = '19960911', end_date = '19970911', key = 'lJWFqmFXKLE8yoxN95xLjnyqMFk67a5I')
 df1997 <- extract_all(term = 'muslim+muslims', begin_date = '19970911', end_date = '19980911', key = 'lJWFqmFXKLE8yoxN95xLjnyqMFk67a5I')
 df1998 <- extract_all(term = 'muslim+muslims', begin_date = '19980911', end_date = '19990911', key = 'lJWFqmFXKLE8yoxN95xLjnyqMFk67a5I')
@@ -210,22 +211,22 @@ comp_df_nondomestic <- comp_df_grouped %>%
 # Visualize ITS analysis result for each subset of the data 
 
 its_dom_plot <- visualize_placebo(df_domestic) + 
-  ggtitle("Majority Interests in Domestic News on Muslims") + 
+  ggtitle("Majority Interests in Domestic News") + 
   labs(tag = "A", caption = "") +
   ylim(c(0,20))
 its_nondom_plot <- visualize_placebo(df_nondomestic) + 
-  ggtitle("Majority Interests in International News on Muslims") + 
+  ggtitle("Majority Interests in International News") + 
   labs(tag = "C", 
        caption = "Source: New York Times") +
   ylim(c(0,20))
 
 comp_its_dom_plot <- visualize_placebo(comp_df_domestic) + 
-  ggtitle("Minority Interests in Doemstic News on Muslims") + 
+  ggtitle("Minority Interests in Doemstic News") + 
   labs(tag = "B", caption = "") +
   ylim(c(0,20))
 
 comp_its_nondom_plot <- visualize_placebo(comp_df_nondomestic) + 
-  ggtitle("Minority Interests in International News on Muslims") + 
+  ggtitle("Minority Interests in International News") + 
   labs(tag = "D", caption = "Source: Ethnic NewsWatch") +
   ylim(c(0,20))
 
