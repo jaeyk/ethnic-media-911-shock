@@ -52,7 +52,7 @@ I created an R package called [tidyethnicnews](https://jaeyk.github.io/tidyethni
 
 - We trained a Lasso model in Python using the labeled texts with the added features (i.e., intervention, source, and group variables). The classification accuracy rate (the percentage of results accurately classified) was 73%, the precision rate (the percentage of relevant results) was 75%, and the recall rate (the percentage of relevant total results correctly classified) was 80%.
 
-2. **Current version (Spring 2021) [[R markdown](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.Rmd)]]**
+2. **Current version (Spring 2021) [[R markdown](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.Rmd)]**
 
 I re-classified the texts using the tidymodels framework in R. Here are the updates I have made.
 
