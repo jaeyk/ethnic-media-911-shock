@@ -4,9 +4,13 @@
 - Co-author: [Andrew Thompson](https://sites.northwestern.edu/athompson/) (George Washington University)
 - RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
 
+## A single replication file [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/replication.r)]
+
+If you intend to reproduce figures and tables appeared in the manuscript and appendix, use this R script. 
+
 ## Research Process
 
-In this section, I document how I implemented the research design step-by-step. If possible, I also provide the Python or R code used in each step.
+If you intend to examine each research process, check the following R markdown files and Jupyter notebooks.
 
 ### Data Collection (Summer 2019)
 
@@ -64,6 +68,3 @@ I re-classified the texts using the tidymodels framework in R. Here are the upda
 ### Additional analysis (Spring 2021)
 
 #### 07_Analzing New York Times Articles in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/07_additional_text_analysis.Rmd)]]
-
-## Replication files [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/replication.r)]
-
