@@ -12,7 +12,6 @@ html_document:
 
 ```{r}
 # Import libraries 
-
 pacman::p_load(
         tidyverse, # the tidyverse framework 
         splitstackshape, # stacking and reshaping datasets 
@@ -47,7 +46,6 @@ pacman::p_load(
         patchwork, # rearranging ggplot 
         purrr, # functional programming 
         testthat) # unit testing
-
 ```
 
 
@@ -56,7 +54,6 @@ pacman::p_load(
 library(makereproducible)
 
 # Import R scripts
-
 script_list <- list.files(paste0(here::here(), "/functions"),
   pattern = "*.r|*.R",
   full.names = TRUE
@@ -66,6 +63,9 @@ for (i in 1:length(script_list))
 {
   source(script_list[[i]])
 }
+
+# Publication ready plots 
+ggplot2::theme_set(ggpubr::theme_pubr())
 ```
 
 # Importing files
@@ -90,7 +90,6 @@ unlabeled <- unlabeled %>% rename(domestic = category)
 
 ```{r}
 # Select key variables 
-
 sample_selected <- dplyr::select(sample, 
               source,
               intervention,
@@ -106,17 +105,14 @@ labeled_selected <- dplyr::select(unlabeled,
               text)
 
 # Row bind the two dataframes  
-
 df <- bind_rows(sample_selected, labeled_selected)
 
 # Fix the coding error in the intervention variable (reversing values)
-
 df$intervention[df$intervention == "post"] <- "1"
 df$intervention[df$intervention == "pre"] <- "0"
 
 df$intervention[df$intervention == "1"] <- "pre"
 df$intervention[df$intervention == "0"] <- "post"
-
 ```
 
 # Descriptive analysis
@@ -126,21 +122,19 @@ df$intervention[df$intervention == "0"] <- "post"
 If you want to replicate the analysis, you can start from here using `df.csv` saved in `processed_data` directory..
 
 ```{r}
-
 # Recode values in domestic variable 
-
 df$domestic <- as.character(df$domestic) 
 df$domestic[df$domestic == 1] <- "Domestic"
 df$domestic[df$domestic == 0] <- "International"
 
 # Create group variable based on newspaper names 
-
 df$group <- ifelse(str_detect(df$source, "India"), "Indian Americans", "Arab Americans")
 
-# Save the processed data 
+# Drop text column 
+df$text <- NULL
 
+# Save the processed data without the text column
 write.csv(df, here("processed_data/df.csv"))
-
 ```
 
 ## Data visualization
@@ -150,56 +144,56 @@ write.csv(df, here("processed_data/df.csv"))
 ### No outliers and missing values 
 
 ```{r}
-
 # Save plot 
   
 cleaned_domestic_plot <- group_df(df, group) %>%
   filter(domestic == "Domestic") %>% 
   visualize_raw() +  
   facet_wrap(~group, scale = "free_y") + # facetting, y scale is free 
-  ggtitle("9/11 and Minority Domestic Political Interests") + 
+  ggtitle("Arab and Indian Immigrants' Domestic Political Interests") + 
   labs(tag = "A", caption = "")
 
 cleaned_nondomestic_plot <- group_df(df, group) %>%
   filter(domestic != "Domestic") %>% 
   visualize_raw() + 
-  ggtitle("9/11 and Minority International Political Interests") + 
+  ggtitle("Arab and Indian Immigrants' International Political Interests") + 
   labs(tag = "B") +
   facet_wrap(~group, scale = "free_y") # facetting, y scale is free 
 
 cleaned_domestic_plot / cleaned_nondomestic_plot
 
-ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot.png"), height = 8)
+ggsave(here("output", "cleaned_data_plot.png"), height = 8)
+```
 
+
+```{r}
 cleaned_domestic_plot_source <- group_df(df, source) %>%
-  filter(domestic == "Domestic") %>% visualize_raw() +  
+  filter(domestic == "Domestic") %>% 
+  visualize_raw() +  
   facet_wrap(~source, scale = "free_y") + # facetting, y scale is free   
-  ggtitle("9/11 and Minority Domestic Political Interests") + 
+  ggtitle("Arab and Indian Immigrants' Domestic Political Interests") + 
   labs(tag = "A", caption = "")
 
 cleaned_nondomestic_plot_source <- group_df(df, source) %>%
-  filter(domestic != "Domestic") %>% visualize_raw() +
-  ggtitle("9/11 and Minority International Political Interests") + 
+  filter(domestic != "Domestic") %>% 
+  visualize_raw() +
+  ggtitle("Arab and Indian Immigrants' International Political Interests") + 
   labs(tag = "B") +
   facet_wrap(~source, scale = "free_y") # facetting, y scale is free 
 
 cleaned_domestic_plot_source / cleaned_nondomestic_plot_source
 
-ggsave(make_here("/home/jae/ITS-Text-Classification/output/cleaned_data_plot_source.png"), 
+ggsave(here("output", "cleaned_data_plot_source.png"), 
        height = 8,
        width = 8)
-
 ```
 
 
 # Interrupted time series design analysis 
 
 ## Base model
-
 ```{r}
-
 # Create assignment variable 
-
 df_grouped <- group_df(df, group)
 
 # Divide data 
@@ -208,18 +202,21 @@ df_domestic <- df_grouped %>%
   filter(domestic == "Domestic") 
 
 df_nondomestic <- df_grouped %>%
-  filter(domestic != "Domestic") 
+  filter(domestic != "Domestic")
 
+save(df_domestic, df_nondomestic, file = here("processed_data", "base_its.RData"))
+```
+
+
+```{r}
 # Visualize ITS analysis result for each subset of the data 
+its_base_dom_plot <- visualize_base(df_domestic) + ggtitle("Arab and Indian Immigrants' Domestic Political Interests") + labs(tag = "A", caption = "")
 
-its_base_dom_plot <- visualize_base(df_domestic) + ggtitle("9/11 and Minority Domestic Political Interests") + labs(tag = "A", caption = "")
-
-its_base_nondom_plot <- visualize_base(df_nondomestic) + ggtitle("9/11 and Minority International Political Interests") + labs(tag = "B")
+its_base_nondom_plot <- visualize_base(df_nondomestic) + ggtitle("Arab and Indian Immigrants' International Political Interests") + labs(tag = "B")
 
 its_base_dom_plot / its_base_nondom_plot
 
-ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_plot.png"), height = 8)
-
+ggsave(here("output" ,"its_base_plot.png"), height = 8)
 ```
 
 ## Check for autocorrelation
@@ -227,7 +224,6 @@ ggsave(make_here("/home/jae/ITS-Text-Classification/output/its_base_plot.png"), 
 The base model is naive. To make it more robust, first, I assess the correlation between the series and its time lags (autocorrelation). In both cases, ACF (correlation a time series and its lags) test shows there exits a weak seasonal trend. 
 
 ```{r}
-
 # Create the full date 
 
 all_days <- seq(min(df_grouped$date), max(df_grouped$date), by = "+1 day")
@@ -243,23 +239,26 @@ df_grouped <- all_days %>%
 
 # Divide data 
 
-df_domestic <- df_grouped %>%
+df_domestic_ts <- df_grouped %>%
   filter(domestic == "Domestic") 
 
-df_nondomestic <- df_grouped %>%
+df_nondomestic_ts <- df_grouped %>%
   filter(domestic != "Domestic") 
 
+save(df_domestic_ts, 
+     df_nondomestic_ts, 
+     file = here("processed_data", "acf.RData"))
 ```
 
 ```{r echo=FALSE}
 # Apply to each data
-acf_dom <- acf_plot(df_domestic) + ggtitle("Domestic Political Interests") + labs(tag = "A")
+acf_dom <- acf_plot(df_domestic_ts) + ggtitle("Domestic Political Interests") + labs(tag = "A")
 
-acf_nondom <- acf_plot(df_nondomestic) + ggtitle("International Political Interests") + labs(tag = "B")
+acf_nondom <- acf_plot(df_nondomestic_ts) + ggtitle("International Political Interests") + labs(tag = "B")
 
 acf_dom / acf_nondom
 
-ggsave(make_here("/home/jae/ITS-Text-Classification/output/acf_plot.png"))
+ggsave(here("output", "acf_plot.png"))
 
 ```
 
@@ -300,9 +299,11 @@ AICc 2928.13 2923.304 2899.759
 
 # Visualize each result in the scatted plot 
 
-its_adj_dom_plot <- visualize_adj(df_domestic, 3, 1) + ggtitle("9/11 and Minority Domestic Political Interests") + labs(caption = "", tag = "A")
+its_adj_dom_plot <- visualize_adj(df_domestic, 1, 1) + ggtitle("Arab and Indian Immigrants' Domestic Political Interests") + labs(caption = "", tag = "A") +
+  ylim(c(0,20))
 
-its_adj_nondom_plot <- visualize_adj(df_nondomestic, 3, 1) + ggtitle("9/11 and Minority International Political Interests") + labs(tag = "B")
+its_adj_nondom_plot <- visualize_adj(df_nondomestic, 3, 1) + ggtitle("Arab and Indian Immigrants' International Political Interests") + labs(tag = "B") +
+  ylim(c(0,20))
 
 its_adj_dom_plot / its_adj_nondom_plot
 
@@ -311,7 +312,7 @@ ggsave(here("output", "its_adjusted_plot.png"), height = 8)
 
 ## Duration effect analysis
 
-```{r}
+```{r eval = FALSE}
 df_domestic <- df_domestic %>%
     mutate(year = extract_year(df_domestic))
 
@@ -320,6 +321,11 @@ df_nondomestic <- df_nondomestic %>%
 
 model_out <- map_dfr(c(1:6), model_spec)
 
+save(model_out, file = here("processed_data", "duration_model.RData"))
+```
+
+
+```{r eval = FALSE}
 model_out %>%
   mutate(Year = rep(2001:2006, each = 4)) %>%
   ggplot(aes(x = Year, y = Estimate)) +
@@ -333,7 +339,7 @@ ggsave(here("output", "duration_effect.png"))
 
 ### OLS
 
-```{r}
+```{r eval = FALSE}
 
 dom_output_ols <- lm(count_ts ~ intervention +  date + group, 
                data = df_domestic) 
@@ -358,15 +364,19 @@ stargazer(dom_output_ols, nondom_output_ols,
 ### GLS 
 
 ```{r}
-
 dom_output_gls <- gls(count_ts ~ intervention +  date + group, 
                data = df_domestic,
-               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
+               correlation = corARMA(p = 1, q = 1, form = ~ date | group)) 
 
 nondom_output_gls <- gls(count_ts ~ intervention +  date + group, 
                data = df_nondomestic,
-               correlation = corARMA(p= 3, q = 1, form = ~ date | group)) 
+               correlation = corARMA(p = 3, q = 1, form = ~ date | group)) 
 
+save(dom_output_gls, nondom_output_gls, 
+     file = here("processed_data", "gls_base.RData"))
+```
+
+```{r}
 stargazer(dom_output_gls, nondom_output_gls,
           title = "ITS design analysis results",
           dep.var.labels = c("The publication count for Muslim-related articles on"),
@@ -384,7 +394,6 @@ stargazer(dom_output_gls, nondom_output_gls,
 ### GLS with sourced fixed effects 
 
 ```{r}
-
 pq_domestic_source <- mapply(correct_ac_domestic_source, c(1,2,3), c(1))
 
 pq_nondomestic_source <- mapply(correct_ac_nondomestic_source, c(1,2,3), c(1))
@@ -392,19 +401,23 @@ pq_nondomestic_source <- mapply(correct_ac_nondomestic_source, c(1,2,3), c(1))
 pq_domestic_source # [1,1]
 
 pq_nondomestic_source # [2,1]
-
 ```
 
 ```{r}
-
-dom_output_gls <- gls(count_ts ~ intervention +  date + source, 
+dom_output_fe <- gls(count_ts ~ intervention +  date + source, 
                data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic == "Domestic"),
                correlation = corARMA(p = 1, q = 1, form = ~ date | source)) 
 
-nondom_output_gls <- gls(count_ts ~ intervention +  date + source, 
+nondom_output_fe <- gls(count_ts ~ intervention +  date + source, 
                data = group_df(df %>% filter(group == "Indian Americans"), source) %>% filter(domestic != "Domestic"),
-               correlation = corARMA(p = 2, q = 1, form = ~ date | source)) 
+               correlation = corARMA(p = 2, q = 1, form = ~ date | source))
 
+save(dom_output_fe, nondom_output_fe, 
+     file = here("processed_data", "gls_fe.RData"))
+```
+
+
+```{r}
 stargazer(dom_output_gls, nondom_output_gls,
           title = "ITS design analysis results",
           dep.var.labels = c("The publication count for Muslim-related articles on"),
@@ -415,7 +428,6 @@ stargazer(dom_output_gls, nondom_output_gls,
           covariate.labels = c("Intervention",
                                "Date"),
           model.numbers = FALSE)
-
 ```
 
 # Extract and export R code 

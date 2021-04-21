@@ -32,6 +32,9 @@ pacman::p_load(
 devtools::install_github("jaeyk/rnytapi", dependencies = TRUE)
 
 library(rnytapi)
+
+# Publication ready plots 
+ggplot2::theme_set(ggpubr::theme_pubr())
 ```
 
 ```{r}
@@ -88,7 +91,7 @@ df2005b <- extract_all(term = 'muslim+muslims', begin_date = '20051231', end_dat
 df2005c <- extract_all(term = 'muslim+muslims', begin_date = '20060311', end_date = '20060711', key = 'lJWFqmFXKLE8yoxN95xLjnyqMFk67a5I')
 df2005d <- extract_all(term = 'muslim+muslims', begin_date = '20060711', end_date = '20060911', key = 'lJWFqmFXKLE8yoxN95xLjnyqMFk67a5I')
 
-save(list = ls(pattern = "^df"), file = here("processed_data/nyt_parts.Rdata"))
+save(list = ls(pattern = "^df"), file = here("processed_data/nyt_parts.RData"))
 
 df <- bind_rows(mget(ls(pattern = "^df")))
 
@@ -98,16 +101,18 @@ df <- df %>%
   # Remove duplicates 
   distinct()
 
-write_rds(df, here("processed_data/nyt_articles.Rdata"))
+write_rds(df, here("processed_data/nyt_articles.RData"))
 ```
 
 # Munging data 
 
 ```{r}
-df <- read_rds(here("processed_data/nyt_articles.Rdata"))
+df <- read_rds(here("processed_data/nyt_articles.RData"))
 
 # Rename columns 
 colnames(df) <- str_remove(colnames(df), "response.docs.")
+
+nrow(df)
 ```
 
 
@@ -142,7 +147,6 @@ table(df$section_name)
 # Data visualization
 
 ```{r}
-comp_df <- read.csv(here("processed_data/df.csv"))
 comp_df$date <- as.Date(comp_df$date)
 ```
 
@@ -204,30 +208,35 @@ df_nondomestic <- df_grouped %>%
   filter(domestic != "Domestic") 
 comp_df_nondomestic <- comp_df_grouped %>%
   filter(domestic != "Domestic")
-```
 
+save(df_domestic, comp_df_domestic, 
+     df_nondomestic, comp_df_nondomestic, 
+     file = here("processed_data/ethnic_NYT.RData"))
+```
 
 ```{r}
 # Visualize ITS analysis result for each subset of the data 
 
 its_dom_plot <- visualize_placebo(df_domestic) + 
-  ggtitle("Majority Interests in Domestic News") + 
+  ggtitle("NYT Articles on Domestic Politics") + 
   labs(tag = "A", caption = "") +
   ylim(c(0,20))
 its_nondom_plot <- visualize_placebo(df_nondomestic) + 
-  ggtitle("Majority Interests in International News") + 
+  ggtitle("NYT Articles on International Politics") + 
   labs(tag = "C", 
        caption = "Source: New York Times") +
   ylim(c(0,20))
 
 comp_its_dom_plot <- visualize_placebo(comp_df_domestic) + 
-  ggtitle("Minority Interests in Doemstic News") + 
-  labs(tag = "B", caption = "") +
+  ggtitle(glue("Ethnic Newspaper Articles on 
+               Domestic Politics")) + 
+  labs(tag = "B", caption = "", y = "") +
   ylim(c(0,20))
 
 comp_its_nondom_plot <- visualize_placebo(comp_df_nondomestic) + 
-  ggtitle("Minority Interests in International News") + 
-  labs(tag = "D", caption = "Source: Ethnic NewsWatch") +
+  ggtitle(glue("Ethnic Newspaper Articles on 
+               International Politics")) + 
+  labs(tag = "D", caption = "Source: Ethnic NewsWatch", y = "") +
   ylim(c(0,20))
 
 (its_dom_plot + comp_its_dom_plot) /
@@ -253,32 +262,6 @@ stargazer(dom_output_ols,
                                "Date"),
           model.numbers = FALSE)
 ```
-
-\begin{table}[!htbp] \centering 
-  \caption{ITS design analysis results} 
-  \label{} 
-\begin{tabular}{@{\extracolsep{5pt}}lc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
- & \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
-\cline{2-2} 
-\\[-1.8ex] & The publication count for Muslim-related articles on \\ 
- & Domestic politics \\ 
-\hline \\[-1.8ex] 
- Intervention & 1.977$^{***}$ (0.164) \\ 
-  Date & 0.0001$^{*}$ (0.0001) \\ 
-  Constant & 0.337 (0.831) \\ 
- \hline \\[-1.8ex] 
-Observations & 2,684 \\ 
-R$^{2}$ & 0.211 \\ 
-Adjusted R$^{2}$ & 0.210 \\ 
-Residual Std. Error & 2.142 (df = 2681) \\ 
-F Statistic & 358.635$^{***}$ (df = 2; 2681) \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
-\end{tabular} 
-\end{table} 
 
 # Extract and export R code 
 

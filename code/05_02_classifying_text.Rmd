@@ -98,6 +98,8 @@ train_y_class <- bake(rec_articles,
                       raw_train_class, all_outcomes())$category %>% as.factor()
 test_y_class <- bake(rec_articles, raw_test_class, all_outcomes())$category %>% as.factor()
 
+save(split_class, train_x_class, test_x_class, train_y_class, test_y_class, 
+     file = here("output/splitted_data.RData"))
 ```
 
 # Model building 
@@ -277,7 +279,6 @@ xg_fit <- xg_wf %>%
   fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
 
 save(lasso_fit, rand_fit, xg_fit, file = here("output/fits.RData"))
-
 ```
 
 # Model evaluation 
@@ -288,7 +289,6 @@ This result is based on the test data.
 
 ```{r}
 (visualize_class_eval(lasso_fit) + labs(title = "Lasso")) /
-
 (visualize_class_eval(rand_fit) + labs(title = "Random forest"))  /
 (visualize_class_eval(xg_fit) + labs(title = "XGBoost"))
 

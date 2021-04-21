@@ -401,7 +401,8 @@ spread_cis <- function(cis) {
 ##### Automating boot analysis work flow #####
 
 model_spec <- function(i){
-  ## OLS
+  
+  # OLS
   dom_ols <- lm(count_ts ~ intervention + date + group,
                 data = subset(df_domestic, year <= 2000 + i)
   )
@@ -410,10 +411,10 @@ model_spec <- function(i){
                    data = subset(df_nondomestic, year <= 2000 + i)
   )
   
-  ## GLS
+  # GLS
   dom_gls <- gls(count_ts ~ intervention + date + group,
                  data = subset(df_domestic, year <= 2000 + i),
-                 correlation = corARMA(p = 3, q = 1, form = ~ date | group )
+                 correlation = corARMA(p = 1, q = 1, form = ~ date | group )
   )
   
   nondom_gls <- gls(count_ts ~ intervention + date + group,
