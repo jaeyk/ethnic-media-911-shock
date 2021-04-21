@@ -40,13 +40,15 @@ I created an R package called [tidyethnicnews](https://jaeyk.github.io/tidyethni
 
 #### 05_Classifying Articles Using Machine Learning 
 
-**[[Code for Preprocessing](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)]**
+**Preprocessing** [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)]]
 
-**Previous version (Fall 2019) [[Code for Classification (previous)](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.ipynb)]**
+**Classification**
 
-- Then, we trained a Lasso model in Python using the labeled texts with the added features (i.e., intervention, source, and group variables). The classification accuracy rate (the percentage of results accurately classified) was 73%, the precision rate (the percentage of relevant results) was 75%, and the recall rate (the percentage of relevant total results correctly classified) was 80%.
+**Previous version (Fall 2019)** [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.ipynb)]]
 
-**Current version (Spring 2021) [[Code for Classification (new)](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.Rmd)]**
+- We trained a Lasso model in Python using the labeled texts with the added features (i.e., intervention, source, and group variables). The classification accuracy rate (the percentage of results accurately classified) was 73%, the precision rate (the percentage of relevant results) was 75%, and the recall rate (the percentage of relevant total results correctly classified) was 80%.
+
+**Current version (Spring 2021)** [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.Rmd)]]
 
 I re-classified the texts using the tidymodels framework in R. Here are the updates I have made.
 
@@ -57,12 +59,11 @@ I re-classified the texts using the tidymodels framework in R. Here are the upda
 
 ### Causal Inference (Winter 2019 and Spring 2020)
 
-#### 06_Estimating the Causal Effect in R  [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_causal_inference.Rmd)]
+#### 06_Estimating the Causal Effect in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/06_causal_inference.Rmd)]
 
 ### Additional analysis (Spring 2021)
 
-#### 07_Analzing New York Times Articles in R [[Code](
-[[Code for Classification (new)](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.Rmd)])]
+#### 07_Analzing New York Times Articles in R [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/07_additional_text_analysis.Rmd)]]
 
-## Replication files 
+## Replication files [[Code](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/replication.r)]
 
