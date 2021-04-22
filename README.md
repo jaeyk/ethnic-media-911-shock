@@ -44,9 +44,9 @@ I created an R package called [tidyethnicnews](https://jaeyk.github.io/tidyethni
 
 #### 05_Classifying Articles Using Machine Learning 
 
-##### Preprocessing [[Jupyter notebook](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)]
+#### Preprocessing [[Jupyter notebook](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_01_preprocessing_text.ipynb)]
 
-##### Classification
+#### Classification
 
 1. **Previous version (Fall 2019) [[Jupyter notebook](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/05_02_classifying_text.ipynb)]**
 
