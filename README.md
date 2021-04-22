@@ -67,4 +67,4 @@ I re-classified the texts using the tidymodels framework in R. Here are the upda
 
 ### Additional analysis (Spring 2021)
 
-#### 07_Analzing New York Times Articles in R [[R markdown](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/07_additional_text_analysis.Rmd)]
+#### 07_Analzing New York Times Articles in R [[R package](https://github.com/jaeyk/rnytapi/)] [[R markdown](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/07_additional_text_analysis.Rmd)]
