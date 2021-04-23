@@ -18,7 +18,8 @@ pacman::p_load(tidyverse, # tidyverse
                nlme, # GLS
                stargazer, # LaTeX table 
                forecast, # time-series forecasting
-               lubridate) # date object manipulation
+               lubridate, # date object manipulation
+               estimatr) # estimation
 
 # Custom functions 
 source(here("functions/utils.r"))
@@ -60,6 +61,32 @@ stargazer(dom_output_ols, nondom_output_ols,
                                "Date",
                                "Indian Americans"),
           model.numbers = FALSE)
+
+# Table ITS design analysis results (OLS with robust standard errors)
+
+dom_output_robust <- lm_robust(count_ts ~ intervention +  date + group, 
+                     data = df_domestic) 
+
+nondom_output_robust <- lm_robust(count_ts ~ intervention +  date + group, 
+                        data = df_nondomestic)
+
+bind_rows(tidy(dom_output_ols, conf.int = TRUE) %>% mutate(model = "OLS"),
+tidy(dom_output_robust) %>% mutate(model = "OLS with Robust SEs")) %>%
+  filter(term != "(Intercept)") %>%
+  ggplot(aes(x = term, y = estimate, 
+             ymin = conf.low,
+             ymax = conf.high)) +
+    geom_pointrange() +
+    scale_x_discrete(labels = 
+      c("date" = "Date",
+        "groupIndian Americans" = "Indian Americans",
+        "intervention" = "Intervention")) +
+    facet_wrap(~model) +
+    coord_flip() +
+    labs(x = "Term",
+         y = "Estimate")
+
+ggsave(here("output/ols_robust_ses.png"))
 
 # Figure 2 NYT Articles (left) and Ethnic Newspaper Articles (right)
 
