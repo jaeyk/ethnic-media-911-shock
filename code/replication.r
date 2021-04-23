@@ -26,7 +26,7 @@ source(here("functions/utils.r"))
 source(here("functions/reg_analysis.r"))
 
 # Publication ready plots 
-ggplot2::theme_set(ggpubr::theme_pubr())
+# ggplot2::theme_set(ggpubr::theme_classic2())
 
 ######################## MANUSCRIPT ######################## 
 
@@ -218,9 +218,9 @@ stargazer(dom_output_ols,
 
 load(here("processed_data", "acf.RData"))
 
-acf_dom <- acf_plot(df_domestic) + ggtitle("Domestic Political Interests") + labs(tag = "A")
+acf_dom <- acf_plot(df_domestic_ts) + ggtitle("Domestic Political Interests") + labs(tag = "A")
 
-acf_nondom <- acf_plot(df_nondomestic) + ggtitle("International Political Interests") + labs(tag = "B")
+acf_nondom <- acf_plot(df_nondomestic_ts) + ggtitle("International Political Interests") + labs(tag = "B")
 
 acf_dom / acf_nondom
 
