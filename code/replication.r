@@ -26,7 +26,8 @@ source(here("functions/utils.r"))
 source(here("functions/reg_analysis.r"))
 
 # Publication ready plots 
-# ggplot2::theme_set(ggpubr::theme_classic2())
+source(here("functions/theme_publications.r"))
+theme_set(theme_Publication(15))
 
 ######################## MANUSCRIPT ######################## 
 
@@ -61,32 +62,6 @@ stargazer(dom_output_ols, nondom_output_ols,
                                "Date",
                                "Indian Americans"),
           model.numbers = FALSE)
-
-# Table ITS design analysis results (OLS with robust standard errors)
-
-dom_output_robust <- lm_robust(count_ts ~ intervention +  date + group, 
-                     data = df_domestic) 
-
-nondom_output_robust <- lm_robust(count_ts ~ intervention +  date + group, 
-                        data = df_nondomestic)
-
-bind_rows(tidy(dom_output_ols, conf.int = TRUE) %>% mutate(model = "OLS"),
-tidy(dom_output_robust) %>% mutate(model = "OLS with Robust SEs")) %>%
-  filter(term != "(Intercept)") %>%
-  ggplot(aes(x = term, y = estimate, 
-             ymin = conf.low,
-             ymax = conf.high)) +
-    geom_pointrange() +
-    scale_x_discrete(labels = 
-      c("date" = "Date",
-        "groupIndian Americans" = "Indian Americans",
-        "intervention" = "Intervention")) +
-    facet_wrap(~model) +
-    coord_flip() +
-    labs(x = "Term",
-         y = "Estimate")
-
-ggsave(here("output/ols_robust_ses.png"))
 
 # Figure 2 NYT Articles (left) and Ethnic Newspaper Articles (right)
 
@@ -173,10 +148,12 @@ at the Ethnic NewsWatch Database, 1996-2006. Retrieved on September 28, 2020.")
 # Figure B.1. Machine Learning Outcomes
 
 ## Load data
+
 load(here("processed_data/splitted_data.RData")) # splitted processed data
 load(here("output/fits.RData")) # model fit data 
 
 ## Decide metrics 
+
 metrics <- yardstick::metric_set(accuracy, precision, recall, f_meas)
 
 ## Visualize outcomes
@@ -186,7 +163,34 @@ metrics <- yardstick::metric_set(accuracy, precision, recall, f_meas)
 
 ggsave(here("output", "ml_eval.png"), height = 10)
 
-# Figure C.1. Duration Effect Analysis
+# Table C. 1. ITS design analysis results (OLS with robust standard errors)
+
+load(file = here("processed_data/base_its.RData"))
+
+dom_output_robust <- lm_robust(count_ts ~ intervention + date + group, 
+                               data = df_domestic) 
+nondom_output_robust <- lm_robust(count_ts ~ intervention + date + group, 
+                                  data = df_nondomestic)
+
+bind_rows(tidy(dom_output_ols, conf.int = TRUE) %>% mutate(model = "OLS"),
+          tidy(dom_output_robust) %>% mutate(model = "OLS with Robust SEs")) %>%
+  filter(term != "(Intercept)") %>%
+  ggplot(aes(x = term, y = estimate, 
+             ymin = conf.low,
+             ymax = conf.high)) +
+  geom_pointrange() +
+  scale_x_discrete(labels = 
+                     c("date" = "Date",
+                       "groupIndian Americans" = "Indian Americans",
+                       "intervention" = "Intervention")) +
+  facet_wrap(~model) +
+  coord_flip() +
+  labs(x = "Term",
+       y = "Estimate")
+
+ggsave(here("output/ols_robust_ses.png"))
+
+# Figure D.1. Duration Effect Analysis
 
 load(here("processed_data", "duration_model.RData"))
 
@@ -198,7 +202,7 @@ model_out %>%
 
 ggsave(here("output", "duration_effect.png"))
 
-# Table D.1. ITS design analysis results
+# Table E.1. ITS design analysis results
 
 dom_output_ols <- lm(count_ts ~ intervention + date, 
                      data = df_domestic) 
@@ -214,7 +218,7 @@ stargazer(dom_output_ols,
                                "Date"),
           model.numbers = FALSE)
 
-# Figure E.1. Autocorrelation plot
+# Figure F.1. Autocorrelation plot
 
 load(here("processed_data", "acf.RData"))
 
@@ -226,7 +230,7 @@ acf_dom / acf_nondom
 
 ggsave(here("output", "acf_plot.png"))
 
-# Figure F.1. Line plots of raw data faceted by source variable
+# Figure G.1. Line plots of raw data faceted by source variable
 
 df <- read.csv(here("processed_data/df.csv"))[,-1]
 df$date <- lubridate::ymd(df$date)
