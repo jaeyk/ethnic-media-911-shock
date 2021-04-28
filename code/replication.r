@@ -27,6 +27,7 @@ source(here("functions/reg_analysis.r"))
 
 # Publication ready plots 
 source(here("functions/theme_publications.r"))
+
 theme_set(theme_Publication(15))
 
 ######################## MANUSCRIPT ######################## 
@@ -41,7 +42,7 @@ its_base_nondom_plot <- visualize_base(df_nondomestic) + ggtitle("Arab and India
 
 its_base_dom_plot / its_base_nondom_plot
 
-ggsave(here("output" ,"its_base_plot.png"), height = 8)
+ggsave(here("output" ,"its_base_plot.png"), height = 12)
 
 # Table 1 ITS design analysis results (OLS)
 
@@ -93,7 +94,7 @@ comp_its_nondom_plot <- visualize_placebo(comp_df_nondomestic) +
 (its_dom_plot + comp_its_dom_plot) /
   (its_nondom_plot + comp_its_nondom_plot)
 
-ggsave(here("output/nyt_ethnic_its_comp.png"), height = 8)
+ggsave(here("output/nyt_ethnic_its_comp.png"), height = 12)
 
 # Table 2 ITS design analysis results (GLS)
 
