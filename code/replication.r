@@ -253,5 +253,5 @@ cleaned_nondomestic_plot_source <- group_df(df, source) %>%
 cleaned_domestic_plot_source / cleaned_nondomestic_plot_source
 
 ggsave(here("output" ,"cleaned_data_plot_source.png"), 
-       height = 8,
-       width = 8)
+       height = 12,
+       width = 12)
