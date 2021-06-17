@@ -33,6 +33,8 @@ evaluate_reg <- function(model){
 
 evaluate_class <- function(model){
   
+  metrics <- yardstick::metric_set(accuracy, precision, recall, f_meas)
+  
   # Bind ground truth and predicted values  
   df <- bind_cols(tibble(truth = test_y_class), # Ground truth 
                   predict(model, test_x_class)) # Predicted values 
@@ -45,6 +47,7 @@ evaluate_class <- function(model){
 # The following visualization code draws on [Diego Usai's medium post](https://towardsdatascience.com/modelling-with-tidymodels-and-parsnip-bae2c01c131c).
 
 visualize_class_eval <- function(model){
+  
   evaluate_class(model) %>%
     ggplot(aes(x = glue("{toupper(.metric)}"), y = .estimate)) +
     geom_col() +

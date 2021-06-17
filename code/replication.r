@@ -155,8 +155,6 @@ load(here("output/fits.RData")) # model fit data
 
 ## Decide metrics 
 
-metrics <- yardstick::metric_set(accuracy, precision, recall, f_meas)
-
 ## Visualize outcomes
 (visualize_class_eval(lasso_fit) + labs(title = "Lasso")) /
 (visualize_class_eval(rand_fit) + labs(title = "Random forest"))  /
