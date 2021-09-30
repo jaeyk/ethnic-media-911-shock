@@ -1,4 +1,4 @@
-# How Insecurity Shifts Ethnic Media’s Attention from Their Home Country to Host Society: Evidence from the September 11 Terrorist Attacks
+## Replication code for How Insecurity Shifts Ethnic Media’s Attention from Their Home Country to Host Society: Evidence from the September 11 Terrorist Attacks
 
 - The preprint version of this project is available at https://osf.io/preprints/socarxiv/y65sd/
 - Co-author: Andrew Thompson (George Washington University)
