@@ -153,9 +153,9 @@ corpus %>%
   # Post 9/11
   filter(intervention == 1) %>%
   # Arab newspaper 
-  filter(group == 0) %>%
+  filter(group == 1) %>%
   # Search documents including the term "immigrant"
-  filter(str_detect(text, "immigrant")) %>%
+  filter(str_detect(text, "immigrant|Immigrant|immigrants|Immigrants")) %>%
   # Select the 3rd row (the 3rd document)
   slice(3) %>%
   # Pull the text 
@@ -165,9 +165,9 @@ corpus %>%
   # Post 9/11
   filter(intervention == 1) %>%
   # Arab newspaper 
-  filter(group == 0) %>%
+  filter(group == 1) %>%
   # Search documents including the term "immigrant"
-  filter(str_detect(text, "immigrant")) %>%
+  filter(str_detect(text, "immigrant|Immigrant|immigrants|Immigrants")) %>%
   # Select the 3rd row (the 3rd document)
   slice(3) %>%
   # Pull the date and newspaper
