@@ -1,8 +1,8 @@
-# ITS-Text-Classification
+## Replication code for How Insecurity Shifts Ethnic Media’s Attention from Their Home Country to Host Society: Evidence from the September 11 Terrorist Attacks
 
 - The preprint version of this project is available at https://osf.io/preprints/socarxiv/y65sd/
-- Co-author: [Andrew Thompson](https://sites.northwestern.edu/athompson/) (George Washington University)
-- RAs: [Carlos Ortiz](https://www.linkedin.com/in/carlosortizdev/), [Sarah Santiago](https://www.linkedin.com/in/sarah-santiago-7a297b18a/), and [Vivek Datta](https://www.linkedin.com/in/vivek-datta/)
+- Co-author: Andrew Thompson (George Washington University)
+- RAs: Carlos Ortiz, Sarah Santiago, Vivek Datta, Noor-Ul-Ain Ali, Riya Shrestha 
 
 ## A single replication file [[R script](https://github.com/jaeyk/ITS-Text-Classification/blob/master/code/replication.r)]
 
