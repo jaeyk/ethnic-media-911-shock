@@ -56,25 +56,26 @@ source(here("functions", "embedding.r"))
 corpus <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)] 
 
 # Create dummy variables 
-corpus$intervention <- if_else(corpus$intervention == "post", 1, 0)
+corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
 
 corpus$group <- if_else(corpus$group == "Arab", 1, 0)
 ```
 
 # Preproceessing text 
 
-```{r}
+```{r eval = FALSE}
 corpus$clean_text <- clean_text(corpus$text)
 
-corpus$clean_text <- str_replace(corpus$clean_text, "muslims", "muslim")
+corpus$clean_text <- str_replace_all(corpus$clean_text, "muslims", "muslim")
 ```
 
 # Local embedding and matrix 
 
-```{r}
-set.seed(20200921)
+```{r eval = FALSE}
+set.seed(1234L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
+
 save(local_glove, local_transform, 
      file = here("processed_data/context_bg.Rdata"))
 ```
@@ -83,7 +84,7 @@ save(local_glove, local_transform,
 
 ### Regression 
 
-```{r}
+```{r eval = FALSE}
 mod <- conText(formula = muslim ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
@@ -108,7 +109,7 @@ plot_tibble <- mod$normed_betas %>%
 plot_tibble
 ```
 
-```{r}
+```{r eval = FALSE}
 reg_plot <- plot_tibble %>%
   ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
   geom_bar(position = position_dodge(), 
@@ -130,17 +131,45 @@ ggsave(here("output", "embedreg.png"))
 
 ## ALC embedding 
 
-```{r}
+```{r eval = FALSE}
 set.seed(1234L)
-arab_post_bt <- get_bt_terms(1, 1, "muslim", 100)
-indian_post_bt <- get_bt_terms(1, 0, "muslim", 100)
+arab_post_bt <- get_bt_terms(1, 1, "muslim", 150)
+indian_post_bt <- get_bt_terms(1, 0, "muslim", 150)
 
-arab_pre_bt <- get_bt_terms(0, 1, "muslim", 100)
-indian_pre_bt <- get_bt_terms(0, 0, "muslim", 100)
+arab_pre_bt <- get_bt_terms(0, 1, "muslim", 150)
+indian_pre_bt <- get_bt_terms(0, 0, "muslim", 150)
 ```
 
-```{r}
+```{r eval = FALSE}
 terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11")
 
-ggsave(here("output", "btmuslimsep.png"), width = 10, height = 10)
+ggsave(here("output", "btmuslimsep.png"), width = 12, height = 10)
+```
+
+# Reading documents
+
+```{r eval = FALSE}
+corpus %>%
+  # Post 9/11
+  filter(intervention == 1) %>%
+  # Arab newspaper 
+  filter(group == 0) %>%
+  # Search documents including the term "immigrant"
+  filter(str_detect(text, "immigrant")) %>%
+  # Select the 3rd row (the 3rd document)
+  slice(3) %>%
+  # Pull the text 
+  pull(text)
+
+corpus %>%
+  # Post 9/11
+  filter(intervention == 1) %>%
+  # Arab newspaper 
+  filter(group == 0) %>%
+  # Search documents including the term "immigrant"
+  filter(str_detect(text, "immigrant")) %>%
+  # Select the 3rd row (the 3rd document)
+  slice(3) %>%
+  # Pull the date and newspaper
+  pull(date, source)
 ```

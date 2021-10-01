@@ -62,108 +62,21 @@ get_word_count <- function(data, stem = TRUE) {
 
 clean_text <- function(full_text) {
   
-  # lower case and remove punctuation 
-  vec <- tm::removePunctuation(tolower(full_text))  
-
-  # remove stopwords 
+  vec <- tolower(full_text) %>%
+    # Remove all non-alpha characters
+    gsub("[^[:alpha:]]", " ", .) %>%
+    # remove 1-2 letter words
+    str_replace_all("\\b\\w{1,2}\\b", "") %>%
+    # remove excess white space
+    str_replace_all("^ +| +$|( ) +", "\\1")
+  
+  vec <- textstem::lemmatize_strings(vec)
+  
   vec <- tm::removeWords(vec, words = c(stopwords(source = "snowball")))
-  
-  # replace date with words
-  vec <- textclean::replace_date(vec)
-  
-  # replace number with words
-  vec <- textclean::replace_number(vec)
-  
-  # replace excessive white space
-  vec <- textclean::replace_white(vec)
   
   return(vec)
   
 }
-
-con2nplot <- function(corpus, keyword, local_glove, local_transform) {
-  # Latino context
-  contextPre <- get_context(x = corpus$clean_text[corpus$group == 1], target = keyword)
-  
-  # Asian context
-  contextPost <- get_context(x = corpus$clean_text[corpus$group == 0], target = keyword)
-  
-  # bind contexts
-  contexts_corpus <- rbind(cbind(contextPre, group = "Hate speech"), cbind(contextPost, group = "Counterspech"))
-  
-  # embed each instance using a la carte
-  contexts_vectors <- embed_target(
-    context = contexts_corpus$context,
-    pre_trained = local_glove,
-    transform_matrix = local_transform,
-    transform = TRUE,
-    verbose = TRUE)
-  
-  # get local vocab
-  local_vocab <- get_local_vocab(c(contextPre$context, contextPost$context), pre_trained = local_glove)
-  
-  # exclude the keyword
-  local_vocab <- setdiff(local_vocab, c(keyword))
-  
-  contrast_target <- contrast_nns(
-    context1 = contextPre$context,
-    context2 = contextPost$context,
-    pre_trained = local_glove,
-    transform_matrix = local_transform,
-    transform = TRUE,
-    bootstrap = TRUE,
-    num_bootstraps = 100,
-    permute = TRUE,
-    num_permutations = 100,
-    candidates = local_vocab,
-    norm = "l2")
-  
-  # define top N of interest
-  N <- 40
-  
-  # first get each party's nearest neighbors (output by the contrast_nns function)
-  nnsPre <- contrast_target$nns1
-  nnsPost <- contrast_target$nns2
-  
-  # subset to the union of top N nearest neighbors for each party
-  top_nns <- union(nnsPre$Term[1:N], nnsPost$Term[1:N])
-  
-  # identify which of these are shared
-  shared_nns <- intersect(nnsPre$Term[1:N], nnsPost$Term[1:N])
-  
-  # subset nns_ratio (output by contrast_nns) to the union of the top nearest
-  # neighbors
-  nns_ratio <- contrast_target$nns_ratio %>%
-    dplyr::filter(Term %in% top_nns) %>%
-    mutate(group = case_when(
-      (Term %in% nnsPre$Term[1:N]) & !(Term %in% nnsPost$Term[1:N]) ~ "Hate speech",
-      !(Term %in% nnsPre$Term[1:N]) & (Term %in% nnsPost$Term[1:N]) ~ "Counterpspeech",
-      (Term %in% shared_nns) ~ "Shared"),
-      significant = if_else(Empirical_Pvalue < 0.01, "yes", "no"))
-  
-  # order Terms by Estimate
-  nns_ratio <- nns_ratio %>%
-    mutate(absdev = abs(1 - Estimate)) %>%
-    arrange(-absdev) %>%
-    mutate(tokenID = 1:nrow(.)) %>%
-    mutate(Term_Sig = if_else(significant == "yes", paste0(Term, "*"), Term))
-  
-  # plot
-  nns_ratio %>%
-    ggplot() +
-    geom_point(aes(x = Estimate, y = tokenID, color = group, shape = group), size = 2) +
-    geom_vline(xintercept = 1, colour = "black", linetype = "dashed",
-               size = 0.5) +
-    geom_text(
-      aes(x = Estimate, y = tokenID, label = Term_Sig), hjust = if_else(nns_ratio$Estimate > 1, -0.2, 1.2), vjust = 0.25, size = 5) +
-    scale_color_brewer(palette = "Dark2") +
-    xlim(-30, 30) +
-    ylim(0, 50) +
-    labs(y = "", x = "cosine similarity ratio \n (Hate speech/Counterspeech)",
-         col = "Category", shape = "Category") +
-    theme(legend.position = "bottom")
-}
-
 
 df2cm <- function(corpus, count_min = 10, window_size = 6) {
   
@@ -220,7 +133,7 @@ df2ltm <- function(corpus, local_glove, count_min = 10, window_size = 6) {
   return(local_transform)
 }
 
-df2vec <- function(corpus, count_min = 10, window_size = 6, dims = 100) {
+df2vec <- function(corpus, count_min = 10, window_size = 6, dims = 50) {
   
   ############################### Create VOCAB ###############################
   
