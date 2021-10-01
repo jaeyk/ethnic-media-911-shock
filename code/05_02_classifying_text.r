@@ -1,17 +1,8 @@
----
-title: "Text classification"
-author: "Jae Yeon Kim"
-date: "3/18/2021"
-output: html_document
----
-
-```{r setup, include=FALSE}
+## ----setup, include=FALSE---------------------
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-# Load packages 
 
-```{r}
+## ---------------------------------------------
 if (!require(pacman)) install.packages("pacman")
 
 p_load(here, # creating computationally reproducible file paths 
@@ -41,11 +32,9 @@ for (i in 1:length(script_list))
 {
   source(script_list[[i]])
 }
-```
 
-# Load data 
 
-```{r}
+## ---------------------------------------------
 # Drop the first column as it's meaningless 
 articles <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)] 
 
@@ -53,11 +42,9 @@ articles %>%
   janitor::tabyl(category)
 
 articles$text <- clean_text(articles$text)
-```
 
-# Preproceessing text 
 
-```{r}
+## ---------------------------------------------
 #Install spacyr and spacy 
 #p_load(spacyr)
 #spacyr::spacy_install()
@@ -76,11 +63,9 @@ rec_articles <- articles %>%
   # Normalize all predictors 
   step_normalize(all_predictors()) %>%
   prep()
-```
 
-# Split data 
 
-```{r}
+## ---------------------------------------------
 # for reproducibility 
 set.seed(1234)
 # split (stratified random sampling)
@@ -104,11 +89,9 @@ test_y_class <- bake(rec_articles, raw_test_class, all_outcomes())$category %>% 
 
 save(split_class, train_x_class, test_x_class, train_y_class, test_y_class, 
      file = here("output/splitted_data.RData"))
-```
 
-# Model building 
 
-```{r}
+## ---------------------------------------------
 # Lasso spec 
 lasso_spec <- logistic_reg(penalty = tune(), # tuning hyperparameter 
                          mixture = 1) %>% # 1 = lasso, 0 = ridge 
@@ -148,22 +131,18 @@ xg_spec <- boost_tree(
            sample_size = tune()
           ) %>% 
   set_engine("xgboost")
-```
 
-# Model tuning 
 
-## Setup 
-
-```{r}
+## ---------------------------------------------
 all_cores <- parallel::detectCores(logical = FALSE)
 registerDoFuture()
 
 cl <- makeCluster(all_cores[1] - 1)
 
 registerDoParallel(cl)
-```
 
-```{r}
+
+## ---------------------------------------------
 # penalty() searches 50 possible combinations 
 
 lambda_grid <- grid_regular(penalty(), levels = 50)
@@ -193,11 +172,9 @@ rec_folds <- vfold_cv(train_x_class %>% bind_cols(tibble(category = train_y_clas
 save(lambda_grid, rand_grid, xg_grid, file = here("output/grids.RData"))
           
 save(rec_folds, file = here("output", glue("folds.RData")))
-```
 
-## Add setup to workflow 
 
-```{r}
+## ---------------------------------------------
 # Lasso 
 lasso_wf <- workflow() %>%
   add_model(lasso_spec) %>%
@@ -210,11 +187,9 @@ rand_wf <- lasso_wf %>%
 # XGBoost 
 xg_wf <- lasso_wf %>%
   update_model(xg_spec)
-```
 
-## Tuning results 
 
-```{r}
+## ---------------------------------------------
 metrics <- yardstick::metric_set(accuracy, precision, recall, f_meas)
 
 # Lasso
@@ -244,19 +219,15 @@ xg_res <- xg_wf %>%
   )
 
 save(lasso_res, rand_res, xg_res, file = here("output/res.RData"))
-```
 
-## Selecting the best performing model 
 
-```{r}
+## ---------------------------------------------
 best_lasso <- select_best(lasso_res, metric = "accuracy")
 best_rand <- select_best(rand_res, metric = "accuracy")
 best_xg <- select_best(xg_res, metric = "accuracy")
-```
 
-## Finalizing the workflow
 
-```{r}
+## ---------------------------------------------
 # Lasso
 lasso_wf <- lasso_wf %>% finalize_workflow(best_lasso) 
 
@@ -265,11 +236,9 @@ rand_wf <- rand_wf %>% finalize_workflow(best_rand)
 
 # XGBoost 
 xg_wf <- xg_wf %>% finalize_workflow(best_xg)
-```
 
-## Fit models 
 
-```{r}
+## ---------------------------------------------
 # Lasso 
 lasso_fit <- lasso_wf %>%
   fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
@@ -283,15 +252,9 @@ xg_fit <- xg_wf %>%
   fit(train_x_class %>% bind_cols(tibble(category = train_y_class)))
 
 save(lasso_fit, rand_fit, xg_fit, file = here("output/fits.RData"))
-```
 
-# Model evaluation 
 
-This result is based on the test data. 
-
-## Confusion matrix 
-
-```{r}
+## ---------------------------------------------
 (visualize_class_eval(lasso_fit) + labs(title = "Lasso")) /
 (visualize_class_eval(rand_fit) + labs(title = "Random forest"))  /
 (visualize_class_eval(xg_fit) + labs(title = "XGBoost"))
@@ -299,22 +262,18 @@ This result is based on the test data.
 message("Putting out the model evalution")
 
 ggsave(here("output", "ml_eval.png"), height = 10)
-```
 
-## Variable importance 
 
-```{r eval = FALSE}
-vi_plot_else(rand_fit, "Random forest") 
+## ----eval = FALSE-----------------------------
+## vi_plot_else(rand_fit, "Random forest")
+## 
+## message("Putting out the variable importance")
+## 
+## ggsave(here("output", "vip_eval.png"), width = 13,
+##        height = 10)
 
-message("Putting out the variable importance")
 
-ggsave(here("output", "vip_eval.png"), width = 13, 
-       height = 10)
-```
-
-# Predict unseen data 
-
-```{r eval = FALSE}
+## ---------------------------------------------
 # Munging data 
 unlabeled_articles <- read.csv(here("raw_data/unlabeled_articles.csv"))[,-1]
   
@@ -331,13 +290,9 @@ unlabeled_articles$category <- predict(rand_fit, unlabeled_articles_preprocessed
 message("Predicting the unseen data")
 
 write.csv(unlabeled_articles, here("processed_data/predicted.csv"))
-```
 
-# Turn an R markdown into an R script 
 
-```{r eval = FALSE}
-knitr::purl(input = here("code/05_02_classifying_text.Rmd"),
-            output = here("code/05_02_classifying_text.r"))
-```
-
+## ----eval = FALSE-----------------------------
+## knitr::purl(input = here("code/05_02_classifying_text.Rmd"),
+##             output = here("code/05_02_classifying_text.r"))
 

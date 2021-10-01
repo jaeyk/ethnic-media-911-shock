@@ -1,3 +1,16 @@
+clean_text <- function(text) {
+  
+  vec <- tolower(text) %>%
+    tm::removeWords(words = c(stopwords::stopwords(source = "snowball"))) %>%
+    replace_html() %>%
+    replace_white()
+  
+  vec <- tm::removePunctuation(vec)
+  
+  return(vec)
+  
+}
+
 ############# REGRESSION #############
 
 visualize_fit <- function(model, names){
