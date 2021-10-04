@@ -74,6 +74,10 @@ clean_text <- function(full_text) {
   
   vec <- tm::removeWords(vec, words = c(stopwords(source = "snowball")))
   
+  vec <- textclean::replace_white(vec)
+  
+  vec <- textclean::replace_number(vec)
+  
   return(vec)
   
 }
@@ -459,7 +463,7 @@ terms2plot_sep <- function(df1, df2, keyword, year) {
   
   bind_rows(df1, df2) %>%
     group_by(label) %>%
-    top_n(25, Estimate) %>%
+    top_n(30, Estimate) %>%
     ggplot(aes(x = fct_reorder(Term, Estimate), y = Estimate,
                ymax = Estimate + 1.96*Std.Error,
                ymin = Estimate - 1.96*Std.Error, col = label)) +

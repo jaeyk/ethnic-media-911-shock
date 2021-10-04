@@ -147,12 +147,6 @@ table(df$section_name)
 # Data visualization
 
 ```{r}
-comp_df$date <- as.Date(comp_df$date)
-```
-
-## Raw data 
-
-```{r}
 domestic_plot <- ts_df(df) %>%
   filter(domestic == "Domestic") %>%
   visualize_raw() +
@@ -168,105 +162,7 @@ nondomestic_plot <- ts_df(df) %>%
        caption = "Source: New York Times") +
   ylim(c(0,17))
 
-comp_domestic_plot <- ts_df(comp_df) %>%
-  filter(domestic == "Domestic") %>% 
-  visualize_raw() +
-  ggtitle("Minority Interests in Doemstic News on Muslims") + 
-  labs(tag = "B", caption = "") +
-  ylim(c(0,17))
-
-comp_nondomestic_plot <- ts_df(comp_df) %>%
-  filter(domestic != "Domestic") %>%
-  visualize_raw() +  
-  ggtitle("Minority Interests in International News on Muslims") + 
-  labs(tag = "D", caption = "Source: Ethnic NewsWatch") +
-  ylim(c(0,17))
-
-(domestic_plot + comp_domestic_plot) /
-(nondomestic_plot + comp_nondomestic_plot) 
+domestic_plot + nondomestic_plot
 
 ggsave(here("output/nyt_ethnic_raw_comp.png"), height = 8)
 ```
-
-## ITS analysis
-
-### Base model
-
-```{r}
-# Create assignment variable 
-df_grouped <- ts_df(df)
-comp_df_grouped <- group_df(comp_df)
-
-# Divide data 
-
-df_domestic <- df_grouped %>%
-  filter(domestic == "Domestic") 
-comp_df_domestic <- comp_df_grouped %>%
-  filter(domestic == "Domestic") 
-
-df_nondomestic <- df_grouped %>%
-  filter(domestic != "Domestic") 
-comp_df_nondomestic <- comp_df_grouped %>%
-  filter(domestic != "Domestic")
-
-save(df_domestic, comp_df_domestic, 
-     df_nondomestic, comp_df_nondomestic, 
-     file = here("processed_data/ethnic_NYT.RData"))
-```
-
-```{r}
-# Visualize ITS analysis result for each subset of the data 
-
-its_dom_plot <- visualize_placebo(df_domestic) + 
-  ggtitle("NYT Articles on Domestic Politics") + 
-  labs(tag = "A", caption = "") +
-  ylim(c(0,20))
-its_nondom_plot <- visualize_placebo(df_nondomestic) + 
-  ggtitle("NYT Articles on International Politics") + 
-  labs(tag = "C", 
-       caption = "Source: New York Times") +
-  ylim(c(0,20))
-
-comp_its_dom_plot <- visualize_placebo(comp_df_domestic) + 
-  ggtitle(glue("Ethnic Newspaper Articles on 
-               Domestic Politics")) + 
-  labs(tag = "B", caption = "", y = "") +
-  ylim(c(0,20))
-
-comp_its_nondom_plot <- visualize_placebo(comp_df_nondomestic) + 
-  ggtitle(glue("Ethnic Newspaper Articles on 
-               International Politics")) + 
-  labs(tag = "D", caption = "Source: Ethnic NewsWatch", y = "") +
-  ylim(c(0,20))
-
-(its_dom_plot + comp_its_dom_plot) /
-(its_nondom_plot + comp_its_nondom_plot)
-
-ggsave(here("output/nyt_ethnic_its_comp.png"), height = 8)
-```
-
-# Regression table
-
-```{r}
-dom_output_ols <- lm(count_ts ~ intervention + date, 
-               data = df_domestic) 
-
-stargazer(dom_output_ols, 
-          title = "ITS design analysis results",
-          dep.var.labels = c("The publication count for Muslim-related articles on"),
-          header = FALSE,
-          single.row = TRUE,
-          column.labels = c("Domestic politics",
-                            "International politics"),
-          covariate.labels = c("Intervention",
-                               "Date"),
-          model.numbers = FALSE)
-```
-
-# Extract and export R code 
-
-```{r eval=FALSE}
-knitr::purl(input = here("code", "07_additional_text_analysis.Rmd"), 
-            output = here("code", "07_additional_text_analysis.r"))
-```
-

@@ -52,9 +52,12 @@ source(here("functions", "embedding.r"))
 # Load data 
 
 ```{r}
-# Drop the first column as it's meaningless 
-corpus <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)] 
+corpus <- read.csv(here("processed_data/cleaned_text.csv"))
 
+nrow(corpus)
+```
+
+```{r}
 # Create dummy variables 
 corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
 
@@ -67,11 +70,14 @@ corpus$group <- if_else(corpus$group == "Arab", 1, 0)
 corpus$clean_text <- clean_text(corpus$text)
 
 corpus$clean_text <- str_replace_all(corpus$clean_text, "muslims", "muslim")
+
+corpus <- corpus %>% 
+  filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
 ```
 
 # Local embedding and matrix 
 
-```{r eval = FALSE}
+```{r}
 set.seed(1234L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
@@ -84,7 +90,7 @@ save(local_glove, local_transform,
 
 ### Regression 
 
-```{r eval = FALSE}
+```{r}
 mod <- conText(formula = muslim ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
@@ -109,7 +115,7 @@ plot_tibble <- mod$normed_betas %>%
 plot_tibble
 ```
 
-```{r eval = FALSE}
+```{r}
 reg_plot <- plot_tibble %>%
   ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
   geom_bar(position = position_dodge(), 
@@ -131,13 +137,13 @@ ggsave(here("output", "embedreg.png"))
 
 ## ALC embedding 
 
-```{r eval = FALSE}
+```{r}
 set.seed(1234L)
-arab_post_bt <- get_bt_terms(1, 1, "muslim", 150)
-indian_post_bt <- get_bt_terms(1, 0, "muslim", 150)
+arab_post_bt <- get_bt_terms(1, 1, "muslim", 200)
+indian_post_bt <- get_bt_terms(1, 0, "muslim", 200)
 
-arab_pre_bt <- get_bt_terms(0, 1, "muslim", 150)
-indian_pre_bt <- get_bt_terms(0, 0, "muslim", 150)
+arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200)
+indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200)
 ```
 
 ```{r eval = FALSE}
@@ -148,14 +154,14 @@ ggsave(here("output", "btmuslimsep.png"), width = 12, height = 10)
 
 # Reading documents
 
-```{r eval = FALSE}
+```{r}
 corpus %>%
   # Post 9/11
   filter(intervention == 1) %>%
   # Arab newspaper 
-  filter(group == 0) %>%
+  filter(group == 1) %>%
   # Search documents including the term "immigrant"
-  filter(str_detect(text, "immigrant")) %>%
+  filter(str_detect(text, "immigrant|Immigrant|immigrants|Immigrants")) %>%
   # Select the 3rd row (the 3rd document)
   slice(3) %>%
   # Pull the text 
@@ -165,9 +171,9 @@ corpus %>%
   # Post 9/11
   filter(intervention == 1) %>%
   # Arab newspaper 
-  filter(group == 0) %>%
+  filter(group == 1) %>%
   # Search documents including the term "immigrant"
-  filter(str_detect(text, "immigrant")) %>%
+  filter(str_detect(text, "immigrant|Immigrant|immigrants|Immigrants")) %>%
   # Select the 3rd row (the 3rd document)
   slice(3) %>%
   # Pull the date and newspaper
