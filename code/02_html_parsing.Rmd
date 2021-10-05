@@ -1,0 +1,40 @@
+---
+title: "HTML parsing"
+author: "Jae Yeon Kim"
+output:
+html_document:
+  toc: True
+  theme: united
+  number_sections: True
+---
+
+# Import packages 
+
+```{r}
+if (!require(pacman)) installed.packages("pacman")
+
+pacman::p_load(devtools, here, tidyverse)
+
+install_github("jaeyk/tidyethnicnews")
+
+library(tidyethnicnews)
+```
+
+# Parse HTML files 
+
+```{r}
+newspapers <- tidyethnicnews::html_to_dataframe_all(here("raw_data"))
+
+arab_india <- newspapers %>%
+  filter(source %in% c("India - West", "The Arab American News", "India Abroad", "News India - Times", "The Arab American View"))
+
+filipino <- newspapers %>%
+  filter(source %in% c("Filipino Reporter", "The Filipino Express"))
+
+aapi <- newspapers %>%
+  filter(source %in% c("Asianweek", "Asian Reporter"))
+
+write.csv(filipino, here("processed_data", "filipino.csv"))
+
+write.csv(aapi, here("processed_data", "aapi.csv"))
+```

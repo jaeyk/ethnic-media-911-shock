@@ -64,10 +64,11 @@ corpus$clean_text <- clean_text(corpus$text)
 
 corpus$clean_text <- str_replace_all(corpus$clean_text, "muslims", "muslim")
 
-names(corpus)
+corpus <- corpus %>% 
+  filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
 ```
 
-```{r}
+```{r eval = FALSE}
 # Build a corpus 
 my_corpus <- corpus(corpus$clean_text)
 # Add the document-level covariates 
@@ -89,14 +90,14 @@ write_rds(my_corpus, here("output", "my_corpus.rds"))
 my_corpus <- read_rds(here("output", "my_corpus.rds"))
 ```
 
-```{r}
+```{r eval = FALSE}
 # Tokenize 
 data_tokens <- quanteda::tokens(my_corpus) 
 ```
 
 # Document-term matrix 
 
-```{r}
+```{r eval = FALSE}
 # Construct a document-term matrix 
 data_dfm <- dfm(data_tokens) %>%
     dfm_trim(min_termfreq = 100, 
@@ -104,7 +105,7 @@ data_dfm <- dfm(data_tokens) %>%
 ```
 
 
-```{r}
+```{r eval = FALSE}
 write_rds(data_dfm, here("processed_data", "data_dfm.rds"))
 data_dfm <- read_rds(here("processed_data", "data_dfm.rds"))
 ```
@@ -113,7 +114,7 @@ data_dfm <- read_rds(here("processed_data", "data_dfm.rds"))
 
 ## Prepare the data 
 
-```{r}
+```{r eval = FALSE}
 # Prepare the data for keyATM
 future::plan("multiprocess")
 
@@ -130,7 +131,7 @@ keyATM_docs <- read_rds(here("processed_data", "keyATM_docs.rds"))
 
 ## Create a dictionary of the key words 
 
-```{r}
+```{r eval = FALSE}
 keywords <- list(
     
     "resistance" = c("civil", "constitutional")
@@ -141,7 +142,7 @@ keywords <- list(
 
 ## Check keywords 
 
-```{r}
+```{r eval = FALSE}
 key_viz <- visualize_keywords(docs = keyATM_docs, 
                               keywords = keywords)
 
@@ -154,7 +155,7 @@ key_viz
 
 ## Number of K
 
-```{r}
+```{r eval = FALSE}
 # future::plan(multiprocess)
 
 set.seed(1234)
@@ -165,7 +166,7 @@ many_models <- tibble(K = c(10, 20, 30)) %>%
                                                        K = .,
                                                        verbose = TRUE)))
 
-write_rds(many_models, here("output", "many_models.rds"))
+write_rds(many_models, here("processed_data", "many_models.rds"))
 
 many_models <- read_rds(here("output", "many_models.rds"))
 ```
@@ -197,7 +198,7 @@ stm_models <- many_models(
   runs = 100
 )
 
-write_rds(stm_models, here("output", "stm_models.rds"))
+write_rds(stm_models, here("processed_data", "stm_models.rds"))
 
 print_models(
   stm_models, corpus$clean_text,
@@ -219,7 +220,7 @@ ggsave(here("output", "k_search_diag.png"))
 
 ## Static topic modeling 
 
-```{r}
+```{r eval = FALSE}
 future::plan("multiprocess")
 
 out <- keyATM(docs = keyATM_docs,       # text input
@@ -237,13 +238,13 @@ out <- read_rds(here("output", "keyATM_out.rds"))
 out$theta <- round(out$theta, 0)
 ```
 
-```{r}
+```{r eval = FALSE}
 # sum 
 sums <- c(sum(out$theta[,1]), sum(out$theta[,2]), 
           sum(out$theta[,3]))
 ```
 
-```{r}
+```{r eval = FALSE}
 topic_out <- tibble(topic_sums = sums,
                     names = c("Anti-Asian", "Anti-racism","Others")) %>%  
            mutate(prop = topic_sums / sum(topic_sums),
@@ -264,7 +265,7 @@ ggsave(here("output", "topic_modeling_static.png"))
 
 ## Covariate topic modeling 
 
-```{r}
+```{r eval = FALSE}
 # Extract covariates 
 vars <- docvars(my_corpus)
 
@@ -283,7 +284,7 @@ covariate_out <- keyATM(docs = keyATM_docs,       # text input
               store_theta = TRUE))
 ```
 
-```{r}
+```{r eval = FALSE}
 # Predicted mean of the document-term distribution for intervention 
 
 strata_topic <- by_strata_DocTopic(out, by_var = "intervention",
@@ -315,7 +316,7 @@ ggplot(res, aes(x = label, ymin = Lower, ymax = Upper, group = Topic)) +
 
 ## Dynamic topic modeling 
 
-````{r}
+```{r eval = FALSE}
 tictoc::tic()
 dynamic_out_day <- keyATM(docs = keyATM_docs,    # text input
                       no_keyword_topics = 1,              # number of topics without keywords
@@ -361,4 +362,9 @@ df %>% ggplot() +
     scale_y_continuous(labels =    
     scales::percent_format(accuracy = 1)) 
 ggsave(here("outputs", "anti_asian_topic_dynamic_trend.png"))
+```
+
+```{r eval = FALSE}
+knitr::purl(input = here("code", "05_03_keyATM.Rmd"),
+            output = here("code", "05_03_keyATM.r"))
 ```

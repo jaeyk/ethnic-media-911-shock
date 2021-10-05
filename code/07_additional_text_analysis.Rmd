@@ -131,6 +131,8 @@ nrow(df)
 df$pub_date <- lubridate::ymd(str_replace(df$pub_date, "T.*", ""))
 
 df <- df %>% rename(date = pub_date)
+
+write.csv(df, here("processed_data", "nyt.csv"))
 ```
 
 

@@ -49,7 +49,9 @@ theme_set(theme_clean())
 source(here("functions", "embedding.r"))
 ```
 
-# Load data 
+# Arab + Indian  
+
+## Load data 
 
 ```{r}
 corpus <- read.csv(here("processed_data/cleaned_text.csv"))
@@ -61,12 +63,15 @@ nrow(corpus)
 # Create dummy variables 
 corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
 
+corpus <- corpus %>%
+  mutate(group = if_else(str_detect(source, "Arab"), "Arab", "Indian"))
+
 corpus$group <- if_else(corpus$group == "Arab", 1, 0)
 ```
 
-# Preproceessing text 
+## Preproceessing text 
 
-```{r eval = FALSE}
+```{r}
 corpus$clean_text <- clean_text(corpus$text)
 
 corpus$clean_text <- str_replace_all(corpus$clean_text, "muslims", "muslim")
@@ -75,7 +80,7 @@ corpus <- corpus %>%
   filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
 ```
 
-# Local embedding and matrix 
+## Local embedding and matrix 
 
 ```{r}
 set.seed(1234L)
@@ -88,7 +93,6 @@ save(local_glove, local_transform,
 
 ## ALC embedding approach 
 
-### Regression 
 
 ```{r}
 mod <- conText(formula = muslim ~ intervention + group, 
@@ -133,9 +137,7 @@ reg_plot
 ggsave(here("output", "embedreg.png"))
 ```
 
-# Nearest neighbors 
-
-## ALC embedding 
+## Nearest neighbors 
 
 ```{r}
 set.seed(1234L)
@@ -146,13 +148,13 @@ arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200)
 indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200)
 ```
 
-```{r eval = FALSE}
+```{r}
 terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11")
 
 ggsave(here("output", "btmuslimsep.png"), width = 12, height = 10)
 ```
 
-# Reading documents
+## Reading documents
 
 ```{r}
 corpus %>%
@@ -179,3 +181,4 @@ corpus %>%
   # Pull the date and newspaper
   pull(date, source)
 ```
+

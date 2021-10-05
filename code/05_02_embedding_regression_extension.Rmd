@@ -1,0 +1,382 @@
+---
+title: "Embedding regression"
+author: "Jae Yeon Kim"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages 
+
+```{r}
+
+# Import pkgs
+pacman::p_load(
+  tidyverse,
+  lubridate, 
+  purrr,
+  furrr,
+  tm,
+  quanteda, 
+  here,
+  tidytext, # text analysis 
+  textclean,
+  textstem, 
+  ggthemes,
+  text2vec, # word embedding 
+  widyr,
+  patchwork, # arranging ggplots
+  glue,
+  # deep learning 
+  text2vec,
+  # network graph
+  igraph,
+  ggraph,
+  # structural breakpoint
+  strucchange,
+  pbapply,
+  kableExtra
+)
+
+devtools::install_github("prodriguezsosa/conText")
+
+library(conText)
+
+theme_set(theme_clean())
+
+source(here("functions", "embedding.r"))
+```
+
+
+## Load data 
+
+```{r}
+df <- read.csv(here("processed_data/cleaned_text.csv")) 
+
+df <- df %>%
+  mutate(group = if_else(str_detect(source, "Arab"), "Arab", "Indian"))
+
+df <- df %>%
+  select(c("text","source","date", "group"))
+
+filipino <- read.csv(here("processed_data", "filipino.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "Filipino")
+
+aapi <- read.csv(here("processed_data", "aapi.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "AAPI")
+
+aapi$date <- dmy(aapi$date)
+filipino$date <- dmy(filipino$date)
+
+df$date <- as.Date(df$date)
+```
+
+```{r}
+corpus <- bind_rows(df, filipino, aapi)
+
+unique(corpus$group)
+```
+
+```{r}
+# Create dummy variables 
+corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
+```
+
+## Preproceessing text 
+
+```{r}
+corpus$clean_text <- clean_text(corpus$text)
+
+corpus$clean_text <- str_replace_all(corpus$clean_text, "muslims", "muslim")
+
+corpus <- corpus %>% 
+  filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
+
+corpus_copy <- corpus
+```
+
+# Arab + Indian  
+
+## Subsetted data 
+
+```{r}
+corpus <- corpus_copy %>%
+  filter(group %in% c("Arab", "Indian")) %>%
+  mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+```
+
+## Local embedding and matrix 
+
+```{r}
+set.seed(1234L)
+local_glove <- df2vec(corpus)
+local_transform <- df2ltm(corpus, local_glove)
+
+save(local_glove, local_transform, 
+     file = here("processed_data/context_bg_ai.Rdata"))
+```
+
+## ALC embedding approach 
+
+
+```{r}
+mod <- conText(formula = muslim ~ intervention + group, 
+          data = corpus, 
+          text_var = 'clean_text', 
+          pre_trained = local_glove,
+          transform = TRUE, 
+          transform_matrix = local_transform, 
+          bootstrap = TRUE, 
+          num_bootstraps = 20, 
+          stratify_by = c('intervention', 'group'),
+          permute = TRUE, 
+          num_permutations = 100, 
+          window = 6, 
+          valuetype = 'fixed', 
+          case_insensitive = TRUE, 
+          hard_cut = FALSE, 
+          verbose = FALSE)
+
+plot_tibble <- mod$normed_betas %>% 
+  mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
+  mutate(Coefficient = factor(Coefficient, levels = Coefficient))
+
+kable(plot_tibble)
+```
+Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
+9/11 attacks	0.1232869	0.0013949	0
+Arab American	0.2121369	0.0016851	0
+
+```{r}
+reg_plot1 <- plot_tibble %>%
+  ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
+  geom_bar(position = position_dodge(), 
+    stat = "identity", width = 0.5) + 
+  geom_errorbar(aes(ymin = Normed_Estimate - 
+    1.96 * Std.Error, ymax = Normed_Estimate + 1.96 * Std.Error), size = 0.75, width = 0.15, 
+    position = position_dodge(0.9)) + 
+  ylab("Norm of beta hats") + 
+  theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
+          axis.text.y = element_text(size = 10)) +
+  labs(
+    title = "Arab and Indian Amerian newspaper comparison",
+    subtitle = "Keyword: Muslim")
+
+reg_plot1
+
+ggsave(here("output", "embedreg_ai.png"))
+```
+
+## Nearest neighbors 
+
+```{r}
+set.seed(1234L)
+arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Indian Americans")
+indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Indian Americans")
+
+arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200, "Arab Americans", "Indian Americans")
+indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200, "Arab Americans", "Indian Americans")
+```
+
+```{r}
+terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11") +
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 8))
+
+ggsave(here("output", "btmuslimsep_ai.png"), width = 12, height = 10)
+```
+
+# Arab + Fipilino
+
+## Subsetted data 
+
+```{r}
+corpus <- corpus_copy %>%
+  filter(group %in% c("Arab", "Filipino")) %>%
+  mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+```
+
+## Local embedding and matrix 
+
+```{r}
+set.seed(1234L)
+local_glove <- df2vec(corpus)
+local_transform <- df2ltm(corpus, local_glove)
+
+save(local_glove, local_transform, 
+     file = here("processed_data/context_bg_af.Rdata"))
+```
+
+## ALC embedding approach 
+
+
+```{r}
+mod <- conText(formula = muslim ~ intervention + group, 
+          data = corpus, 
+          text_var = 'clean_text', 
+          pre_trained = local_glove,
+          transform = TRUE, 
+          transform_matrix = local_transform, 
+          bootstrap = TRUE, 
+          num_bootstraps = 20, 
+          stratify_by = c('intervention', 'group'),
+          permute = TRUE, 
+          num_permutations = 100, 
+          window = 6, 
+          valuetype = 'fixed', 
+          case_insensitive = TRUE, 
+          hard_cut = FALSE, 
+          verbose = FALSE)
+
+plot_tibble <- mod$normed_betas %>% 
+  mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
+  mutate(Coefficient = factor(Coefficient, levels = Coefficient))
+
+kableExtra::kable(plot_tibble)
+```
+
+Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
+9/11 attacks	0.6490103	0.0189908	0
+Arab American	1.2189990	0.0076688	0
+
+```{r}
+reg_plot2 <- plot_tibble %>%
+  ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
+  geom_bar(position = position_dodge(), 
+    stat = "identity", width = 0.5) + 
+  geom_errorbar(aes(ymin = Normed_Estimate - 
+    1.96 * Std.Error, ymax = Normed_Estimate + 1.96 * Std.Error), size = 0.75, width = 0.15, 
+    position = position_dodge(0.9)) + 
+  ylab("Norm of beta hats") + 
+  theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
+          axis.text.y = element_text(size = 10)) +
+  labs(title = "Arab and Filipino American newspaper comparison",
+       subtitle = "Keyword: Muslim")
+
+reg_plot2
+
+ggsave(here("output", "embedreg_af.png"))
+```
+
+## Nearest neighbors 
+
+```{r}
+set.seed(1234L)
+arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Filipino Americans")
+indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Filipino Americans")
+
+arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200, "Arab Americans", "Filipino Americans")
+indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200, "Arab Americans", "Filipino Americans")
+```
+
+```{r}
+terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11") + 
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 8))
+
+ggsave(here("output", "btmuslimsep_af.png"), width = 12, height = 10)
+```
+
+# Arab + AAPI
+
+## Subsetted data 
+
+```{r}
+corpus <- corpus_copy %>%
+  filter(group %in% c("Arab", "AAPI")) %>%
+  mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+```
+
+## Local embedding and matrix 
+
+```{r}
+set.seed(1234L)
+local_glove <- df2vec(corpus)
+local_transform <- df2ltm(corpus, local_glove)
+
+save(local_glove, local_transform, 
+     file = here("processed_data/context_bg_aa.Rdata"))
+```
+
+## ALC embedding approach 
+
+
+```{r}
+mod <- conText(formula = muslim ~ intervention + group, 
+          data = corpus, 
+          text_var = 'clean_text', 
+          pre_trained = local_glove,
+          transform = TRUE, 
+          transform_matrix = local_transform, 
+          bootstrap = TRUE, 
+          num_bootstraps = 20, 
+          stratify_by = c('intervention', 'group'),
+          permute = TRUE, 
+          num_permutations = 100, 
+          window = 6, 
+          valuetype = 'fixed', 
+          case_insensitive = TRUE, 
+          hard_cut = FALSE, 
+          verbose = FALSE)
+
+plot_tibble <- mod$normed_betas %>% 
+  mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
+  mutate(Coefficient = factor(Coefficient, levels = Coefficient))
+
+kable(plot_tibble)
+```
+Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
+9/11 attacks	0.6490103	0.0189908	0
+Arab American	1.2189990	0.0076688	0
+
+```{r}
+reg_plot3 <- plot_tibble %>%
+  ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
+  geom_bar(position = position_dodge(), 
+    stat = "identity", width = 0.5) + 
+  geom_errorbar(aes(ymin = Normed_Estimate - 
+    1.96 * Std.Error, ymax = Normed_Estimate + 1.96 * Std.Error), size = 0.75, width = 0.15, 
+    position = position_dodge(0.9)) + 
+  ylab("Norm of beta hats") + 
+  theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
+          axis.text.y = element_text(size = 10)) +
+  labs(title = "Arab and Asian American newspaper comparison",
+       subtitle = "Keyword: Muslim")
+
+reg_plot3
+
+ggsave(here("output", "embedreg_aa.png"))
+
+(reg_plot1) /
+(reg_plot2) /
+(reg_plot3) +
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 8))
+
+ggsave(here("output", "embedreg_all.png"),
+       height = 15)
+```
+
+## Nearest neighbors 
+
+```{r}
+set.seed(1234L)
+arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Asian Americans")
+indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Asian Americans")
+
+arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200, "Arab Americans", "Asian Americans")
+indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200, "Arab Americans", "Asian Americans")
+```
+
+```{r}
+terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11") +
+  plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag = element_text(size = 8))
+
+ggsave(here("output", "btmuslimsep_aa.png"), width = 12, height = 10)
+```
