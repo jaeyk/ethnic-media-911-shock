@@ -97,7 +97,7 @@ data_tokens <- quanteda::tokens(my_corpus)
 
 # Document-term matrix 
 
-```{r eval = FALSE}
+```{r}
 # Construct a document-term matrix 
 data_dfm <- dfm(data_tokens) %>%
     dfm_trim(min_termfreq = 100, 
@@ -105,7 +105,7 @@ data_dfm <- dfm(data_tokens) %>%
 ```
 
 
-```{r eval = FALSE}
+```{r}
 write_rds(data_dfm, here("processed_data", "data_dfm.rds"))
 data_dfm <- read_rds(here("processed_data", "data_dfm.rds"))
 ```
@@ -114,7 +114,7 @@ data_dfm <- read_rds(here("processed_data", "data_dfm.rds"))
 
 ## Prepare the data 
 
-```{r eval = FALSE}
+```{r}
 # Prepare the data for keyATM
 future::plan("multiprocess")
 
@@ -131,10 +131,20 @@ keyATM_docs <- read_rds(here("processed_data", "keyATM_docs.rds"))
 
 ## Create a dictionary of the key words 
 
-```{r eval = FALSE}
+```{r}
 keywords <- list(
     
-    "resistance" = c("civil", "constitutional")
+    "assimilation" = c("compliance", "loyal", "fear", "assimilation", "assimilated"),
+    
+    "resistance" = c("legal", "civil", "constitutional", "recognize", "represent", "unite", "engage", "justice", "advocacy", "citizen"), 
+    
+    "surveillance" = c("fbi", "police", "surveillance", "criminal", "immigrant"),
+    
+    "discrimination" = c("streotype", "bias", "prejudice", "discrimination", "anti"),
+    
+    "terrorism" = c("terror", "terrorism", "taliban"),
+    
+    "foreign affairs" = c("pakistan", "middle east", "gulf", "suhatro", "indonesia", "philippine", "china", "japan", "korea")
     
     )
 ```
@@ -142,7 +152,7 @@ keywords <- list(
 
 ## Check keywords 
 
-```{r eval = FALSE}
+```{r}
 key_viz <- visualize_keywords(docs = keyATM_docs, 
                               keywords = keywords)
 
@@ -155,7 +165,7 @@ key_viz
 
 ## Number of K
 
-```{r eval = FALSE}
+```{r}
 # future::plan(multiprocess)
 
 set.seed(1234)
@@ -172,42 +182,6 @@ many_models <- read_rds(here("output", "many_models.rds"))
 ```
 
 ```{r}
-set.seed(1234L)
-
-processed <- textProcessor(
-  documents = corpus$clean_text,
-  metadata = corpus %>%
-    select(clean_text, date, group, source, intervention)
-)
-
-out <- prepDocuments(
-  documents = processed$documents,
-  vocab = processed$vocab,
-  meta = processed$meta
-)
-
-set.seed(1234L)
-
-stm_models <- many_models(
-  K = 5:30,
-  documents = out$documents,
-  vocab = out$vocab,
-  prevalence = ~ intervention + s(group), 
-  data = out$meta,
-  N = 4,
-  runs = 100
-)
-
-write_rds(stm_models, here("processed_data", "stm_models.rds"))
-
-print_models(
-  stm_models, corpus$clean_text,
-  file = here("output", "stm_runs.pdf"),
-  title = "Optimizing k"
-)
-```
-
-```{r}
 # Resolve conflicts 
 conflicted::conflict_prefer("purrr", "map")
 
@@ -220,11 +194,11 @@ ggsave(here("output", "k_search_diag.png"))
 
 ## Static topic modeling 
 
-```{r eval = FALSE}
+```{r}
 future::plan("multiprocess")
 
 out <- keyATM(docs = keyATM_docs,       # text input
-              no_keyword_topics = 1,    # number of topics without keywords
+              no_keyword_topics = 4,    # number of topics without keywords
               keywords = keywords,      # keywords
               model = "base",           # select the model
               options = list(seed = 250,
@@ -238,7 +212,7 @@ out <- read_rds(here("output", "keyATM_out.rds"))
 out$theta <- round(out$theta, 0)
 ```
 
-```{r eval = FALSE}
+```{r}
 # sum 
 sums <- c(sum(out$theta[,1]), sum(out$theta[,2]), 
           sum(out$theta[,3]))
@@ -265,17 +239,17 @@ ggsave(here("output", "topic_modeling_static.png"))
 
 ## Covariate topic modeling 
 
-```{r eval = FALSE}
+```{r}
 # Extract covariates 
 vars <- docvars(my_corpus)
 
 vars_selected <- vars %>% select(intervention) %>%
-    mutate(intervention = ifelse(intervention == 1, "Post-Trump speech", "Pre-Trump speech"))
+    mutate(intervention = ifelse(intervention == 1, "Post-9/11", "Pre-9/11"))
 
 # Topic modeling 
 
 covariate_out <- keyATM(docs = keyATM_docs,       # text input
-              no_keyword_topics = 1,    # number of topics without keywords
+              no_keyword_topics = 4,    # number of topics without keywords
               keywords = keywords,      # keywords
               model = "covariate",           # select the model
               model_settings = list(covariates_data = vars_selected,
@@ -288,7 +262,7 @@ covariate_out <- keyATM(docs = keyATM_docs,       # text input
 # Predicted mean of the document-term distribution for intervention 
 
 strata_topic <- by_strata_DocTopic(out, by_var = "intervention",
-                                   labels = c("Post-Trump speech", "Pre-Trump speech"))
+                                   labels = c("Post-9/11", "Pre-9/11"))
 est <- summary(strata_topic)
 
 # Baseline 
