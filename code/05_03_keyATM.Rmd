@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 pacman::p_load(tidyverse, # for tidyverse 
+               lubridate, 
                ggpubr, # for arranging ggplots   
                ggthemes, # for fancy ggplot themes
                here, # for reproducibility 
@@ -47,17 +48,43 @@ library(keyATM)
 
 # Load data 
 
+## Load data 
+
 ```{r}
-# Drop the first column as it's meaningless 
-corpus <- read.csv(here("processed_data/cleaned_text.csv"))[,-c(1,7:9)] 
+df <- read.csv(here("processed_data/cleaned_text.csv")) 
 
-# Create dummy variables 
-corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
+df <- df %>%
+  mutate(group = if_else(str_detect(source, "Arab"), "Arab", "Indian"))
 
-corpus$group <- if_else(corpus$group == "Arab", 1, 0)
+df <- df %>%
+  select(c("text","source","date", "group"))
+
+filipino <- read.csv(here("processed_data", "filipino.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "Filipino")
+
+aapi <- read.csv(here("processed_data", "aapi.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "AAPI")
+
+aapi$date <- dmy(aapi$date)
+filipino$date <- dmy(filipino$date)
+
+df$date <- as.Date(df$date)
 ```
 
-# Preproceessing text 
+```{r}
+corpus <- bind_rows(df, filipino, aapi)
+
+unique(corpus$group)
+```
+
+```{r}
+# Create dummy variables 
+corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
+```
+
+## Preproceessing text 
 
 ```{r}
 corpus$clean_text <- clean_text(corpus$text)
@@ -66,9 +93,13 @@ corpus$clean_text <- str_replace_all(corpus$clean_text, "muslims", "muslim")
 
 corpus <- corpus %>% 
   filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
+
+corpus_copy <- corpus
+
+write.csv(corpus_copy, here("processed_data", "corpus_copy.csv"))
 ```
 
-```{r eval = FALSE}
+```{r}
 # Build a corpus 
 my_corpus <- corpus(corpus$clean_text)
 # Add the document-level covariates 
@@ -90,20 +121,17 @@ write_rds(my_corpus, here("output", "my_corpus.rds"))
 my_corpus <- read_rds(here("output", "my_corpus.rds"))
 ```
 
-```{r eval = FALSE}
-# Tokenize 
-data_tokens <- quanteda::tokens(my_corpus) 
-```
-
 # Document-term matrix 
 
 ```{r}
+# Tokenize 
+data_tokens <- quanteda::tokens(my_corpus) 
+
 # Construct a document-term matrix 
 data_dfm <- dfm(data_tokens) %>%
     dfm_trim(min_termfreq = 100, 
              min_docfreq = 100)
 ```
-
 
 ```{r}
 write_rds(data_dfm, here("processed_data", "data_dfm.rds"))
@@ -131,7 +159,7 @@ keyATM_docs <- read_rds(here("processed_data", "keyATM_docs.rds"))
 
 ## Create a dictionary of the key words 
 
-```{r}
+```{r eval = FALSE}
 keywords <- list(
     
     "assimilation" = c("compliance", "loyal", "fear", "assimilation", "assimilated"),
@@ -152,7 +180,7 @@ keywords <- list(
 
 ## Check keywords 
 
-```{r}
+```{r eval = FALSE}
 key_viz <- visualize_keywords(docs = keyATM_docs, 
                               keywords = keywords)
 
@@ -167,11 +195,10 @@ key_viz
 
 ```{r}
 # future::plan(multiprocess)
-
 set.seed(1234)
 
 # Run many models 
-many_models <- tibble(K = c(10, 20, 30)) %>%
+many_models <- tibble(K = c(10:20)) %>%
                mutate(topic_model = furrr::future_map(K, ~stm(data_dfm, 
                                                        K = .,
                                                        verbose = TRUE)))
@@ -181,7 +208,7 @@ write_rds(many_models, here("processed_data", "many_models.rds"))
 many_models <- read_rds(here("output", "many_models.rds"))
 ```
 
-```{r}
+```{r eval = FALSE}
 # Resolve conflicts 
 conflicted::conflict_prefer("purrr", "map")
 
@@ -192,9 +219,40 @@ k_search_diag
 ggsave(here("output", "k_search_diag.png"))
 ```
 
-## Static topic modeling 
 
 ```{r}
+processed <- textProcessor(
+  documents = corpus$clean_text,
+  metadata = corpus
+)
+
+out <- prepDocuments(
+  documents = processed$documents,
+  vocab = processed$vocab,
+  meta = processed$meta
+)
+
+stm_models <- many_models(
+  K = 10:20,
+  documents = out$documents,
+  vocab= out$vocab,
+  prevalence = ~ intervention + s(group), 
+  data = out$meta,
+  N = 4,
+  runs = 100
+)
+
+print_models(
+  stm_models, gadarian$open.ended.response,
+  file = "stm_runs.pdf",
+  title = "Finding the optimal k"
+)
+```
+
+
+## Static topic modeling 
+
+```{r eval = FALSE}
 future::plan("multiprocess")
 
 out <- keyATM(docs = keyATM_docs,       # text input
@@ -212,7 +270,7 @@ out <- read_rds(here("output", "keyATM_out.rds"))
 out$theta <- round(out$theta, 0)
 ```
 
-```{r}
+```{r eval = FALSE}
 # sum 
 sums <- c(sum(out$theta[,1]), sum(out$theta[,2]), 
           sum(out$theta[,3]))
@@ -239,7 +297,7 @@ ggsave(here("output", "topic_modeling_static.png"))
 
 ## Covariate topic modeling 
 
-```{r}
+```{r eval = FALSE}
 # Extract covariates 
 vars <- docvars(my_corpus)
 
@@ -314,7 +372,8 @@ df <- data.frame(date = fig_timetrend_day$values$time_index,
                 lower = fig_timetrend_day$values$Lower,
                 topic = fig_timetrend_day$values$Topic)
 ```
-```{r}
+
+```{r eval = FALSE}
 df %>% ggplot() +
     geom_line(aes(x = date, y = mean),
               alpha = 0.5, size = 1.2) +
