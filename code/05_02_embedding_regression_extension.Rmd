@@ -85,6 +85,8 @@ unique(corpus$group)
 ```{r}
 # Create dummy variables 
 corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
+
+write.csv(corpus, here("processed_data", "corpus.csv"))
 ```
 
 ## Preproceessing text 
@@ -113,7 +115,7 @@ corpus <- corpus_copy %>%
 ## Local embedding and matrix 
 
 ```{r}
-set.seed(1234L)
+set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
 
@@ -125,7 +127,7 @@ save(local_glove, local_transform,
 
 
 ```{r}
-mod <- conText(formula = muslim ~ intervention + group, 
+mod1 <- conText(formula = muslim ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
           pre_trained = local_glove,
@@ -139,21 +141,21 @@ mod <- conText(formula = muslim ~ intervention + group,
           window = 6, 
           valuetype = 'fixed', 
           case_insensitive = TRUE, 
-          hard_cut = FALSE, 
+          hard_cut = FALSE,
           verbose = FALSE)
 
-plot_tibble <- mod$normed_betas %>% 
+plot_tibble1 <- mod1$normed_betas %>% 
   mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
   mutate(Coefficient = factor(Coefficient, levels = Coefficient))
 
-kable(plot_tibble)
+kable(plot_tibble1)
 ```
 Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
 9/11 attacks	0.1232869	0.0013949	0
 Arab American	0.2121369	0.0016851	0
 
 ```{r}
-reg_plot1 <- plot_tibble %>%
+reg_plot1 <- plot_tibble1 %>%
   ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
   geom_bar(position = position_dodge(), 
     stat = "identity", width = 0.5) + 
@@ -175,7 +177,7 @@ ggsave(here("output", "embedreg_ai.png"))
 ## Nearest neighbors 
 
 ```{r}
-set.seed(1234L)
+set.seed(20201008L)
 arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Indian Americans")
 indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Indian Americans")
 
@@ -204,7 +206,7 @@ corpus <- corpus_copy %>%
 ## Local embedding and matrix 
 
 ```{r}
-set.seed(1234L)
+set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
 
@@ -216,7 +218,7 @@ save(local_glove, local_transform,
 
 
 ```{r}
-mod <- conText(formula = muslim ~ intervention + group, 
+mod2 <- conText(formula = muslim ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
           pre_trained = local_glove,
@@ -233,11 +235,11 @@ mod <- conText(formula = muslim ~ intervention + group,
           hard_cut = FALSE, 
           verbose = FALSE)
 
-plot_tibble <- mod$normed_betas %>% 
+plot_tibble2 <- mod2$normed_betas %>% 
   mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
   mutate(Coefficient = factor(Coefficient, levels = Coefficient))
 
-kableExtra::kable(plot_tibble)
+kableExtra::kable(plot_tibble2)
 ```
 
 Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
@@ -245,7 +247,7 @@ Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
 Arab American	1.2189990	0.0076688	0
 
 ```{r}
-reg_plot2 <- plot_tibble %>%
+reg_plot2 <- plot_tibble2 %>%
   ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
   geom_bar(position = position_dodge(), 
     stat = "identity", width = 0.5) + 
@@ -266,7 +268,7 @@ ggsave(here("output", "embedreg_af.png"))
 ## Nearest neighbors 
 
 ```{r}
-set.seed(1234L)
+set.seed(20201008L)
 arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Filipino Americans")
 indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Filipino Americans")
 
@@ -295,7 +297,7 @@ corpus <- corpus_copy %>%
 ## Local embedding and matrix 
 
 ```{r}
-set.seed(1234L)
+set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
 
@@ -307,7 +309,7 @@ save(local_glove, local_transform,
 
 
 ```{r}
-mod <- conText(formula = muslim ~ intervention + group, 
+mod3 <- conText(formula = muslim ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
           pre_trained = local_glove,
@@ -324,18 +326,23 @@ mod <- conText(formula = muslim ~ intervention + group,
           hard_cut = FALSE, 
           verbose = FALSE)
 
-plot_tibble <- mod$normed_betas %>% 
+plot_tibble3 <- mod3$normed_betas %>% 
   mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
   mutate(Coefficient = factor(Coefficient, levels = Coefficient))
 
-kable(plot_tibble)
+kable(plot_tibble3)
+
+mean(mod1$normed_betas$Normed_Estimate[2]/mod1$normed_betas$Normed_Estimate[1],
+mod2$normed_betas$Normed_Estimate[2]/mod2$normed_betas$Normed_Estimate[1],
+mod3$normed_betas$Normed_Estimate[2]/mod3$normed_betas$Normed_Estimate[1])
+
 ```
 Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
 9/11 attacks	0.6490103	0.0189908	0
 Arab American	1.2189990	0.0076688	0
 
 ```{r}
-reg_plot3 <- plot_tibble %>%
+reg_plot3 <- plot_tibble3 %>%
   ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
   geom_bar(position = position_dodge(), 
     stat = "identity", width = 0.5) + 
@@ -365,7 +372,7 @@ ggsave(here("output", "embedreg_all.png"),
 ## Nearest neighbors 
 
 ```{r}
-set.seed(1234L)
+set.seed(20201008L)
 arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Asian Americans")
 indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Asian Americans")
 
