@@ -467,7 +467,7 @@ terms2plot_sep <- function(df1, df2, keyword, year) {
     ggplot(aes(x = fct_reorder(Term, Estimate), y = Estimate,
                ymax = Estimate + 1.96*Std.Error,
                ymin = Estimate - 1.96*Std.Error, col = label)) +
-    geom_pointrange() +
+    geom_pointrange(size = 0.5) +
     facet_wrap(~intervention) +
     coord_flip() +
     labs(subtitle = glue("Keyword: {keyword}"),
