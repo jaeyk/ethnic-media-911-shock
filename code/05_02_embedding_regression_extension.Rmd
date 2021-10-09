@@ -94,8 +94,6 @@ write.csv(corpus, here("processed_data", "corpus.csv"))
 ```{r}
 corpus$clean_text <- clean_text(corpus$text)
 
-corpus$clean_text <- str_replace_all(corpus$clean_text, "muslims", "muslim")
-
 corpus <- corpus %>% 
   filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
 
@@ -127,7 +125,7 @@ save(local_glove, local_transform,
 
 
 ```{r}
-mod1 <- conText(formula = muslim ~ intervention + group, 
+mod1 <- conText(formula = terror ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
           pre_trained = local_glove,
@@ -137,7 +135,7 @@ mod1 <- conText(formula = muslim ~ intervention + group,
           num_bootstraps = 20, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
-          num_permutations = 100, 
+          num_permutations = 200, 
           window = 6, 
           valuetype = 'fixed', 
           case_insensitive = TRUE, 
@@ -167,7 +165,7 @@ reg_plot1 <- plot_tibble1 %>%
           axis.text.y = element_text(size = 10)) +
   labs(
     title = "Arab and Indian Amerian newspaper comparison",
-    subtitle = "Keyword: Muslim")
+    subtitle = "Keyword: Terror")
 
 reg_plot1
 
@@ -178,19 +176,19 @@ ggsave(here("output", "embedreg_ai.png"))
 
 ```{r}
 set.seed(20201008L)
-arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Indian Americans")
-indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Indian Americans")
+arab_post_bt <- get_bt_terms(1, 1, "terror", 200, "Arab Americans", "Indian Americans")
+indian_post_bt <- get_bt_terms(1, 0, "terror", 200, "Arab Americans", "Indian Americans")
 
-arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200, "Arab Americans", "Indian Americans")
-indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200, "Arab Americans", "Indian Americans")
+arab_pre_bt <- get_bt_terms(0, 1, "terror", 200, "Arab Americans", "Indian Americans")
+indian_pre_bt <- get_bt_terms(0, 0, "terror", 200, "Arab Americans", "Indian Americans")
 ```
 
 ```{r}
-terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11") +
+terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "terror", "Post-9/11") +
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 
-ggsave(here("output", "btmuslimsep_ai.png"), width = 12, height = 10)
+ggsave(here("output", "btterrorsep_ai.png"), width = 12, height = 10)
 ```
 
 # Arab + Fipilino
@@ -218,7 +216,7 @@ save(local_glove, local_transform,
 
 
 ```{r}
-mod2 <- conText(formula = muslim ~ intervention + group, 
+mod2 <- conText(formula = terror ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
           pre_trained = local_glove,
@@ -228,7 +226,7 @@ mod2 <- conText(formula = muslim ~ intervention + group,
           num_bootstraps = 20, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
-          num_permutations = 100, 
+          num_permutations = 200, 
           window = 6, 
           valuetype = 'fixed', 
           case_insensitive = TRUE, 
@@ -258,7 +256,7 @@ reg_plot2 <- plot_tibble2 %>%
   theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
           axis.text.y = element_text(size = 10)) +
   labs(title = "Arab and Filipino American newspaper comparison",
-       subtitle = "Keyword: Muslim")
+       subtitle = "Keyword: Terror")
 
 reg_plot2
 
@@ -269,19 +267,19 @@ ggsave(here("output", "embedreg_af.png"))
 
 ```{r}
 set.seed(20201008L)
-arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Filipino Americans")
-indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Filipino Americans")
+arab_post_bt <- get_bt_terms(1, 1, "terror", 200, "Arab Americans", "Filipino Americans")
+indian_post_bt <- get_bt_terms(1, 0, "terror", 200, "Arab Americans", "Filipino Americans")
 
-arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200, "Arab Americans", "Filipino Americans")
-indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200, "Arab Americans", "Filipino Americans")
+arab_pre_bt <- get_bt_terms(0, 1, "terror", 200, "Arab Americans", "Filipino Americans")
+indian_pre_bt <- get_bt_terms(0, 0, "terror", 200, "Arab Americans", "Filipino Americans")
 ```
 
 ```{r}
-terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11") + 
+terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "terror", "Post-9/11") + 
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 
-ggsave(here("output", "btmuslimsep_af.png"), width = 12, height = 10)
+ggsave(here("output", "btterrorsep_af.png"), width = 12, height = 10)
 ```
 
 # Arab + AAPI
@@ -309,7 +307,7 @@ save(local_glove, local_transform,
 
 
 ```{r}
-mod3 <- conText(formula = muslim ~ intervention + group, 
+mod3 <- conText(formula = terror ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
           pre_trained = local_glove,
@@ -319,7 +317,7 @@ mod3 <- conText(formula = muslim ~ intervention + group,
           num_bootstraps = 20, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
-          num_permutations = 100, 
+          num_permutations = 200, 
           window = 6, 
           valuetype = 'fixed', 
           case_insensitive = TRUE, 
@@ -332,10 +330,9 @@ plot_tibble3 <- mod3$normed_betas %>%
 
 kable(plot_tibble3)
 
-mean(mod1$normed_betas$Normed_Estimate[2]/mod1$normed_betas$Normed_Estimate[1],
-mod2$normed_betas$Normed_Estimate[2]/mod2$normed_betas$Normed_Estimate[1],
-mod3$normed_betas$Normed_Estimate[2]/mod3$normed_betas$Normed_Estimate[1])
-
+mean(mod1$normed_betas$Normed_Estimate[1]/mod1$normed_betas$Normed_Estimate[2],
+mod2$normed_betas$Normed_Estimate[1]/mod2$normed_betas$Normed_Estimate[2],
+mod3$normed_betas$Normed_Estimate[1]/mod3$normed_betas$Normed_Estimate[2])
 ```
 Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
 9/11 attacks	0.6490103	0.0189908	0
@@ -353,7 +350,7 @@ reg_plot3 <- plot_tibble3 %>%
   theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
           axis.text.y = element_text(size = 10)) +
   labs(title = "Arab and Asian American newspaper comparison",
-       subtitle = "Keyword: Muslim")
+       subtitle = "Keyword: Terror")
 
 reg_plot3
 
@@ -373,17 +370,17 @@ ggsave(here("output", "embedreg_all.png"),
 
 ```{r}
 set.seed(20201008L)
-arab_post_bt <- get_bt_terms(1, 1, "muslim", 200, "Arab Americans", "Asian Americans")
-indian_post_bt <- get_bt_terms(1, 0, "muslim", 200, "Arab Americans", "Asian Americans")
+arab_post_bt <- get_bt_terms(1, 1, "terror", 200, "Arab Americans", "Asian Americans")
+indian_post_bt <- get_bt_terms(1, 0, "terror", 200, "Arab Americans", "Asian Americans")
 
-arab_pre_bt <- get_bt_terms(0, 1, "muslim", 200, "Arab Americans", "Asian Americans")
-indian_pre_bt <- get_bt_terms(0, 0, "muslim", 200, "Arab Americans", "Asian Americans")
+arab_pre_bt <- get_bt_terms(0, 1, "terror", 200, "Arab Americans", "Asian Americans")
+indian_pre_bt <- NULL
 ```
 
 ```{r}
-terms2plot_sep(arab_pre_bt, indian_pre_bt, "Muslim", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "Muslim", "Post-9/11") +
+terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "terror", "Post-9/11") +
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 
-ggsave(here("output", "btmuslimsep_aa.png"), width = 12, height = 10)
+ggsave(here("output", "btterrorsep_aa.png"), width = 12, height = 10)
 ```

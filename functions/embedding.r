@@ -1,3 +1,11 @@
+
+find_close_words <- function(wv, word, n) {
+  word_out <- wv[word, , drop = F]
+  cos_sim <- sim2(x = wv, y = word_out, method = "cosine", norm = "l2")
+  out <- head(sort(cos_sim[,1], decreasing = T), n)
+  return(out)
+}
+
 ## for bootstrapping 95% confidence intervals; Borrowed from Nick Camp's code from Jaren, Nick, and my shared project
 
 theta <- function(x, xdata, na.rm = T) {

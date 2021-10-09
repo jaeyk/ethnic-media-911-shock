@@ -1,0 +1,204 @@
+---
+title: "EDA"
+author: "Jae Yeon Kim"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages 
+
+```{r}
+
+# Import pkgs
+pacman::p_load(
+  tidyverse,
+  lubridate, 
+  purrr,
+  furrr,
+  tm,
+  quanteda, 
+  here,
+  tidytext, # text analysis 
+  textclean,
+  textstem, 
+  text2vec, 
+  ggthemes,
+  # deep learning 
+  kableExtra
+)
+
+theme_set(theme_clean())
+
+source(here("functions", "embedding.r"))
+```
+
+
+## Load data 
+
+```{r}
+df <- read.csv(here("processed_data/cleaned_text.csv")) 
+
+df <- df %>%
+  mutate(group = if_else(str_detect(source, "Arab"), "Arab", "Indian"))
+
+df <- df %>%
+  select(c("text","source","date", "group"))
+
+filipino <- read.csv(here("processed_data", "filipino.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "Filipino")
+
+aapi <- read.csv(here("processed_data", "aapi.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "AAPI")
+
+aapi$date <- dmy(aapi$date)
+filipino$date <- dmy(filipino$date)
+
+df$date <- as.Date(df$date)
+```
+
+```{r}
+corpus <- bind_rows(df, filipino, aapi)
+
+unique(corpus$group)
+```
+
+```{r}
+# Create dummy variables 
+corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
+
+write.csv(corpus, here("processed_data", "corpus.csv"))
+```
+
+## Preproceessing text 
+
+```{r}
+corpus$clean_text <- clean_text(corpus$text)
+
+corpus <- corpus %>% 
+  filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
+
+write.csv(corpus, here("processed_data", "eda_version.csv"))
+
+corpus <- read.csv(here("processed_data", "eda_version.csv"))
+```
+
+# Creating an embedding 
+
+```{r}
+set.seed(20201008L)
+pre <- subset(corpus, intervention == 0)
+post <- subset(corpus, intervention == 1)
+
+pre911 <- df2vec(pre)
+post911 <- df2vec(post) 
+```
+
+# Foreign and Domestic 
+
+```{r}
+# foreign affairs
+
+find_close_words(pre911, "pakistan", 30)
+find_close_words(post911, "pakistan", 30)
+
+find_close_words(pre911, "bjp", 30)
+find_close_words(post911, "bjp", 30)
+
+find_close_words(pre911, "indonesia", 30)
+find_close_words(post911, "indonesia", 30)
+
+find_close_words(pre911, "basilan", 30)
+find_close_words(post911, "basilan", 30)
+
+find_close_words(pre911, "mindanao", 30)
+find_close_words(post911, "mindanao", 30)
+
+foreign_affairs_dic <- c("sudan", "saudia", "lanao", "basilan", "mindanao", "maguinanao", "janijalani", "pakistan", "bjp", "godhra", "indonesia", "parliament", "morocco", "beligium", "uzbekistan", "musharraf", "kashmir", "islamabad", "pervez", "jammu", "vhp", "modi", "gujarat", "bharatiya", "janata", "nda", "advani", "hindutva", "sangh", "rss", "uttar", "indonesian", "singapore", "malaysia", "jakarta", "thailand", "vietnam", "korea", "swedish", "timor", "suharto", "philippines", "iran", "brunei", "cuba", "arabia", "morocco", "turkey", "egypt", "bali", "jordan", "basilan", "sulu", "jolo", "sayyaf", "lanao", "tawi", "abu", "marawi", "lamitan", "zamboanga", "cotabato", "visayas", "mnlf", "separatist", "liberation", "insurgency", "rebel", "rebel", "troop", "milf", "misuari", "hussin", "luzon", "arroyo")
+
+find_close_words(pre911, "republican", 30)
+find_close_words(post911, "republican", 30)
+
+find_close_words(pre911, "bush", 30)
+find_close_words(post911, "bush", 30)
+
+find_close_words(pre911, "george", 30)
+find_close_words(post911, "george", 30)
+
+domestic_dic <- c("patriot", "caucus", "florida", "republican", "democrat", "senator", "congressman", "primary", "bush", "kerry", "ohio", "governor", "manhattan", " gore", "pennsylvania", "michigan", "california", "george", "clinton")
+
+corpus <- corpus %>%
+  mutate(foreign = if_else(str_detect(clean_text, paste0(foreign_affairs_dic, collapse = "|")), 1, 0)) 
+
+sum_articles <- corpus %>%
+  group_by(date, group) %>%
+  summarize(sum_articles = sum(foreign))
+
+sum_articles %>%
+  ggplot(aes(x = as.Date(date), y = sum_articles)) +
+  geom_point(alpha = 0.2) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = as.Date("2001-09-11"), linetype = "dashed", size = 1, color = "red") + # vertical line
+  scale_y_continuous(breaks = scales::pretty_breaks()) +
+  facet_wrap(~group, scales = "free")
+```
+
+
+# Adding keywords 
+
+```{r}
+#taliban & terrorist 
+find_close_words(pre911, "taliban", 30)
+find_close_words(post911, "taliban", 30)
+
+find_close_words(pre911, "terrorist", 30)
+find_close_words(post911, "terrorist", 30)
+
+terrorism_dic <- c("taliban", "isi", "radical", "qaida", "qaeda", "bin", "osama", "lade", "taleban", "mastermind", "hunt", "fundamentalist", "extremist", "mnlf", "separatist", "liberation", "insurgency", "godhra", "rebel", "troop")
+
+#police
+
+#surveillance
+find_close_words(pre911, "protest", 30)
+find_close_words(post911, "surveillance", 30)
+
+find_close_words(pre911, "constitutional", 30)
+find_close_words(post911, "constitutional", 30)
+
+rights_dic <- c("civil", "liberty", "disobedience", "constitution", "constitutional", "protection", "protect", "freedom", "defend", "advocacy", "violation", "principle", "amendment", "mandate")
+
+#unite
+
+#represent
+
+#streotype|discrimination|bias|prejudice|scapegoat
+
+#civil|constitutional
+
+find_close_words(pre911, "civil", 30)
+find_close_words(post911, "civil", 30)
+
+find_close_words(pre911, "constitutional", 30)
+find_close_words(post911, "constitutional", 30)
+
+rights_dic <- c("civil", "liberty", "disobedience", "constitution", "constitutional", "protection", "protect", "freedom", "defend", "advocacy", "violation", "principle", "amendment", "mandate")
+```
+
+```{r}
+corpus <- corpus %>%
+  mutate(taliban = if_else(str_detect(corpus$clean_text, "taliban"), 1,0),
+         fear = if_else(str_detect(corpus$clean_text, "fear"), 1, 0),
+         terror = if_else(str_detect(corpus$clean_text, "terror|terrorist|terrorism|counterterrorism"), 1, 0),
+         police = if_else(str_detect(corpus$clean_text, "police"), 1, 0),
+         surveilance = if_else(str_detect(corpus$clean_text, "surveilance"), 1, 0),
+         unite = if_else(str_detect(corpus$clean_text, "unite"), 1, 0),
+         represent = if_else(str_detect(corpus$clean_text, "represent"), 1, 0),
+         discrimination = if_else(str_detect(corpus$clean_text, "streotype|discrimination|bias|prejudice|scapegoat")),
+         rights = if_else(str_detect(corpus$clean_text, "civil|constitutional|legal")),
+         foreign = if_else(str_detect(corpus$clean_text, "lanago|basilan|mindanao|maguindanao|janijalani|pakistan|bjp|godhra|jewish|indonesia|insurgency|parliament|peninsula|morocco|belgium|uzbekistan")))
+```
