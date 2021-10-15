@@ -87,6 +87,8 @@ unique(corpus$group)
 corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
 
 write.csv(corpus, here("processed_data", "corpus.csv"))
+
+corpus <- read.csv(here("processed_data", "corpus.csv"))
 ```
 
 ## Preproceessing text 
@@ -134,7 +136,7 @@ mod1 <- conText(formula = terror ~ intervention + group,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 20, 
+          num_bootstraps = 200, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
           num_permutations = 200, 
@@ -228,7 +230,7 @@ mod2 <- conText(formula = terror ~ intervention + group,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 20, 
+          num_bootstraps = 200, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
           num_permutations = 200, 
@@ -320,7 +322,7 @@ mod3 <- conText(formula = terror ~ intervention + group,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 20, 
+          num_bootstraps = 200, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
           num_permutations = 200, 
@@ -388,4 +390,9 @@ terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_se
   theme(plot.tag = element_text(size = 8))
 
 ggsave(here("output", "btterrorsep_aa.png"), width = 12, height = 10)
+```
+
+```{r eval = FALSE}
+knitr::purl(here("code", "05_02_embedding_regression_extension.Rmd"),
+            here("code", "05_02_embedding_regression_extension.r"))
 ```

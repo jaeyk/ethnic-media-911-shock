@@ -187,6 +187,8 @@ df2vec <- function(corpus, count_min = 10, window_size = 6, dims = 50) {
 
 get_bt_terms <- function(period_n, group_n, keyword, word_n, group1, group2) {
   
+  set.seed(20211014L)
+  
   contexts <- get_context(x = subset(corpus, intervention == period_n & group == group_n)$clean_text, target = keyword,
                           window = 6, valuetype = "fixed", case_insensitive = TRUE, hard_cut = FALSE, verbose = FALSE)
   

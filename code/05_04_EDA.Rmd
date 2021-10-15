@@ -130,9 +130,10 @@ combined %>%
   ggplot(aes(x = factor(intervention), y = mean, ymax = mean + ci.high, ymin = mean - ci.low, col = Duration)) +
   geom_pointrange() +
   facet_wrap(~group) +
-  ggrepel::geom_text_repel(aes(label = round(mean, 2))) +
+  ggrepel::geom_text_repel(aes(label = scales::percent(round(mean, 2)))) +
   labs(x = "", y = "% of articles published on terror, terrorism, and terrorist",
-       col = "Window size")
+       col = "Window size") +
+  scale_y_continuous(labels = scales::percent)
 
 ggsave(here("output", "mean_diff.png"))
 ```
