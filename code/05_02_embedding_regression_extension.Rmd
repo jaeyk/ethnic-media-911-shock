@@ -114,7 +114,7 @@ corpus <- corpus_copy %>%
 
 ## Local embedding and matrix 
 
-```{r eval = FALSE}
+```{r}
 set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
@@ -128,16 +128,18 @@ save(local_glove, local_transform,
 
 ```{r}
 load(file = here("processed_data/context_bg_ai.Rdata"))
+
+qunat_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+toks <- quanteda::tokens(qunat_corpus)
      
 mod1 <- conText(formula = terror ~ intervention + group, 
-          data = corpus, 
-          text_var = 'clean_text', 
+          data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 200, 
-          stratify_by = c('intervention', 'group'),
+          num_bootstraps = 20, 
+          stratify = TRUE,
           permute = TRUE, 
           num_permutations = 200, 
           window = 6, 
@@ -146,7 +148,7 @@ mod1 <- conText(formula = terror ~ intervention + group,
           hard_cut = FALSE,
           verbose = FALSE)
 
-plot_tibble1 <- mod1$normed_betas %>% 
+plot_tibble1 <- mod1@normed_cofficients %>% 
   mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
   mutate(Coefficient = factor(Coefficient, levels = Coefficient))
 
@@ -208,7 +210,7 @@ corpus <- corpus_copy %>%
 
 ## Local embedding and matrix 
 
-```{r eval = FALSE}
+```{r}
 set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
@@ -223,24 +225,26 @@ save(local_glove, local_transform,
 ```{r}
 load(file = here("processed_data/context_bg_af.Rdata"))
 
+qunat_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+toks <- quanteda::tokens(qunat_corpus)
+     
 mod2 <- conText(formula = terror ~ intervention + group, 
-          data = corpus, 
-          text_var = 'clean_text', 
+          data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 200, 
-          stratify_by = c('intervention', 'group'),
+          num_bootstraps = 20, 
+          stratify = TRUE,
           permute = TRUE, 
           num_permutations = 200, 
           window = 6, 
           valuetype = 'fixed', 
           case_insensitive = TRUE, 
-          hard_cut = FALSE, 
+          hard_cut = FALSE,
           verbose = FALSE)
 
-plot_tibble2 <- mod2$normed_betas %>% 
+plot_tibble2 <- mod2@normed_cofficients %>% 
   mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
   mutate(Coefficient = factor(Coefficient, levels = Coefficient))
 
@@ -301,7 +305,7 @@ corpus <- corpus_copy %>%
 
 ## Local embedding and matrix 
 
-```{r eval = FALSE}
+```{r}
 set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
@@ -315,36 +319,32 @@ save(local_glove, local_transform,
 ```{r}
 load(here("processed_data/context_bg_aa.Rdata"))
 
+qunat_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+toks <- quanteda::tokens(qunat_corpus)
+     
 mod3 <- conText(formula = terror ~ intervention + group, 
-          data = corpus, 
-          text_var = 'clean_text', 
+          data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 200, 
-          stratify_by = c('intervention', 'group'),
+          num_bootstraps = 20, 
+          stratify = TRUE,
           permute = TRUE, 
           num_permutations = 200, 
           window = 6, 
           valuetype = 'fixed', 
           case_insensitive = TRUE, 
-          hard_cut = FALSE, 
+          hard_cut = FALSE,
           verbose = FALSE)
 
-plot_tibble3 <- mod3$normed_betas %>% 
+plot_tibble3 <- mod3@normed_cofficients %>% 
   mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
   mutate(Coefficient = factor(Coefficient, levels = Coefficient))
 
 kable(plot_tibble3)
-
-mean(mod1$normed_betas$Normed_Estimate[1]/mod1$normed_betas$Normed_Estimate[2],
-mod2$normed_betas$Normed_Estimate[1]/mod2$normed_betas$Normed_Estimate[2],
-mod3$normed_betas$Normed_Estimate[1]/mod3$normed_betas$Normed_Estimate[2])
 ```
-Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
-9/11 attacks	52.51782	6.066866	0.315
-Arab American	29.20984	2.607220	0.285
+
 
 ```{r}
 reg_plot3 <- plot_tibble3 %>%
@@ -363,14 +363,6 @@ reg_plot3 <- plot_tibble3 %>%
 reg_plot3
 
 ggsave(here("output", "embedreg_aa.png"))
-
-(reg_plot1) /
-(reg_plot2) /
-(reg_plot3) +
-  plot_annotation(tag_levels = 'A') & 
-  theme(plot.tag = element_text(size = 8))
-
-ggsave(here("output", "embedreg_all.png"), height = 10)
 ```
 
 ## Nearest neighbors 
@@ -392,7 +384,45 @@ terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_se
 ggsave(here("output", "btterrorsep_aa.png"), width = 12, height = 10)
 ```
 
-```{r eval = FALSE}
-knitr::purl(here("code", "05_02_embedding_regression_extension.Rmd"),
-            here("code", "05_02_embedding_regression_extension.r"))
+# Summary 
+
+## Ratio 
+
+```{r}
+round(mean(mod1@normed_cofficients$Normed_Estimate[1]/mod1@normed_cofficients$Normed_Estimate[2],
+mod2@normed_cofficients$Normed_Estimate[1]/mod2@normed_cofficients$Normed_Estimate[2],
+mod3@normed_cofficients$Normed_Estimate[1]/mod3@normed_cofficients$Normed_Estimate[2]), 2)
+
+# 1.18
+```
+
+## Plot 
+
+```{r}
+sums <- data.frame(estimate = 
+             c(mod1@normed_cofficients$Normed_Estimate[1],
+             mod2@normed_cofficients$Normed_Estimate[1],
+             mod3@normed_cofficients$Normed_Estimate[1], mod1@normed_cofficients$Normed_Estimate[2],
+             mod2@normed_cofficients$Normed_Estimate[2],
+             mod3@normed_cofficients$Normed_Estimate[2]),
+           std.error = 
+             c(mod1@normed_cofficients$Std.Error[1], mod2@normed_cofficients$Std.Error[1], mod3@normed_cofficients$Std.Error[1],
+               mod1@normed_cofficients$Std.Error[2], mod2@normed_cofficients$Std.Error[2], mod3@normed_cofficients$Std.Error[2]),
+           group = rep(c("Indian American", "Filipino American", "Asian American"),2),
+           type = rep(c("Intervention", "Group"), each = 3))
+```
+
+```{r}
+sums %>%
+  ggplot(aes(x = fct_reorder(group, estimate), y = estimate, ymax = estimate + 1.96*std.error, ymin = estimate - 1.96*std.error, col = type)) +
+  geom_pointrange() +
+  labs(title = "Overall context comparison",
+       x = "Comparison group",
+       y = "Norm of beta hats",
+       col = "Covavriate") +
+  geom_text(label = round(sums$estimate, 2),
+            position = position_dodge(width = 0.9),
+            vjust = -0.5)
+
+ggsave(here("output", "embedreg_all.png"))
 ```
