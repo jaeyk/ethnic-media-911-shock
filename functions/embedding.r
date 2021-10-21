@@ -139,8 +139,8 @@ df2ltm <- function(corpus, local_glove, count_min = 10, window_size = 6) {
   # subset fcm to the vocabulary included in the embeddings
   fcm_cr <- fcm_select(fcm_cr, pattern = vocab_pruned$term, selection = "keep")
   
-  local_transform <- compute_transform(context_fcm = fcm_cr, pre_trained = local_glove,
-                                       vocab = vocab_pruned, weighting = 1000)
+  local_transform <- compute_transform(x = fcm_cr, pre_trained = local_glove,
+                                       weighting = 'log')
   
   return(local_transform)
 }

@@ -1,5 +1,8 @@
 .Rproj.user
 .Rhistory
 .Ruserdata
+.rds 
+.PDF
 slides/*
 raw_data/*
+processed_data/*

@@ -1,0 +1,258 @@
+---
+title: "Embedding regression"
+author: "Jae Yeon Kim"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages 
+
+```{r}
+
+# Import pkgs
+pacman::p_load(
+  tidyverse,
+  lubridate, 
+  purrr,
+  furrr,
+  tm,
+  quanteda, 
+  here,
+  tidytext, # text analysis 
+  textclean,
+  textstem, 
+  ggthemes,
+  text2vec, # word embedding 
+  widyr,
+  patchwork, # arranging ggplots
+  glue,
+  # deep learning 
+  text2vec,
+  # network graph
+  igraph,
+  ggraph,
+  # structural breakpoint
+  strucchange,
+  pbapply,
+  kableExtra
+)
+
+devtools::install_github("prodriguezsosa/conText")
+
+library(conText)
+
+theme_set(theme_clean())
+
+source(here("functions", "embedding.r"))
+```
+
+
+## Load data 
+
+```{r}
+df <- read.csv(here("processed_data/cleaned_text.csv")) 
+
+df <- df %>%
+  mutate(group = if_else(str_detect(source, "Arab"), "Arab", "Indian"))
+
+df <- df %>%
+  select(c("text","source","date", "group"))
+
+filipino <- read.csv(here("processed_data", "filipino.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "Filipino")
+
+aapi <- read.csv(here("processed_data", "aapi.csv")) %>%
+  select(c("text","source","date")) %>%
+  mutate(group = "AAPI")
+
+aapi$date <- dmy(aapi$date)
+filipino$date <- dmy(filipino$date)
+
+df$date <- as.Date(df$date)
+```
+
+```{r}
+corpus <- bind_rows(df, filipino, aapi)
+
+unique(corpus$group)
+```
+
+```{r}
+# Create dummy variables 
+corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
+
+write.csv(corpus, here("processed_data", "corpus.csv"))
+```
+
+## Preproceessing text 
+
+```{r}
+corpus <- corpus %>% 
+  filter(intervention == 1)
+
+corpus$clean_text <- clean_text(corpus$text)
+
+corpus <- corpus %>% 
+  filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
+
+corpus_copy <- corpus
+```
+
+# Arab + Indian  
+
+## Subsetted data 
+
+```{r}
+corpus <- corpus_copy %>%
+  filter(group %in% c("Arab", "Indian")) %>%
+  mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+```
+
+## Local embedding and matrix 
+
+```{r}
+set.seed(20201008L)
+local_glove <- df2vec(corpus)
+local_transform <- df2ltm(corpus, local_glove)
+
+save(local_glove, local_transform, 
+     file = here("processed_data/context_bg_ai_post.Rdata"))
+```
+
+## ALC embedding approach 
+
+```{r}
+corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+toks <- quanteda::tokens(corpus)
+
+mod1 <- conText(formula = terror ~ group, 
+          data = toks, 
+          pre_trained = local_glove,
+          transform = TRUE, 
+          transform_matrix = local_transform, 
+          bootstrap = TRUE, 
+          num_bootstraps = 20, 
+          stratify = TRUE,
+          permute = TRUE, 
+          num_permutations = 200, 
+          window = 6, 
+          valuetype = 'fixed', 
+          case_insensitive = TRUE, 
+          hard_cut = FALSE,
+          verbose = FALSE)
+```
+# Arab + Fipilino
+
+## Subsetted data 
+
+```{r}
+corpus <- corpus_copy %>%
+  filter(group %in% c("Arab", "Filipino")) %>%
+  mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+```
+
+## Local embedding and matrix 
+
+```{r}
+set.seed(20201008L)
+local_glove <- df2vec(corpus)
+local_transform <- df2ltm(corpus, local_glove)
+
+save(local_glove, local_transform, 
+     file = here("processed_data/context_bg_af_post.Rdata"))
+```
+
+## ALC embedding approach 
+
+```{r}
+corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+toks <- quanteda::tokens(corpus)
+
+mod2 <- conText(formula = terror ~ group, 
+          data = toks, 
+          pre_trained = local_glove,
+          transform = TRUE, 
+          transform_matrix = local_transform, 
+          bootstrap = TRUE, 
+          num_bootstraps = 20, 
+          stratify = TRUE,
+          permute = TRUE, 
+          num_permutations = 200, 
+          window = 6, 
+          valuetype = 'fixed', 
+          case_insensitive = TRUE, 
+          hard_cut = FALSE,
+          verbose = FALSE)
+```
+
+# Arab + AAPI
+
+## Subsetted data 
+
+```{r}
+corpus <- corpus_copy %>%
+  filter(group %in% c("Arab", "AAPI")) %>%
+  mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+```
+
+## Local embedding and matrix 
+
+```{r}
+set.seed(20201008L)
+local_glove <- df2vec(corpus)
+local_transform <- df2ltm(corpus, local_glove)
+
+save(local_glove, local_transform, 
+     file = here("processed_data/context_bg_aa_post.Rdata"))
+```
+
+## ALC embedding approach 
+
+
+```{r}
+corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+toks <- quanteda::tokens(corpus)
+
+mod3 <- conText(formula = terror ~ group, 
+          data = toks, 
+          pre_trained = local_glove,
+          transform = TRUE, 
+          transform_matrix = local_transform, 
+          bootstrap = TRUE, 
+          num_bootstraps = 20, 
+          stratify = TRUE,
+          permute = TRUE, 
+          num_permutations = 200, 
+          window = 6, 
+          valuetype = 'fixed', 
+          case_insensitive = TRUE, 
+          hard_cut = FALSE,
+          verbose = FALSE)
+```
+
+```{r}
+sums <- data.frame(estimate = 
+             c(mod1@normed_cofficients$Normed_Estimate,
+             mod2@normed_cofficients$Normed_Estimate,
+             mod3@normed_cofficients$Normed_Estimate),
+           std.error = 
+             c(mod1@normed_cofficients$Std.Error, mod2@normed_cofficients$Std.Error, mod3@normed_cofficients$Std.Error),
+           group = c("Indian American", "Filipino American", "Asian American"))
+
+sums %>%
+  ggplot(aes(x = fct_reorder(group, estimate), y = estimate, ymax = estimate + 1.96*std.error, ymin = estimate - 1.96*std.error)) +
+  geom_pointrange() +
+  labs(title = "Post 9/11 context comparison",
+       x = "Comparison group",
+       y = "Norm of beta hats") +
+  geom_text(label = round(sums$estimate, 2),
+            position = position_dodge(width = 0.9),
+            vjust = -0.5)
+
+ggsave(here("output", "post911_group.png"))
+```
