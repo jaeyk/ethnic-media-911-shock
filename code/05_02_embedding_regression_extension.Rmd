@@ -87,6 +87,8 @@ unique(corpus$group)
 corpus$intervention <- if_else(corpus$date >= as.Date("2001-09-11"), 1, 0)
 
 write.csv(corpus, here("processed_data", "corpus.csv"))
+
+corpus <- read.csv(here("processed_data", "corpus.csv"))
 ```
 
 ## Preproceessing text 
@@ -112,7 +114,7 @@ corpus <- corpus_copy %>%
 
 ## Local embedding and matrix 
 
-```{r}
+```{r eval = FALSE}
 set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
@@ -125,6 +127,8 @@ save(local_glove, local_transform,
 
 
 ```{r}
+load(file = here("processed_data/context_bg_ai.Rdata"))
+     
 mod1 <- conText(formula = terror ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
@@ -132,7 +136,7 @@ mod1 <- conText(formula = terror ~ intervention + group,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 20, 
+          num_bootstraps = 200, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
           num_permutations = 200, 
@@ -148,9 +152,10 @@ plot_tibble1 <- mod1$normed_betas %>%
 
 kable(plot_tibble1)
 ```
+
 Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
-9/11 attacks	0.1232869	0.0013949	0
-Arab American	0.2121369	0.0016851	0
+9/11 attacks	0.2631970	0.0075927	0.14
+Arab American	0.2199773	0.0054957	0.00
 
 ```{r}
 reg_plot1 <- plot_tibble1 %>%
@@ -203,7 +208,7 @@ corpus <- corpus_copy %>%
 
 ## Local embedding and matrix 
 
-```{r}
+```{r eval = FALSE}
 set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
@@ -216,6 +221,8 @@ save(local_glove, local_transform,
 
 
 ```{r}
+load(file = here("processed_data/context_bg_af.Rdata"))
+
 mod2 <- conText(formula = terror ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
@@ -223,7 +230,7 @@ mod2 <- conText(formula = terror ~ intervention + group,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 20, 
+          num_bootstraps = 200, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
           num_permutations = 200, 
@@ -241,8 +248,8 @@ kableExtra::kable(plot_tibble2)
 ```
 
 Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
-9/11 attacks	0.6490103	0.0189908	0
-Arab American	1.2189990	0.0076688	0
+9/11 attacks	1.7252518	0.0977760	0.005
+Arab American	0.9729713
 
 ```{r}
 reg_plot2 <- plot_tibble2 %>%
@@ -294,7 +301,7 @@ corpus <- corpus_copy %>%
 
 ## Local embedding and matrix 
 
-```{r}
+```{r eval = FALSE}
 set.seed(20201008L)
 local_glove <- df2vec(corpus)
 local_transform <- df2ltm(corpus, local_glove)
@@ -305,8 +312,9 @@ save(local_glove, local_transform,
 
 ## ALC embedding approach 
 
-
 ```{r}
+load(here("processed_data/context_bg_aa.Rdata"))
+
 mod3 <- conText(formula = terror ~ intervention + group, 
           data = corpus, 
           text_var = 'clean_text', 
@@ -314,7 +322,7 @@ mod3 <- conText(formula = terror ~ intervention + group,
           transform = TRUE, 
           transform_matrix = local_transform, 
           bootstrap = TRUE, 
-          num_bootstraps = 20, 
+          num_bootstraps = 200, 
           stratify_by = c('intervention', 'group'),
           permute = TRUE, 
           num_permutations = 200, 
@@ -335,8 +343,8 @@ mod2$normed_betas$Normed_Estimate[1]/mod2$normed_betas$Normed_Estimate[2],
 mod3$normed_betas$Normed_Estimate[1]/mod3$normed_betas$Normed_Estimate[2])
 ```
 Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
-9/11 attacks	0.6490103	0.0189908	0
-Arab American	1.2189990	0.0076688	0
+9/11 attacks	52.51782	6.066866	0.315
+Arab American	29.20984	2.607220	0.285
 
 ```{r}
 reg_plot3 <- plot_tibble3 %>%
@@ -362,8 +370,7 @@ ggsave(here("output", "embedreg_aa.png"))
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 
-ggsave(here("output", "embedreg_all.png"),
-       height = 15)
+ggsave(here("output", "embedreg_all.png"), height = 10)
 ```
 
 ## Nearest neighbors 
@@ -383,4 +390,9 @@ terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_se
   theme(plot.tag = element_text(size = 8))
 
 ggsave(here("output", "btterrorsep_aa.png"), width = 12, height = 10)
+```
+
+```{r eval = FALSE}
+knitr::purl(here("code", "05_02_embedding_regression_extension.Rmd"),
+            here("code", "05_02_embedding_regression_extension.r"))
 ```
