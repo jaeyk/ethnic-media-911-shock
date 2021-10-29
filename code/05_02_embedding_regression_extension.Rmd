@@ -78,8 +78,12 @@ df$date <- as.Date(df$date)
 
 ```{r}
 corpus <- bind_rows(df, filipino, aapi)
+```
 
+```{r eval = FALSE}
 unique(corpus$group)
+
+unique(corpus$source)
 ```
 
 ```{r}
@@ -100,6 +104,35 @@ corpus <- corpus %>%
   filter(!str_detect(clean_text, "film|cartoon|festival|music|dance"))
 
 corpus_copy <- corpus
+```
+
+```{r eval = FALSE}
+corpus_copy %>%
+  group_by(group) %>%
+  summarise(n = n(),
+            min = min(date),
+            max = max(date))
+
+nrow(corpus_copy)
+
+corpus_copy %>%
+  group_by(source) %>%
+  summarise(n = n())
+```
+
+```{r eval = FALSE}
+sum(str_detect(corpus$clean_text, "terror"))/nrow(corpus)
+
+sum(str_detect(corpus$clean_text, "terror"))
+
+str_counts <- corpus %>%
+  group_by(group) %>%
+  summarize(word_count = str_count(clean_text))
+
+str_counts %>%
+  group_by(group) %>%
+  summarize(mean = round(mean(word_count),0),
+            se = round(std(word_count),0))
 ```
 
 # Arab + Indian  

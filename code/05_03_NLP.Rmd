@@ -1,0 +1,133 @@
+---
+title: "NLP"
+author: "Jae Yeon Kim"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages 
+
+```{r}
+
+# Import pkgs
+pacman::p_load(
+  tidyverse,
+  lubridate, 
+  purrr,
+  furrr,
+  tm,
+  quanteda, 
+  here,
+  tidytext, # text analysis 
+  textclean,
+  textstem, 
+  text2vec, 
+  spacyr, 
+  ggthemes,
+  # deep learning 
+  kableExtra
+)
+
+theme_set(theme_clean())
+
+source(here("functions", "embedding.r"))
+```
+
+
+## Load data 
+
+```{r}
+corpus <- read.csv(here("processed_data", "eda_version.csv"))
+```
+
+```{r}
+parse_corpus <- spacy_parse(corpus$text, tag = FALSE, lemma = FALSE, entity = TRUE, nounphrase = TRUE)
+
+geo_list <- entity_extract(parse_corpus, type = "named") %>%
+  filter(entity_type %in% c("GPE", "LOC"))
+
+org_list <- entity_extract(parse_corpus, type = "named") %>%
+  filter(entity_type == "ORG")
+
+person_list <- entity_extract(parse_corpus, type = "named") %>%
+  filter(entity_type == "PERSON")
+
+save(geo_list, org_list, person_list, file = here("processed_data", "entity_list.RData"))
+```
+
+```{r}
+load(here("processed_data", "entity_list.RData"))
+```
+
+# Unique lists 
+
+```{r}
+
+corpus$doc_id <- glue("text{1:nrow(corpus)}")
+
+geo_df <- left_join(geo_list, corpus %>%
+                        select(text, date, source, group, intervention, doc_id))
+
+label_geo <- data.frame(geos = unique(geo_df$entity), 
+           region = NA,
+           country = NA
+           )
+
+saveRDS(label_geo, here("processed_data", "label_geo.rds"))
+
+label_geo %>%
+  mutate(region = if_else(str_detect(geos, "United_States|USA"), "US", "Non-US")) %>%
+  filter(region != "Non-US")
+```
+
+# Adding keywords 
+
+```{r}
+terrorism_dic <- c("terror", "terrorism", "terrorist")
+```
+
+```{r}
+corpus <- corpus %>%
+  mutate(terror = if_else(str_detect(corpus$clean_text, "terror|terrorist|terrorism"), 1, 0))
+```
+
+# Tracking the trend 
+
+```{r}
+all <- corpus %>%
+  group_by(intervention, group) %>%
+  summarise(mean = mean(terror),
+            ci.high = ci.high(terror),
+            ci.low = ci.low(terror)) %>%
+  mutate(Duration = "10 Year")
+
+one_year <- corpus %>%
+  mutate(date = as.Date(date)) %>%
+  filter(date >= as.Date("2000-01-1") & date <= as.Date("2002-12-31")) %>%
+  group_by(intervention, group) %>%
+  summarise(mean = mean(terror),
+            ci.high = ci.high(terror),
+            ci.low = ci.low(terror)) %>%
+  mutate(Duration = "2 Year")
+
+combined <- bind_rows(all, one_year)
+
+combined %>%
+  mutate(intervention = recode(intervention, 
+    `0` = "Pre-9/11",
+    `1` = "Post-9/11")) %>%
+  mutate(intervention = factor(intervention, levels = c("Pre-9/11", "Post-9/11"))) %>%
+  ggplot(aes(x = factor(intervention), y = mean, ymax = mean + ci.high, ymin = mean - ci.low, col = Duration)) +
+  geom_pointrange() +
+  facet_wrap(~group) +
+  ggrepel::geom_text_repel(aes(label = scales::percent(round(mean, 2)))) +
+  labs(x = "", y = "% of articles published on terror, terrorism, and terrorist",
+       col = "Window size") +
+  scale_y_continuous(labels = scales::percent)
+
+ggsave(here("output", "mean_diff.png"))
+```

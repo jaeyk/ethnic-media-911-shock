@@ -1,4 +1,6 @@
 
+std <- function(x) sd(x)/sqrt(length(x))
+
 find_close_words <- function(wv, word, n) {
   word_out <- wv[word, , drop = F]
   cos_sim <- sim2(x = wv, y = word_out, method = "cosine", norm = "l2")

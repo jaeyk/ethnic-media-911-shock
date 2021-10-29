@@ -1,7 +1,6 @@
 ## ----setup, include=FALSE----------------
 knitr::opts_chunk$set(echo = TRUE)
 
-
 ## ----------------------------------------
 
 # Import pkgs
@@ -86,15 +85,6 @@ get_mean_mod <- function(corpus_copy) {
   quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
   toks <- quanteda::tokens(quant_corpus)
   
-  ## ----eval = FALSE------------------------
-  ## set.seed(20201008L)
-  ## local_glove <- df2vec(corpus)
-  ## local_transform <- df2ltm(corpus, local_glove)
-  ## 
-  ## save(local_glove, local_transform,
-  ##      file = here("processed_data/context_bg_af.Rdata"))
-  
-  
   ## ----------------------------------------
   load(file = here("processed_data/context_bg_af.Rdata"))
   
@@ -124,6 +114,9 @@ get_mean_mod <- function(corpus_copy) {
   
   ## ----------------------------------------
   load(here("processed_data/context_bg_aa.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
   
   mod3 <- conText(formula = terror ~ intervention + group, 
                   data = toks, 
