@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 # Load packages 
 
 ```{r}
-
 # Import pkgs
 pacman::p_load(
   tidyverse,
@@ -35,6 +34,7 @@ pacman::p_load(
 theme_set(theme_clean())
 
 source(here("functions", "embedding.r"))
+source(here("functions", "utils.r"))
 ```
 
 
@@ -42,6 +42,8 @@ source(here("functions", "embedding.r"))
 
 ```{r}
 corpus <- read.csv(here("processed_data", "eda_version.csv"))
+
+dim(corpus)
 ```
 
 ```{r}
@@ -66,56 +68,50 @@ load(here("processed_data", "entity_list.RData"))
 # Unique lists 
 
 ```{r}
-
 corpus$doc_id <- glue("text{1:nrow(corpus)}")
 
 geo_df <- left_join(geo_list, corpus %>%
                         select(text, date, source, group, intervention, doc_id))
 
-label_geo <- data.frame(geos = unique(geo_df$entity), 
-           region = NA,
-           country = NA
-           )
+saveRDS(geo_df, here("processed_data", "geo_df.rds"))
+
+label_geo <- data.frame(entity = unique(geo_df$entity))
 
 saveRDS(label_geo, here("processed_data", "label_geo.rds"))
-
-label_geo %>%
-  mutate(region = if_else(str_detect(geos, "United_States|USA"), "US", "Non-US")) %>%
-  filter(region != "Non-US")
-```
-
-# Adding keywords 
-
-```{r}
-terrorism_dic <- c("terror", "terrorism", "terrorist")
 ```
 
 ```{r}
-corpus <- corpus %>%
-  mutate(terror = if_else(str_detect(corpus$clean_text, "terror|terrorist|terrorism"), 1, 0))
+us_geo <- add_US_location(df = label_geo)
+
+geo_joined <- left_join(geo_df, us_geo)
+
+geo_tagged <- geo_joined %>%
+  group_by(doc_id, date, intervention, group) %>%
+  summarize(mean = mean(US_location)) %>%
+  mutate(us_dummy = if_else(mean > 0, 1, 0))
 ```
 
-# Tracking the trend 
-
 ```{r}
-all <- corpus %>%
+all <- geo_tagged %>%
   group_by(intervention, group) %>%
-  summarise(mean = mean(terror),
-            ci.high = ci.high(terror),
-            ci.low = ci.low(terror)) %>%
+  summarise(mean = mean(us_dummy),
+            ci.high = ci.high(us_dummy),
+            ci.low = ci.low(us_dummy)) %>%
   mutate(Duration = "10 Year")
 
-one_year <- corpus %>%
+one_year <- geo_tagged %>%
   mutate(date = as.Date(date)) %>%
   filter(date >= as.Date("2000-01-1") & date <= as.Date("2002-12-31")) %>%
   group_by(intervention, group) %>%
-  summarise(mean = mean(terror),
-            ci.high = ci.high(terror),
-            ci.low = ci.low(terror)) %>%
+  summarise(mean = mean(us_dummy),
+            ci.high = ci.high(us_dummy),
+            ci.low = ci.low(us_dummy)) %>%
   mutate(Duration = "2 Year")
 
 combined <- bind_rows(all, one_year)
+```
 
+```{r}
 combined %>%
   mutate(intervention = recode(intervention, 
     `0` = "Pre-9/11",
@@ -125,9 +121,19 @@ combined %>%
   geom_pointrange() +
   facet_wrap(~group) +
   ggrepel::geom_text_repel(aes(label = scales::percent(round(mean, 2)))) +
-  labs(x = "", y = "% of articles published on terror, terrorism, and terrorist",
-       col = "Window size") +
+  labs(x = "", y = "% of articles mentioned US states, cities, and counties",
+       col = "Window size",
+       title = "Increasing interest in US",
+       subtitle = "All articles mentioned Muslim/Muslims") +
   scale_y_continuous(labels = scales::percent)
 
 ggsave(here("output", "mean_diff.png"))
+```
+
+```{r}
+geo_joined %>%
+  filter(group == "Arab" & intervention == 0) %>%
+  filter(US_location == 1) %>%
+  select(text) %>%
+  unique()
 ```

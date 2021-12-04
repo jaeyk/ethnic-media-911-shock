@@ -55,13 +55,29 @@ get_mean_mod <- function(corpus_copy) {
     filter(group %in% c("Arab", "Indian")) %>%
     mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
 
-  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-  toks <- quanteda::tokens(quant_corpus)
+  quant_corpus <- quanteda::corpus(
+    corpus, 
+    text_field = "clean_text")
+  
+  # remove unncessary elements 
+  toks <- quanteda::tokens(quant_corpus,  
+                           remove_punct = T, 
+                           remove_symbols = T, 
+                           remove_numbers = T, 
+                           remove_separators = T)
+  
+  # only use features that appear at least 5 times in the corpus
+  feats <- dfm(toks, verbose = TRUE) %>% 
+    dfm_trim(min_termfreq = 5) %>% 
+    featnames()
+  
+  # leave the pads 
+  toks <- tokens_select(toks, feats, padding = TRUE)
   
     ## ----------------------------------------
   load(file = here("processed_data/context_bg_ai.Rdata"))
        
-  mod1 <- conText(formula = terror ~ intervention + group, 
+  mod1 <- conText(formula = terror ~ pattern.intervention + pattern.group, 
                   data = toks, 
                   pre_trained = local_glove,
                   transform = TRUE, 
@@ -82,16 +98,48 @@ get_mean_mod <- function(corpus_copy) {
     filter(group %in% c("Arab", "Filipino")) %>%
     mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
   
-  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-  toks <- quanteda::tokens(quant_corpus)
+  quant_corpus <- quanteda::corpus(
+    corpus, 
+    text_field = "clean_text")
+  
+  # remove unncessary elements 
+  toks <- quanteda::tokens(quant_corpus,  
+                           remove_punct = T, 
+                           remove_symbols = T, 
+                           remove_numbers = T, 
+                           remove_separators = T)
+  
+  # only use features that appear at least 5 times in the corpus
+  feats <- dfm(toks, verbose = TRUE) %>% 
+    dfm_trim(min_termfreq = 5) %>% 
+    featnames()
+  
+  # leave the pads 
+  toks <- tokens_select(toks, feats, padding = TRUE)
   
   ## ----------------------------------------
   load(file = here("processed_data/context_bg_af.Rdata"))
   
-  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-  toks <- quanteda::tokens(quant_corpus)
+  quant_corpus <- quanteda::corpus(
+    corpus, 
+    text_field = "clean_text")
   
-  mod2 <- conText(formula = terror ~ intervention + group, 
+  # remove unncessary elements 
+  toks <- quanteda::tokens(quant_corpus,  
+                           remove_punct = T, 
+                           remove_symbols = T, 
+                           remove_numbers = T, 
+                           remove_separators = T)
+  
+  # only use features that appear at least 5 times in the corpus
+  feats <- dfm(toks, verbose = TRUE) %>% 
+    dfm_trim(min_termfreq = 5) %>% 
+    featnames()
+  
+  # leave the pads 
+  toks <- tokens_select(toks, feats, padding = TRUE)
+  
+  mod2 <- conText(formula = terror ~ pattern.intervention + pattern.group, 
                   data = toks, 
                   pre_trained = local_glove,
                   transform = TRUE, 
@@ -115,10 +163,26 @@ get_mean_mod <- function(corpus_copy) {
   ## ----------------------------------------
   load(here("processed_data/context_bg_aa.Rdata"))
   
-  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-  toks <- quanteda::tokens(quant_corpus)
+  quant_corpus <- quanteda::corpus(
+    corpus, 
+    text_field = "clean_text")
   
-  mod3 <- conText(formula = terror ~ intervention + group, 
+  # remove unncessary elements 
+  toks <- quanteda::tokens(quant_corpus,  
+                           remove_punct = T, 
+                           remove_symbols = T, 
+                           remove_numbers = T, 
+                           remove_separators = T)
+  
+  # only use features that appear at least 5 times in the corpus
+  feats <- dfm(toks, verbose = TRUE) %>% 
+    dfm_trim(min_termfreq = 5) %>% 
+    featnames()
+  
+  # leave the pads 
+  toks <- tokens_select(toks, feats, padding = TRUE)
+  
+  mod3 <- conText(formula = terror ~ pattern.intervention + pattern.group, 
                   data = toks, 
                   pre_trained = local_glove,
                   transform = TRUE, 
@@ -134,9 +198,9 @@ get_mean_mod <- function(corpus_copy) {
                   hard_cut = FALSE,
                   verbose = FALSE)
   
-  out <- mean(mod1@normed_cofficients$Normed_Estimate[1]/mod1@normed_cofficients$Normed_Estimate[2],
-              mod2@normed_cofficients$Normed_Estimate[1]/mod2@normed_cofficients$Normed_Estimate[2],
-              mod3@normed_cofficients$Normed_Estimate[1]/mod3@normed_cofficients$Normed_Estimate[2])
+  out <- mean(mod1@normed_cofficients$normed.estimate[1]/mod1@normed_cofficients$normed.estimate[2],
+              mod2@normed_cofficients$normed.estimate[1]/mod2@normed_cofficients$normed.estimate[2],
+              mod3@normed_cofficients$normed.estimate[1]/mod3@normed_cofficients$normed.estimate[2])
   
   return(out)
 }

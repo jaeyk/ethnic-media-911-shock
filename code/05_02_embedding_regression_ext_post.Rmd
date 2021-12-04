@@ -127,10 +127,28 @@ save(local_glove, local_transform,
 ## ALC embedding approach 
 
 ```{r}
-corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-toks <- quanteda::tokens(corpus)
+load(file = here("processed_data/context_bg_ai_post.Rdata"))
 
-mod1 <- conText(formula = terror ~ group, 
+quant_corpus <- quanteda::corpus(
+  corpus, 
+  text_field = "clean_text")
+
+# remove unncessary elements 
+toks <- quanteda::tokens(quant_corpus,  
+                         remove_punct = T, 
+                         remove_symbols = T, 
+                         remove_numbers = T, 
+                         remove_separators = T)
+
+# only use features that appear at least 5 times in the corpus
+feats <- dfm(toks, verbose = TRUE) %>% 
+  dfm_trim(min_termfreq = 5) %>% 
+  featnames()
+
+# leave the pads 
+toks <- tokens_select(toks, feats, padding = TRUE)
+
+mod1 <- conText(formula = terror ~ pattern.group, 
           data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
@@ -146,6 +164,7 @@ mod1 <- conText(formula = terror ~ group,
           hard_cut = FALSE,
           verbose = FALSE)
 ```
+
 # Arab + Fipilino
 
 ## Subsetted data 
@@ -170,10 +189,26 @@ save(local_glove, local_transform,
 ## ALC embedding approach 
 
 ```{r}
-corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-toks <- quanteda::tokens(corpus)
+quant_corpus <- quanteda::corpus(
+  corpus, 
+  text_field = "clean_text")
 
-mod2 <- conText(formula = terror ~ group, 
+# remove unncessary elements 
+toks <- quanteda::tokens(quant_corpus,  
+                         remove_punct = T, 
+                         remove_symbols = T, 
+                         remove_numbers = T, 
+                         remove_separators = T)
+
+# only use features that appear at least 5 times in the corpus
+feats <- dfm(toks, verbose = TRUE) %>% 
+  dfm_trim(min_termfreq = 5) %>% 
+  featnames()
+
+# leave the pads 
+toks <- tokens_select(toks, feats, padding = TRUE)
+     
+mod2 <- conText(formula = terror ~ pattern.group, 
           data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
@@ -215,10 +250,26 @@ save(local_glove, local_transform,
 
 
 ```{r}
-corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-toks <- quanteda::tokens(corpus)
+quant_corpus <- quanteda::corpus(
+  corpus, 
+  text_field = "clean_text")
 
-mod3 <- conText(formula = terror ~ group, 
+# remove unncessary elements 
+toks <- quanteda::tokens(quant_corpus,  
+                         remove_punct = T, 
+                         remove_symbols = T, 
+                         remove_numbers = T, 
+                         remove_separators = T)
+
+# only use features that appear at least 5 times in the corpus
+feats <- dfm(toks, verbose = TRUE) %>% 
+  dfm_trim(min_termfreq = 5) %>% 
+  featnames()
+
+# leave the pads 
+toks <- tokens_select(toks, feats, padding = TRUE)
+     
+mod3 <- conText(formula = terror ~ pattern.group, 
           data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
@@ -237,12 +288,16 @@ mod3 <- conText(formula = terror ~ group,
 
 ```{r}
 sums <- data.frame(estimate = 
-             c(mod1@normed_cofficients$Normed_Estimate,
-             mod2@normed_cofficients$Normed_Estimate,
-             mod3@normed_cofficients$Normed_Estimate),
+             c(mod1@normed_cofficients$normed.estimate[1],
+             mod2@normed_cofficients$normed.estimate[1],
+             mod3@normed_cofficients$normed.estimate[1], mod1@normed_cofficients$normed.estimate[2],
+             mod2@normed_cofficients$normed.estimate[2],
+             mod3@normed_cofficients$normed.estimate[2]),
            std.error = 
-             c(mod1@normed_cofficients$Std.Error, mod2@normed_cofficients$Std.Error, mod3@normed_cofficients$Std.Error),
-           group = c("Indian American", "Filipino American", "Asian American"))
+             c(mod1@normed_cofficients$std.error[1], mod2@normed_cofficients$std.error[1], mod3@normed_cofficients$std.error[1],
+               mod1@normed_cofficients$std.error[2], mod2@normed_cofficients$std.error[2], mod3@normed_cofficients$std.error[2]),
+           group = rep(c("Indian American", "Filipino American", "Asian American"),2),
+           type = rep(c("Intervention", "Group"), each = 3))
 
 sums %>%
   ggplot(aes(x = fct_reorder(group, estimate), y = estimate, ymax = estimate + 1.96*std.error, ymin = estimate - 1.96*std.error)) +

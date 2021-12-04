@@ -191,8 +191,14 @@ get_bt_terms <- function(period_n, group_n, keyword, word_n, group1, group2) {
   
   set.seed(20211014L)
   
-  contexts <- get_context(x = subset(corpus, intervention == period_n & group == group_n)$clean_text, target = keyword,
-                          window = 6, valuetype = "fixed", case_insensitive = TRUE, hard_cut = FALSE, verbose = FALSE)
+  contexts <- get_context(x = subset(corpus, 
+                          intervention == period_n & group == group_n)$clean_text, 
+                          target = keyword,
+                          window = 6, 
+                          valuetype = "fixed", 
+                          case_insensitive = TRUE, 
+                          hard_cut = FALSE, 
+                          verbose = FALSE)
   
   local_vocab <- get_local_vocab(contexts$context, local_glove)
   
@@ -400,13 +406,13 @@ models2plot_seq <- function(models, key_word) {
     mutate(year = factor(unique(corpus$year), levels = unique(corpus$year)))
   
   plot <- ggplot(plot_tibble,
-                 aes(x = year, y = Normed_Estimate, group = 1)) +
+                 aes(x = year, y = normed.estimate, group = 1)) +
     geom_line(color = 'blue', size = 0.5) +
     geom_pointrange(aes(
       x = year,
-      y = Normed_Estimate,
-      ymin = Normed_Estimate - 1.96*Std.Error,
-      ymax = Normed_Estimate + 1.96*Std.Error),
+      y = normed.estimate,
+      ymin = normed.estimate - 1.96*std.error,
+      ymax = normed.estimate + 1.96*std.error),
       lwd = 0.5,
       position = position_dodge(width = 1/2)) +
     labs(x = "",
@@ -456,8 +462,8 @@ terms2plot <- function(df1, df2, keyword, year) {
     group_by(Term) %>%
     filter(n() > 1) %>%
     ggplot(aes(x = fct_reorder(Term, Estimate), y = Estimate,
-               ymax = Estimate + 1.96*Std.Error,
-               ymin = Estimate - 1.96*Std.Error, col = label)) +
+               ymax = Estimate + 1.96*std.error,
+               ymin = Estimate - 1.96*std.error, col = label)) +
     geom_pointrange() +
     facet_wrap(~intervention) +
     coord_flip() +
@@ -474,11 +480,11 @@ terms2plot <- function(df1, df2, keyword, year) {
 terms2plot_sep <- function(df1, df2, keyword, year) {
   
   bind_rows(df1, df2) %>%
-    group_by(label) %>%
-    top_n(30, Estimate) %>%
-    ggplot(aes(x = fct_reorder(Term, Estimate), y = Estimate,
-               ymax = Estimate + 1.96*Std.Error,
-               ymin = Estimate - 1.96*Std.Error, col = label)) +
+    group_by(feature) %>%
+    top_n(30, value) %>%
+    ggplot(aes(x = fct_reorder(feature, value), y = value,
+               ymax = value + 1.96*std.error,
+               ymin = value - 1.96*std.error, col = label)) +
     geom_pointrange(size = 0.5) +
     facet_wrap(~intervention) +
     coord_flip() +
@@ -490,4 +496,398 @@ terms2plot_sep <- function(df1, df2, keyword, year) {
     theme(legend.position = "bottom") +
     scale_color_brewer(palette = "Dark2")
   
+}
+
+# terror 
+
+get_terror_mod <- function(corpus_copy) {
+  
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Indian")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_ai.Rdata"))
+  
+  mod1 <- conText(formula = terror ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Filipino")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_af.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod2 <- conText(formula = terror ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "AAPI")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  ## ----------------------------------------
+  load(here("processed_data/context_bg_aa.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod3 <- conText(formula = terror ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  out <- list(mod1, mod2, mod3)
+  
+  return(out)
+}
+
+# immigrant 
+
+get_immigrant_mod <- function(corpus_copy) {
+  
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Indian")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_ai.Rdata"))
+  
+  mod1 <- conText(formula = immigrant ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Filipino")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_af.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod2 <- conText(formula = immigrant ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "AAPI")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  ## ----------------------------------------
+  load(here("processed_data/context_bg_aa.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod3 <- conText(formula = immigrant ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  out <- list(mod1, mod2, mod3)
+  
+  return(out)
+}
+
+# criminal 
+
+get_criminal_mod <- function(corpus_copy) {
+  
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Indian")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_ai.Rdata"))
+  
+  mod1 <- conText(formula = criminal  ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Filipino")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_af.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod2 <- conText(formula = criminal  ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "AAPI")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  ## ----------------------------------------
+  load(here("processed_data/context_bg_aa.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod3 <- conText(formula = criminal  ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  out <- list(mod1, mod2, mod3)
+  
+  return(out)
+}
+
+# hate
+
+get_hate_mod <- function(corpus_copy) {
+  
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Indian")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_ai.Rdata"))
+  
+  mod1 <- conText(formula = hate ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "Filipino")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  ## ----------------------------------------
+  load(file = here("processed_data/context_bg_af.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod2 <- conText(formula = hate ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  ## ----------------------------------------
+  corpus <- corpus_copy %>%
+    filter(group %in% c("Arab", "AAPI")) %>%
+    mutate(group = if_else(str_detect(group, "Arab"), 1, 0))
+  
+  ## ----------------------------------------
+  load(here("processed_data/context_bg_aa.Rdata"))
+  
+  quant_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
+  toks <- quanteda::tokens(quant_corpus)
+  
+  mod3 <- conText(formula = hate ~ intervention + group, 
+                  data = toks, 
+                  pre_trained = local_glove,
+                  transform = TRUE, 
+                  transform_matrix = local_transform, 
+                  bootstrap = TRUE, 
+                  num_bootstraps = 20, 
+                  stratify = TRUE,
+                  permute = TRUE, 
+                  num_permutations = 200, 
+                  window = 6, 
+                  valuetype = 'fixed', 
+                  case_insensitive = TRUE, 
+                  hard_cut = FALSE,
+                  verbose = FALSE)
+  
+  out <- list(mod1, mod2, mod3)
+  
+  return(out)
+}
+
+# parse_embed_outputs
+
+parse_embed_out <- function(list.out) {
+
+mod1 <- list.out[[1]]
+mod2 <- list.out[[2]]
+mod3 <- list.out[[3]]
+  
+sums <- data.frame(estimate = 
+                     c(mod1@normed_cofficients$normed.estimate[1],
+                       mod2@normed_cofficients$normed.estimate[1],
+                       mod3@normed_cofficients$normed.estimate[1], mod1@normed_cofficients$normed.estimate[2],
+                       mod2@normed_cofficients$normed.estimate[2],
+                       mod3@normed_cofficients$normed.estimate[2]),
+                   std.error = 
+                     c(mod1@normed_cofficients$std.error[1], mod2@normed_cofficients$std.error[1], mod3@normed_cofficients$std.error[1],
+                       mod1@normed_cofficients$std.error[2], mod2@normed_cofficients$std.error[2], mod3@normed_cofficients$std.error[2]),
+                   p.value = c(mod1@normed_cofficients$p.value[1], mod2@normed_cofficients$p.value[1], mod3@normed_cofficients$p.value[1],
+                               mod1@normed_cofficients$p.value[2], mod2@normed_cofficients$p.value[2], mod3@normed_cofficients$p.value[2]),
+                   group = rep(c("Indian American", "Filipino American", "Asian American"),2),
+                   type = rep(c("Intervention", "Group"), each = 3))
+
+return(sums)
+
 }

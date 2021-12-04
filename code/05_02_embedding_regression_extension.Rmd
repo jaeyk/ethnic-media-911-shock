@@ -106,7 +106,7 @@ corpus <- corpus %>%
 corpus_copy <- corpus
 ```
 
-```{r eval = FALSE}
+```{r}
 corpus_copy %>%
   group_by(group) %>%
   summarise(n = n(),
@@ -121,19 +121,32 @@ corpus_copy %>%
 ```
 
 ```{r eval = FALSE}
-sum(str_detect(corpus$clean_text, "terror"))/nrow(corpus)
+corpus$terror <- str_detect(corpus$clean_text, "terror")
 
-sum(str_detect(corpus$clean_text, "terror"))
+corpus %>%
+  group_by(group, intervention) %>%
+  summarize(n = sum(terror))
 
-str_counts <- corpus %>%
-  group_by(group) %>%
-  summarize(word_count = str_count(clean_text))
-
-str_counts %>%
-  group_by(group) %>%
-  summarize(mean = round(mean(word_count),0),
-            se = round(std(word_count),0))
+(83 - 5)/5
+(371 - 85)/85
+(265 - 55)/55
+(853 - 304)/304
 ```
+
+group
+<chr>
+intervention
+<int>
+n
+<int>
+AAPI	0	5		
+AAPI	1	83		
+Arab	0	85		
+Arab	1	371		
+Filipino	0	55		
+Filipino	1	265		
+Indian	0	304		
+Indian	1	853	
 
 # Arab + Indian  
 
@@ -162,10 +175,26 @@ save(local_glove, local_transform,
 ```{r}
 load(file = here("processed_data/context_bg_ai.Rdata"))
 
-qunat_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-toks <- quanteda::tokens(qunat_corpus)
-     
-mod1 <- conText(formula = terror ~ intervention + group, 
+quant_corpus <- quanteda::corpus(
+  corpus, 
+  text_field = "clean_text")
+
+# remove unncessary elements 
+toks <- quanteda::tokens(quant_corpus,  
+                         remove_punct = T, 
+                         remove_symbols = T, 
+                         remove_numbers = T, 
+                         remove_separators = T)
+
+# only use features that appear at least 5 times in the corpus
+feats <- dfm(toks, verbose = TRUE) %>% 
+  dfm_trim(min_termfreq = 5) %>% 
+  featnames()
+
+# leave the pads 
+toks <- tokens_select(toks, feats, padding = TRUE)
+
+mod1 <- conText(formula = terror ~ pattern.intervention + pattern.group, 
           data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
@@ -182,23 +211,20 @@ mod1 <- conText(formula = terror ~ intervention + group,
           verbose = FALSE)
 
 plot_tibble1 <- mod1@normed_cofficients %>% 
-  mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
-  mutate(Coefficient = factor(Coefficient, levels = Coefficient))
+  as_tibble() %>%
+  mutate(coefficient = c("9/11 attacks", "Arab American")) %>% 
+  mutate(coefficient = factor(coefficient, levels = coefficient))
 
-kable(plot_tibble1)
+plot_tibble1
 ```
-
-Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
-9/11 attacks	0.2631970	0.0075927	0.14
-Arab American	0.2199773	0.0054957	0.00
 
 ```{r}
 reg_plot1 <- plot_tibble1 %>%
-  ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
+  ggplot(aes(x = coefficient, y = normed.estimate)) + 
   geom_bar(position = position_dodge(), 
     stat = "identity", width = 0.5) + 
-  geom_errorbar(aes(ymin = Normed_Estimate - 
-    1.96 * Std.Error, ymax = Normed_Estimate + 1.96 * Std.Error), size = 0.75, width = 0.15, 
+  geom_errorbar(aes(ymin = normed.estimate - 
+    1.96 * std.error, ymax = normed.estimate + 1.96 * std.error), size = 0.75, width = 0.15, 
     position = position_dodge(0.9)) + 
   ylab("Norm of beta hats") + 
   theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
@@ -216,11 +242,11 @@ ggsave(here("output", "embedreg_ai.png"))
 
 ```{r}
 set.seed(20201008L)
-arab_post_bt <- get_bt_terms(1, 1, "terror", 200, "Arab Americans", "Indian Americans")
-indian_post_bt <- get_bt_terms(1, 0, "terror", 200, "Arab Americans", "Indian Americans")
+arab_post_bt <- get_bt_terms(1, 1, "terror", 30, "Arab Americans", "Indian Americans")
+indian_post_bt <- get_bt_terms(1, 0, "terror", 30, "Arab Americans", "Indian Americans")
 
-arab_pre_bt <- get_bt_terms(0, 1, "terror", 200, "Arab Americans", "Indian Americans")
-indian_pre_bt <- get_bt_terms(0, 0, "terror", 200, "Arab Americans", "Indian Americans")
+arab_pre_bt <- get_bt_terms(0, 1, "terror", 30, "Arab Americans", "Indian Americans")
+indian_pre_bt <- get_bt_terms(0, 0, "terror", 30, "Arab Americans", "Indian Americans")
 ```
 
 ```{r}
@@ -258,10 +284,26 @@ save(local_glove, local_transform,
 ```{r}
 load(file = here("processed_data/context_bg_af.Rdata"))
 
-qunat_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-toks <- quanteda::tokens(qunat_corpus)
+quant_corpus <- quanteda::corpus(
+  corpus, 
+  text_field = "clean_text")
+
+# remove unncessary elements 
+toks <- quanteda::tokens(quant_corpus,  
+                         remove_punct = T, 
+                         remove_symbols = T, 
+                         remove_numbers = T, 
+                         remove_separators = T)
+
+# only use features that appear at least 5 times in the corpus
+feats <- dfm(toks, verbose = TRUE) %>% 
+  dfm_trim(min_termfreq = 5) %>% 
+  featnames()
+
+# leave the pads 
+toks <- tokens_select(toks, feats, padding = TRUE)
      
-mod2 <- conText(formula = terror ~ intervention + group, 
+mod2 <- conText(formula = terror ~ pattern.intervention + pattern.group, 
           data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
@@ -278,23 +320,20 @@ mod2 <- conText(formula = terror ~ intervention + group,
           verbose = FALSE)
 
 plot_tibble2 <- mod2@normed_cofficients %>% 
-  mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
-  mutate(Coefficient = factor(Coefficient, levels = Coefficient))
+  as_tibble() %>%
+  mutate(coefficient = c("9/11 attacks", "Arab American")) %>% 
+  mutate(coefficient = factor(coefficient, levels = coefficient))
 
-kableExtra::kable(plot_tibble2)
+plot_tibble2
 ```
-
-Coefficient	Normed_Estimate	Std.Error	Empirical_Pvalue
-9/11 attacks	1.7252518	0.0977760	0.005
-Arab American	0.9729713
 
 ```{r}
 reg_plot2 <- plot_tibble2 %>%
-  ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
+  ggplot(aes(x = coefficient, y = normed.estimate)) + 
   geom_bar(position = position_dodge(), 
     stat = "identity", width = 0.5) + 
-  geom_errorbar(aes(ymin = Normed_Estimate - 
-    1.96 * Std.Error, ymax = Normed_Estimate + 1.96 * Std.Error), size = 0.75, width = 0.15, 
+  geom_errorbar(aes(ymin = normed.estimate - 
+    1.96 * std.error, ymax = normed.estimate + 1.96 * std.error), size = 0.75, width = 0.15, 
     position = position_dodge(0.9)) + 
   ylab("Norm of beta hats") + 
   theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
@@ -311,15 +350,15 @@ ggsave(here("output", "embedreg_af.png"))
 
 ```{r}
 set.seed(20201008L)
-arab_post_bt <- get_bt_terms(1, 1, "terror", 200, "Arab Americans", "Filipino Americans")
-indian_post_bt <- get_bt_terms(1, 0, "terror", 200, "Arab Americans", "Filipino Americans")
+arab_post_bt <- get_bt_terms(1, 1, "terror", 30, "Arab Americans", "Filipino Americans")
+filipino_post_bt <- get_bt_terms(1, 0, "terror", 30, "Arab Americans", "Filipino Americans")
 
-arab_pre_bt <- get_bt_terms(0, 1, "terror", 200, "Arab Americans", "Filipino Americans")
-indian_pre_bt <- get_bt_terms(0, 0, "terror", 200, "Arab Americans", "Filipino Americans")
+arab_pre_bt <- get_bt_terms(0, 1, "terror", 30, "Arab Americans", "Filipino Americans")
+filipino_pre_bt <- get_bt_terms(0, 0, "terror", 30, "Arab Americans", "Filipino Americans")
 ```
 
 ```{r}
-terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "terror", "Post-9/11") + 
+terms2plot_sep(arab_pre_bt, filipino_pre_bt, "terror", "Pre-9/11") + terms2plot_sep(arab_post_bt, filipino_post_bt, "terror", "Post-9/11") + 
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 
@@ -352,10 +391,26 @@ save(local_glove, local_transform,
 ```{r}
 load(here("processed_data/context_bg_aa.Rdata"))
 
-qunat_corpus <- quanteda::corpus(corpus, text_field = "clean_text")
-toks <- quanteda::tokens(qunat_corpus)
+quant_corpus <- quanteda::corpus(
+  corpus, 
+  text_field = "clean_text")
+
+# remove unncessary elements 
+toks <- quanteda::tokens(quant_corpus,  
+                         remove_punct = T, 
+                         remove_symbols = T, 
+                         remove_numbers = T, 
+                         remove_separators = T)
+
+# only use features that appear at least 5 times in the corpus
+feats <- dfm(toks, verbose = TRUE) %>% 
+  dfm_trim(min_termfreq = 5) %>% 
+  featnames()
+
+# leave the pads 
+toks <- tokens_select(toks, feats, padding = TRUE)
      
-mod3 <- conText(formula = terror ~ intervention + group, 
+mod3 <- conText(formula = terror ~ pattern.intervention + pattern.group, 
           data = toks, 
           pre_trained = local_glove,
           transform = TRUE, 
@@ -372,20 +427,21 @@ mod3 <- conText(formula = terror ~ intervention + group,
           verbose = FALSE)
 
 plot_tibble3 <- mod3@normed_cofficients %>% 
-  mutate(Coefficient = c("9/11 attacks", "Arab American")) %>% 
-  mutate(Coefficient = factor(Coefficient, levels = Coefficient))
+  as_tibble() %>%
+  mutate(coefficient = c("9/11 attacks", "Arab American")) %>% 
+  mutate(coefficient = factor(coefficient, levels = coefficient))
 
-kable(plot_tibble3)
+plot_tibble3
 ```
 
 
 ```{r}
 reg_plot3 <- plot_tibble3 %>%
-  ggplot(aes(x = Coefficient, y = Normed_Estimate)) + 
+  ggplot(aes(x = coefficient, y = normed.estimate)) + 
   geom_bar(position = position_dodge(), 
     stat = "identity", width = 0.5) + 
-  geom_errorbar(aes(ymin = Normed_Estimate - 
-    1.96 * Std.Error, ymax = Normed_Estimate + 1.96 * Std.Error), size = 0.75, width = 0.15, 
+  geom_errorbar(aes(ymin = normed.estimate - 
+    1.96 * std.error, ymax = normed.estimate + 1.96 * std.error), size = 0.75, width = 0.15, 
     position = position_dodge(0.9)) + 
   ylab("Norm of beta hats") + 
   theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
@@ -402,15 +458,15 @@ ggsave(here("output", "embedreg_aa.png"))
 
 ```{r}
 set.seed(20201008L)
-arab_post_bt <- get_bt_terms(1, 1, "terror", 200, "Arab Americans", "Asian Americans")
-indian_post_bt <- get_bt_terms(1, 0, "terror", 200, "Arab Americans", "Asian Americans")
+arab_post_bt <- get_bt_terms(1, 1, "terror", 30, "Arab Americans", "Asian Americans")
+aa_post_bt <- get_bt_terms(1, 0, "terror", 30, "Arab Americans", "Asian Americans")
 
-arab_pre_bt <- get_bt_terms(0, 1, "terror", 200, "Arab Americans", "Asian Americans")
-indian_pre_bt <- NULL
+arab_pre_bt <- get_bt_terms(0, 1, "terror", 30, "Arab Americans", "Asian Americans")
+aa_pre_bt <- NULL
 ```
 
 ```{r}
-terms2plot_sep(arab_pre_bt, indian_pre_bt, "terror", "Pre-9/11") + terms2plot_sep(arab_post_bt, indian_post_bt, "terror", "Post-9/11") +
+terms2plot_sep(arab_pre_bt, aa_pre_bt, "terror", "Pre-9/11") + terms2plot_sep(arab_post_bt, aa_post_bt, "terror", "Post-9/11") +
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 
@@ -419,28 +475,18 @@ ggsave(here("output", "btterrorsep_aa.png"), width = 12, height = 10)
 
 # Summary 
 
-## Ratio 
-
-```{r}
-round(mean(mod1@normed_cofficients$Normed_Estimate[1]/mod1@normed_cofficients$Normed_Estimate[2],
-mod2@normed_cofficients$Normed_Estimate[1]/mod2@normed_cofficients$Normed_Estimate[2],
-mod3@normed_cofficients$Normed_Estimate[1]/mod3@normed_cofficients$Normed_Estimate[2]), 2)
-
-# 1.18
-```
-
 ## Plot 
 
 ```{r}
 sums <- data.frame(estimate = 
-             c(mod1@normed_cofficients$Normed_Estimate[1],
-             mod2@normed_cofficients$Normed_Estimate[1],
-             mod3@normed_cofficients$Normed_Estimate[1], mod1@normed_cofficients$Normed_Estimate[2],
-             mod2@normed_cofficients$Normed_Estimate[2],
-             mod3@normed_cofficients$Normed_Estimate[2]),
+             c(mod1@normed_cofficients$normed.estimate[1],
+             mod2@normed_cofficients$normed.estimate[1],
+             mod3@normed_cofficients$normed.estimate[1], mod1@normed_cofficients$normed.estimate[2],
+             mod2@normed_cofficients$normed.estimate[2],
+             mod3@normed_cofficients$normed.estimate[2]),
            std.error = 
-             c(mod1@normed_cofficients$Std.Error[1], mod2@normed_cofficients$Std.Error[1], mod3@normed_cofficients$Std.Error[1],
-               mod1@normed_cofficients$Std.Error[2], mod2@normed_cofficients$Std.Error[2], mod3@normed_cofficients$Std.Error[2]),
+             c(mod1@normed_cofficients$std.error[1], mod2@normed_cofficients$std.error[1], mod3@normed_cofficients$std.error[1],
+               mod1@normed_cofficients$std.error[2], mod2@normed_cofficients$std.error[2], mod3@normed_cofficients$std.error[2]),
            group = rep(c("Indian American", "Filipino American", "Asian American"),2),
            type = rep(c("Intervention", "Group"), each = 3))
 ```
@@ -455,7 +501,34 @@ sums %>%
        col = "Covavriate") +
   geom_text(label = round(sums$estimate, 2),
             position = position_dodge(width = 0.9),
-            vjust = -0.5)
+            vjust = -0.5) +
+  scale_fill_viridis_d()
 
 ggsave(here("output", "embedreg_all.png"))
 ```
+
+# Reading documents 
+
+```{r}
+corpus$terror <- str_detect(corpus$clean_text, "terror")
+
+corpus %>%
+  filter(intervention == 0) %>%
+  group_by(group) %>%
+  summarize(avg = sum(terror))
+```
+
+```{r}
+corpus %>%
+  # Post 9/11
+  filter(intervention == 1) %>%
+  # Arab newspaper 
+  filter(group == 1) %>%
+  # Search documents including the term "immigrant"
+  filter(str_detect(text, "immigrant|Immigrant|immigrants|Immigrants")) %>%
+  # Select the 3rd row (the 3rd document)
+  slice(3) %>%
+  # Pull the date and newspaper
+  pull(date, source)
+```
+
