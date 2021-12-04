@@ -1,4 +1,4 @@
-## Replication code for How Insecurity Shifts Ethnic Media’s Attention from Their Home Country to Host Society: Evidence from the September 11 Terrorist Attacks
+## Replication code for Perceived and Experienced Exclusion: The Post-9/11 Surveillance State and Ethnic Media
 
 - The preprint version of this project is available at https://osf.io/preprints/socarxiv/y65sd/
 - Co-author: Andrew Thompson (George Washington University)
